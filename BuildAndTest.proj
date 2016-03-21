@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright (c) IxMilia.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information. -->
+<Project
+  xmlns="http://schemas.microsoft.com/developer/msbuild/2003"
+  DefaultTargets="BuildAndTest"
+  ToolsVersion="12.0">
+
+  <PropertyGroup>
+    <Configuration Condition="'$(Configuration)' == ''">Debug</Configuration>
+    <SolutionDir>$(MSBuildThisFileDirectory)src</SolutionDir>
+    <SolutionFile>$(SolutionDir)\IxMilia.Step.sln</SolutionFile>
+    <TestAssembly>$(SolutionDir)\Binaries\$(Configuration)\IxMilia.Step.Test.dll</TestAssembly>
+    <NuGetExe>$(MSBuildThisFileDirectory)src\.nuget\NuGet.exe</NuGetExe>
+  </PropertyGroup>
+
+  <UsingTask TaskName="DownloadFile" TaskFactory="CodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.v4.0.dll">
+    <ParameterGroup>
+      <Url ParameterType="System.String" Required="true" />
+      <Destination ParameterType="System.String" Required="true" />
+    </ParameterGroup>
+    <Task>
+      <Reference Include="System" />
+      <Code Type="Fragment" Language="cs">
+        <![CDATA[
+          new System.Net.WebClient().DownloadFile(Url, Destination);
+        ]]>
+      </Code>
+    </Task>
+  </UsingTask>
+
+  <Target Name="RestorePackages">
+    <DownloadFile Url="https://www.nuget.org/nuget.exe" Destination="$(NuGetExe)" Condition="!Exists('$(NuGetExe)')" />
+    <Exec Command="&quot;$(NuGetExe)&quot; restore &quot;$(SolutionFile)&quot;" />
+  </Target>
+
+  <Target Name="Build" DependsOnTargets="RestorePackages">
+    <MSBuild BuildInParallel="true"
+             Projects="$(SolutionFile)"
+             Properties="TreatWarningsAsErrors=true"
+             Targets="Build" />
+  </Target>
+
+  <Target Name="Clean">
+    <MSBuild BuildInParallel="true"
+             Projects="$(SolutionFile)"
+             Targets="Clean" />
+  </Target>
+
+  <Target Name="Rebuild">
+    <MSBuild BuildInParallel="true"
+             Projects="$(SolutionFile)"
+             Properties="TreatWarningsAsErrors=true"
+             Targets="Rebuild" />
+  </Target>
+
+  <Target Name="Test">
+    <Exec Command="$(MSBuildThisFileDirectory)src\packages\xunit.runners.1.9.2\tools\xunit.console.clr4.exe $(TestAssembly)" />
+  </Target>
+
+  <Target Name="BuildAndTest"
+          DependsOnTargets="Build;Test" />
+
+</Project>
