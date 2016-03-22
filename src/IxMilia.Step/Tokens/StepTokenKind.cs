@@ -4,9 +4,8 @@ namespace IxMilia.Step.Tokens
 {
     internal enum StepTokenKind
     {
-        SemiColon,
+        Semicolon,
         Omitted,
-        Identifier,
         Integer,
         Real,
         String,

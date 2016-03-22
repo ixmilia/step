@@ -17,6 +17,7 @@ namespace IxMilia.Step.Test
             {
                 writer.Write(text);
                 writer.Flush();
+                stream.Seek(0, SeekOrigin.Begin);
                 var tokenizer = new StepTokenizer(stream);
                 return tokenizer.GetTokens().ToArray();
             }
@@ -29,9 +30,9 @@ namespace IxMilia.Step.Test
             return token => token.Kind == kind;
         }
 
-        private TokenVerifier SemiColon()
+        private TokenVerifier Semicolon()
         {
-            return WithKind(StepTokenKind.SemiColon);
+            return WithKind(StepTokenKind.Semicolon);
         }
 
         private TokenVerifier Keyword(string keyword)
@@ -53,8 +54,7 @@ namespace IxMilia.Step.Test
         public void SpecialTokenTest()
         {
             VerifyTokens("ISO-10303-21;",
-                Keyword("ISO-10303-21"),
-                SemiColon());
+                Keyword("ISO-10303-21"), Semicolon());
         }
 
         [Fact]
@@ -67,12 +67,48 @@ ENDSEC;
 DATA;
 ENDSEC;
 END-ISO-10303-21;",
-                Keyword("ISO-10303-21"), SemiColon(),
-                Keyword("HEADER"), SemiColon(),
-                Keyword("ENDSEC"), SemiColon(),
-                Keyword("DATA"), SemiColon(),
-                Keyword("ENDSEC"), SemiColon(),
-                Keyword("END-ISO-10303-21"), SemiColon());
+                Keyword("ISO-10303-21"), Semicolon(),
+                Keyword("HEADER"), Semicolon(),
+                Keyword("ENDSEC"), Semicolon(),
+                Keyword("DATA"), Semicolon(),
+                Keyword("ENDSEC"), Semicolon(),
+                Keyword("END-ISO-10303-21"), Semicolon());
+        }
+
+        [Fact]
+        public void TokensWithCommentsTest1()
+        {
+            VerifyTokens(@"
+HEADER;
+/* comment DATA; (comment's end is on the same line) */
+ENDSEC;",
+                Keyword("HEADER"), Semicolon(),
+                Keyword("ENDSEC"), Semicolon());
+        }
+
+        [Fact]
+        public void TokensWithCommentsTest2()
+        {
+            VerifyTokens(@"
+HEADER;
+/* comment (comment's end is on another line)
+DATA; */
+ENDSEC;",
+                Keyword("HEADER"), Semicolon(),
+                Keyword("ENDSEC"), Semicolon());
+        }
+
+        [Fact]
+        public void TokensWithCommentsTest3()
+        {
+            VerifyTokens(@"
+HEADER;
+                /* comment
+                (comment's end is on another line and farther back)
+DATA; */
+ENDSEC;",
+                Keyword("HEADER"), Semicolon(),
+                Keyword("ENDSEC"), Semicolon());
         }
     }
 }

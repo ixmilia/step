@@ -17,6 +17,11 @@ namespace IxMilia.Step
         internal const string EndSectionText = "ENDSEC";
         internal const string DataText = "DATA";
 
+        internal const string FileDescriptionText = "FILE_DESCRIPTION";
+
+        public string Description { get; set; }
+        public string ImplementationLevel { get; set; }
+
         public static StepFile Load(Stream stream)
         {
             return new StepReader(stream).ReadFile();

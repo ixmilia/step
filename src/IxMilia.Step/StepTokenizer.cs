@@ -16,6 +16,9 @@ namespace IxMilia.Step
         private int _currentLineNumber;
         private int _currentColumn;
 
+        public int CurrentLine => _currentLineNumber;
+        public int CurrentColumn => _currentColumn;
+
         public StepTokenizer(Stream stream)
         {
             _reader = new StreamReader(stream);
@@ -49,14 +52,42 @@ namespace IxMilia.Step
 
                 switch (_currentLine[_offset])
                 {
-                    // TODO: space ends a token, linebreaks do not
-                    case ' ':
-                    case '\r':
-                    case '\n':
-                    case '\t':
-                        // skip whitespace
-                        _offset++;
-                        continue;
+                    case '/':
+                        if (_offset <= _currentLine.Length - 1 && _currentLine[_offset + 1] == '*')
+                        {
+                            // entered multiline comment
+                            Advance(); // swallow '/'
+                            Advance(); // swallow '*'
+
+                            var endIndex = _currentLine.IndexOf("*/", _offset);
+                            while (endIndex < 0 && _currentLine != null)
+                            {
+                                // end wasn't on this line
+                                ReadNextLine();
+                                if (_currentLine == null)
+                                {
+                                    break;
+                                }
+
+                                endIndex = _currentLine.IndexOf("*/", _offset);
+                            }
+
+                            if (_currentLine == null)
+                            {
+                                // read past the end of the file
+                                return null;
+                            }
+                            else
+                            {
+                                // end was on this line
+                                _offset = endIndex + 2;
+                            }
+                        }
+                        else
+                        {
+                            goto default;
+                        }
+                        break;
                     default:
                         return _currentLine[_offset];
                 }
@@ -66,6 +97,7 @@ namespace IxMilia.Step
         private void Advance()
         {
             _offset++;
+            _currentColumn++;
             if (_offset > _currentLine.Length)
             {
                 ReadNextLine();
@@ -74,19 +106,22 @@ namespace IxMilia.Step
 
         public IEnumerable<StepToken> GetTokens()
         {
-            var cn = PeekCharacter();
-            while (cn != null)
+            char? cn;
+            SwallowWhitespace();
+            while ((cn = PeekCharacter()) != null)
             {
+                var tokenLine = _currentLineNumber;
+                var tokenColumn = _currentColumn;
                 var c = cn.GetValueOrDefault();
                 if (c == '$')
                 {
                     Advance();
-                    yield return new StepOmittedToken(_currentLineNumber, _currentColumn);
+                    yield return new StepOmittedToken(tokenLine, tokenColumn);
                 }
                 else if (c == ';')
                 {
                     Advance();
-                    yield return new StepSemiColonToken(_currentLineNumber, _currentColumn);
+                    yield return new StepSemicolonToken(tokenLine, tokenColumn);
                 }
                 else if (IsNumberStart(c))
                 {
@@ -114,27 +149,55 @@ namespace IxMilia.Step
                 }
                 else if (IsLeftParen(c))
                 {
-                    yield return new StepLeftParenToken(_currentLineNumber, _currentColumn);
+                    Advance();
+                    yield return new StepLeftParenToken(tokenLine, tokenColumn);
                 }
                 else if (IsRightParen(c))
                 {
-                    yield return new StepRightParenToken(_currentLineNumber, _currentColumn);
+                    Advance();
+                    yield return new StepRightParenToken(tokenLine, tokenColumn);
                 }
                 else if (IsComma(c))
                 {
-                    yield return new StepCommaToken(_currentLineNumber, _currentColumn);
+                    Advance();
+                    yield return new StepCommaToken(tokenLine, tokenColumn);
                 }
                 else if (IsUpper(c))
                 {
-                    
+                    yield return ParseKeyword();
                 }
                 else
                 {
                     throw new StepReadException($"Unexpected character '{c}'", _currentLineNumber, _currentColumn);
                 }
+
+                SwallowWhitespace();
             }
 
             yield break;
+        }
+
+        private void SwallowWhitespace()
+        {
+            char? cn;
+            bool keepSwallowing = true;
+            while (keepSwallowing && (cn = PeekCharacter()) != null)
+            {
+                switch (cn.GetValueOrDefault())
+                {
+                    case ' ':
+                    case '\r':
+                    case '\n':
+                    case '\t':
+                    case '\f':
+                    case '\v':
+                        Advance();
+                        break;
+                    default:
+                        keepSwallowing = false;
+                        break;
+                }
+            }
         }
 
         private bool IsDigit(char c)
@@ -160,6 +223,11 @@ namespace IxMilia.Step
         private bool IsMinus(char c)
         {
             return c == '-';
+        }
+
+        private bool IsUnderscore(char c)
+        {
+            return c == '_';
         }
 
         private bool IsNumberStart(char c)
@@ -217,7 +285,8 @@ namespace IxMilia.Step
         private bool IsKeywordCharacter(char c)
         {
             return IsUpperOrDigit(c)
-                || c == '-';
+                || IsUnderscore(c)
+                || IsMinus(c);
         }
 
         private StepToken ParseNumber()
@@ -315,6 +384,7 @@ namespace IxMilia.Step
                 {
                     // just a normal string
                     sb.Append(c);
+                    Advance();
                 }
             }
 
@@ -412,9 +482,10 @@ namespace IxMilia.Step
         {
             var sb = new StringBuilder();
             char? c;
-            while ((c = PeekCharacter()) != null && c.HasValue)
+            while ((c = PeekCharacter()) != null && predicate(c.GetValueOrDefault()))
             {
                 sb.Append(c);
+                Advance();
             }
 
             return sb.ToString();

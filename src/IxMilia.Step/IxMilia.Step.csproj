@@ -20,9 +20,13 @@
   <ItemGroup>
     <Compile Include="StepFile.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="StepMacro.cs" />
+    <Compile Include="StepValueList.cs" />
     <Compile Include="StepReader.cs" />
     <Compile Include="StepReadException.cs" />
     <Compile Include="StepTokenizer.cs" />
+    <Compile Include="StepIndividualValue.cs" />
+    <Compile Include="StepValue.cs" />
     <Compile Include="Tokens\StepCommaToken.cs" />
     <Compile Include="Tokens\StepConstantValueToken.cs" />
     <Compile Include="Tokens\StepConstantInstanceToken.cs" />
@@ -35,7 +39,7 @@
     <Compile Include="Tokens\StepOmittedToken.cs" />
     <Compile Include="Tokens\StepRealToken.cs" />
     <Compile Include="Tokens\StepRightParenToken.cs" />
-    <Compile Include="Tokens\StepSemiColonToken.cs" />
+    <Compile Include="Tokens\StepSemicolonToken.cs" />
     <Compile Include="Tokens\StepStringToken.cs" />
     <Compile Include="Tokens\StepToken.cs" />
     <Compile Include="Tokens\StepTokenKind.cs" />
