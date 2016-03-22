@@ -20,3 +20,4 @@ Save a STEP file:
 ### Specification
 
 Using spec from steptools.com [here](http://www.steptools.com/library/standard/IS_final_p21e3.html).
+STEP Application Protocols [here](http://www.steptools.com/support/stdev_docs/express/).
