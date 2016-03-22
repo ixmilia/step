@@ -113,7 +113,10 @@ namespace IxMilia.Step
         private void ApplyFileSchema(StepValueList valueList)
         {
             AssertValueListCount(valueList, 1);
-            _file.Schemas.AddRange(GetListValues(valueList.Values[0]).Select(v => GetStringValue(v)));
+            foreach (var schemaType in GetListValues(valueList.Values[0]).Select(v => StepSchemaTypeExtensions.SchemaTypeFromName(GetStringValue(v))))
+            {
+                _file.Schemas.Add(schemaType);
+            }
         }
 
         private void AssertValueListCount(StepValueList valueList, int expectedCount)

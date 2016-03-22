@@ -32,12 +32,12 @@ namespace IxMilia.Step
         public string Authorization { get; set; }
 
         // FILE_SCHEMA values
-        public List<string> Schemas { get; }
+        public HashSet<StepSchemaTypes> Schemas { get; }
 
         public StepFile()
         {
             Timestamp = DateTime.Now;
-            Schemas = new List<string>();
+            Schemas = new HashSet<StepSchemaTypes>();
         }
 
         public static StepFile Load(Stream stream)
