@@ -1,6 +1,8 @@
 ﻿// Copyright (c) IxMilia.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
+using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using IxMilia.Step.Tokens;
@@ -77,6 +79,12 @@ namespace IxMilia.Step
                 case StepFile.FileDescriptionText:
                     ApplyFileDescription(macro.Values);
                     break;
+                case StepFile.FileNameText:
+                    ApplyFileName(macro.Values);
+                    break;
+                case StepFile.FileSchemaText:
+                    ApplyFileSchema(macro.Values);
+                    break;
                 default:
                     // TODO:
                     break;
@@ -85,13 +93,35 @@ namespace IxMilia.Step
 
         private void ApplyFileDescription(StepValueList valueList)
         {
-            if (valueList.Values.Count != 2)
-            {
-                ReportError($"Expected 2 values but got {valueList.Values.Count}", valueList.Line, valueList.Column);
-            }
+            AssertValueListCount(valueList, 2);
+            _file.Description = GetConcatenatedStringValue(valueList.Values[0]);
+            _file.ImplementationLevel = GetStringValue(valueList.Values[1]); // TODO: handle appropriate values
+        }
 
-            _file.Description = string.Join(string.Empty, GetListValues(valueList.Values[0]).Select(v => GetStringValue(v)));
-            _file.ImplementationLevel = GetStringValue(valueList.Values[1]);
+        private void ApplyFileName(StepValueList valueList)
+        {
+            AssertValueListCount(valueList, 7);
+            _file.Name = GetStringValue(valueList.Values[0]);
+            _file.Timestamp = GetDateTimeValue(valueList.Values[1]);
+            _file.Author = GetConcatenatedStringValue(valueList.Values[2]);
+            _file.Organization = GetConcatenatedStringValue(valueList.Values[3]);
+            _file.PreprocessorVersion = GetStringValue(valueList.Values[4]);
+            _file.OriginatingSystem = GetStringValue(valueList.Values[5]);
+            _file.Authorization = GetStringValue(valueList.Values[6]);
+        }
+
+        private void ApplyFileSchema(StepValueList valueList)
+        {
+            AssertValueListCount(valueList, 1);
+            _file.Schemas.AddRange(GetListValues(valueList.Values[0]).Select(v => GetStringValue(v)));
+        }
+
+        private void AssertValueListCount(StepValueList valueList, int expectedCount)
+        {
+            if (valueList.Values.Count != expectedCount)
+            {
+                ReportError($"Expected {expectedCount} values but got {valueList.Values.Count}", valueList.Line, valueList.Column);
+            }
         }
 
         public List<StepValue> GetListValues(StepValue value)
@@ -107,7 +137,7 @@ namespace IxMilia.Step
             }
         }
 
-        public string GetStringValue(StepValue value)
+        private string GetStringValue(StepValue value)
         {
             if (value is StepIndividualValue && ((StepIndividualValue)value).Value.Kind == StepTokenKind.String)
             {
@@ -118,6 +148,17 @@ namespace IxMilia.Step
                 ReportError("Expected string token", value.Line, value.Column);
                 return null; // unreachable
             }
+        }
+
+        private string GetConcatenatedStringValue(StepValue value)
+        {
+            return string.Join(string.Empty, GetListValues(value).Select(v => GetStringValue(v)));
+        }
+
+        private DateTime GetDateTimeValue(StepValue value)
+        {
+            var str = GetStringValue(value);
+            return DateTime.ParseExact(str, "yyyy-MM-ddT", CultureInfo.InvariantCulture);
         }
 
         private bool IsNextTokenKeyword(string keyword)

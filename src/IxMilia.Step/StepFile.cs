@@ -3,9 +3,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace IxMilia.Step
 {
@@ -18,9 +15,30 @@ namespace IxMilia.Step
         internal const string DataText = "DATA";
 
         internal const string FileDescriptionText = "FILE_DESCRIPTION";
+        internal const string FileNameText = "FILE_NAME";
+        internal const string FileSchemaText = "FILE_SCHEMA";
 
+        // FILE_DESCRIPTION values
         public string Description { get; set; }
         public string ImplementationLevel { get; set; }
+
+        // FILE_NAME values
+        public string Name { get; set; }
+        public DateTime Timestamp { get; set; }
+        public string Author { get; set; }
+        public string Organization { get; set; }
+        public string PreprocessorVersion { get; set; }
+        public string OriginatingSystem { get; set; }
+        public string Authorization { get; set; }
+
+        // FILE_SCHEMA values
+        public List<string> Schemas { get; }
+
+        public StepFile()
+        {
+            Timestamp = DateTime.Now;
+            Schemas = new List<string>();
+        }
 
         public static StepFile Load(Stream stream)
         {
