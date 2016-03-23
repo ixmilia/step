@@ -25,7 +25,10 @@ namespace IxMilia.Step.Entities
             switch (macro.Keyword.Value)
             {
                 case "CARTESIAN_POINT":
-                    entity = new StepCartesianPoint(macro);
+                    entity = StepCartesianPoint.CreateFromMacro(macro);
+                    break;
+                case "DIRECTION":
+                    entity = StepDirection.CreateFromMacro(macro);
                     break;
                 default:
                     entity = null;

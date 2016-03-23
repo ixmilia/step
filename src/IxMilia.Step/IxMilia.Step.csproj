@@ -19,8 +19,10 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' " />
   <ItemGroup>
     <Compile Include="Entities\StepCartesianPoint.cs" />
+    <Compile Include="Entities\StepDirection.cs" />
     <Compile Include="Entities\StepEntity.cs" />
     <Compile Include="Entities\StepEntityType.cs" />
+    <Compile Include="Entities\StepTriple.cs" />
     <Compile Include="StepFile.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="StepMacro.cs" />

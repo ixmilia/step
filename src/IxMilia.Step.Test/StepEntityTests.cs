@@ -42,5 +42,15 @@ END-ISO-10303-21;
             Assert.Equal(0.0, point.Y);
             Assert.Equal(0.0, point.Z);
         }
+
+        [Fact]
+        public void ReadDirectionTest()
+        {
+            var direction = (StepDirection)ReadEntity("#1=DIRECTION('name',(1.0,2.0,3.0));");
+            Assert.Equal("name", direction.Name);
+            Assert.Equal(1.0, direction.X);
+            Assert.Equal(2.0, direction.Y);
+            Assert.Equal(3.0, direction.Z);
+        }
     }
 }

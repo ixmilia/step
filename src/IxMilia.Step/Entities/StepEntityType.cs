@@ -4,6 +4,7 @@ namespace IxMilia.Step.Entities
 {
     public enum StepEntityType
     {
-        CartesianPoint
+        CartesianPoint,
+        Direction
     }
 }
