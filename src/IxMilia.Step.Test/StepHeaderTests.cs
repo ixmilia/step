@@ -9,18 +9,6 @@ namespace IxMilia.Step.Test
 {
     public class StepHeaderTests
     {
-        private StepFile ReadFile(string data)
-        {
-            using (var stream = new MemoryStream())
-            using (var writer = new StreamWriter(stream))
-            {
-                writer.Write(data);
-                writer.Flush();
-                stream.Seek(0, SeekOrigin.Begin);
-                return StepFile.Load(stream);
-            }
-        }
-
         private StepFile ReadFileFromHeader(string header)
         {
             var file = $@"
@@ -32,7 +20,7 @@ namespace IxMilia.Step.Test
 {StepFile.EndSectionText};
 {StepFile.MagicFooter};
 ";
-            return ReadFile(file.Trim());
+            return StepFile.Parse(file.Trim());
         }
 
         [Fact]

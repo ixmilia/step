@@ -12,7 +12,7 @@ namespace IxMilia.Step.Test
     {
         private StepToken[] GetTokens(string text)
         {
-            var stream = new MemoryStream();
+            using (var stream = new MemoryStream())
             using (var writer = new StreamWriter(stream))
             {
                 writer.Write(text);

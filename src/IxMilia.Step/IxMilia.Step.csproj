@@ -18,10 +18,15 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' " />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' " />
   <ItemGroup>
+    <Compile Include="Entities\StepCartesianPoint.cs" />
+    <Compile Include="Entities\StepEntity.cs" />
+    <Compile Include="Entities\StepEntityType.cs" />
     <Compile Include="StepFile.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="StepMacro.cs" />
     <Compile Include="StepSchemaTypes.cs" />
+    <Compile Include="StepTokenEntity.cs" />
+    <Compile Include="StepValueExtensions.cs" />
     <Compile Include="StepValueList.cs" />
     <Compile Include="StepReader.cs" />
     <Compile Include="StepReadException.cs" />
@@ -33,6 +38,7 @@
     <Compile Include="Tokens\StepConstantInstanceToken.cs" />
     <Compile Include="Tokens\StepEntityInstanceToken.cs" />
     <Compile Include="Tokens\StepEnumerationToken.cs" />
+    <Compile Include="Tokens\StepEqualsToken.cs" />
     <Compile Include="Tokens\StepInstanceValueToken.cs" />
     <Compile Include="Tokens\StepIntegerToken.cs" />
     <Compile Include="Tokens\StepKeywordToken.cs" />

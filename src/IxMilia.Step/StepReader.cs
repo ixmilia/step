@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using IxMilia.Step.Entities;
 using IxMilia.Step.Tokens;
 
 namespace IxMilia.Step
@@ -46,10 +47,15 @@ namespace IxMilia.Step
             // data
             SwallowKeywordAndSemicolon(StepFile.DataText);
 
-            // TODO: read data, but skip it in the mean time
-            while (!IsNextTokenKeyword(StepFile.EndSectionText))
+            // read data
+            while (IsNextTokenEntityInstance())
             {
-                MoveNext();
+                var tokenEntity = LexTokenEntity();
+                var entity = StepEntity.FromMacro(tokenEntity.Macro);
+                if (entity != null)
+                {
+                    _file.Entities.Add(entity);
+                }
             }
 
             SwallowKeywordAndSemicolon(StepFile.EndSectionText);
@@ -93,37 +99,29 @@ namespace IxMilia.Step
 
         private void ApplyFileDescription(StepValueList valueList)
         {
-            AssertValueListCount(valueList, 2);
+            valueList.AssertValueListCount(2);
             _file.Description = GetConcatenatedStringValue(valueList.Values[0]);
-            _file.ImplementationLevel = GetStringValue(valueList.Values[1]); // TODO: handle appropriate values
+            _file.ImplementationLevel = valueList.Values[1].GetStringValue(); // TODO: handle appropriate values
         }
 
         private void ApplyFileName(StepValueList valueList)
         {
-            AssertValueListCount(valueList, 7);
-            _file.Name = GetStringValue(valueList.Values[0]);
+            valueList.AssertValueListCount(7);
+            _file.Name = valueList.Values[0].GetStringValue();
             _file.Timestamp = GetDateTimeValue(valueList.Values[1]);
             _file.Author = GetConcatenatedStringValue(valueList.Values[2]);
             _file.Organization = GetConcatenatedStringValue(valueList.Values[3]);
-            _file.PreprocessorVersion = GetStringValue(valueList.Values[4]);
-            _file.OriginatingSystem = GetStringValue(valueList.Values[5]);
-            _file.Authorization = GetStringValue(valueList.Values[6]);
+            _file.PreprocessorVersion = valueList.Values[4].GetStringValue();
+            _file.OriginatingSystem = valueList.Values[5].GetStringValue();
+            _file.Authorization = valueList.Values[6].GetStringValue();
         }
 
         private void ApplyFileSchema(StepValueList valueList)
         {
-            AssertValueListCount(valueList, 1);
-            foreach (var schemaType in GetListValues(valueList.Values[0]).Select(v => StepSchemaTypeExtensions.SchemaTypeFromName(GetStringValue(v))))
+            valueList.AssertValueListCount(1);
+            foreach (var schemaType in GetListValues(valueList.Values[0]).Select(v => StepSchemaTypeExtensions.SchemaTypeFromName(v.GetStringValue())))
             {
                 _file.Schemas.Add(schemaType);
-            }
-        }
-
-        private void AssertValueListCount(StepValueList valueList, int expectedCount)
-        {
-            if (valueList.Values.Count != expectedCount)
-            {
-                ReportError($"Expected {expectedCount} values but got {valueList.Values.Count}", valueList.Line, valueList.Column);
             }
         }
 
@@ -140,33 +138,30 @@ namespace IxMilia.Step
             }
         }
 
-        private string GetStringValue(StepValue value)
-        {
-            if (value is StepIndividualValue && ((StepIndividualValue)value).Value.Kind == StepTokenKind.String)
-            {
-                return ((StepStringToken)(((StepIndividualValue)value).Value)).Value;
-            }
-            else
-            {
-                ReportError("Expected string token", value.Line, value.Column);
-                return null; // unreachable
-            }
-        }
-
         private string GetConcatenatedStringValue(StepValue value)
         {
-            return string.Join(string.Empty, GetListValues(value).Select(v => GetStringValue(v)));
+            return string.Join(string.Empty, GetListValues(value).Select(v => v.GetStringValue()));
         }
 
         private DateTime GetDateTimeValue(StepValue value)
         {
-            var str = GetStringValue(value);
+            var str = value.GetStringValue();
             return DateTime.ParseExact(str, "yyyy-MM-ddT", CultureInfo.InvariantCulture);
+        }
+
+        private bool IsNextTokenKind(StepTokenKind kind)
+        {
+            return Current.Kind == kind;
+        }
+
+        private bool IsNextTokenEntityInstance()
+        {
+            return IsNextTokenKind(StepTokenKind.EntityInstance);
         }
 
         private bool IsNextTokenKeyword(string keyword)
         {
-            return Current.Kind == StepTokenKind.Keyword && ((StepKeywordToken)Current).Value == keyword;
+            return IsNextTokenKind(StepTokenKind.Keyword) && ((StepKeywordToken)Current).Value == keyword;
         }
 
         private void SwallowKeyword(string keyword)
@@ -240,6 +235,20 @@ namespace IxMilia.Step
             return new StepMacro(keyword, values);
         }
 
+        private StepTokenEntity LexTokenEntity()
+        {
+            AssertNextKindIs(StepTokenKind.EntityInstance);
+            var id = ((StepEntityInstanceToken)Current).Id;
+            MoveNext();
+
+            AssertNextKindIs(StepTokenKind.Equals);
+            MoveNext();
+
+            var macro = LexMacro();
+
+            return new StepTokenEntity(id, macro);
+        }
+
         private StepValueList LexValueList()
         {
             var listLine = CurrentLine;
@@ -270,6 +279,7 @@ namespace IxMilia.Step
                         case StepTokenKind.Omitted:
                         case StepTokenKind.Real:
                         case StepTokenKind.String:
+                            // TODO: it could be a keyword followed by a parameter list, e.g., another macro (typed parameter)
                             values.Add(new StepIndividualValue(Current));
                             MoveNext();
                             break;

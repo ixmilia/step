@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using IxMilia.Step.Entities;
 
 namespace IxMilia.Step
 {
@@ -34,15 +35,30 @@ namespace IxMilia.Step
         // FILE_SCHEMA values
         public HashSet<StepSchemaTypes> Schemas { get; }
 
+        public List<StepEntity> Entities { get; }
+
         public StepFile()
         {
             Timestamp = DateTime.Now;
             Schemas = new HashSet<StepSchemaTypes>();
+            Entities = new List<StepEntity>();
         }
 
         public static StepFile Load(Stream stream)
         {
             return new StepReader(stream).ReadFile();
+        }
+
+        public static StepFile Parse(string data)
+        {
+            using (var stream = new MemoryStream())
+            using (var writer = new StreamWriter(stream))
+            {
+                writer.Write(data);
+                writer.Flush();
+                stream.Seek(0, SeekOrigin.Begin);
+                return Load(stream);
+            }
         }
     }
 }
