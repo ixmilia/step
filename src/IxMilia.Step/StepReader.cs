@@ -10,6 +10,8 @@ namespace IxMilia.Step
 {
     internal class StepReader
     {
+        public const string DateTimeFormat = "yyyy-MM-ddT";
+
         private StepLexer _lexer;
         private StepFile _file;
 

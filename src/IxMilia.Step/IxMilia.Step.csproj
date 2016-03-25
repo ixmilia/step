@@ -34,6 +34,7 @@
     <Compile Include="StepReader.cs" />
     <Compile Include="StepReadException.cs" />
     <Compile Include="StepTokenizer.cs" />
+    <Compile Include="StepWriter.cs" />
     <Compile Include="Syntax\StepDataSectionSyntax.cs" />
     <Compile Include="Syntax\StepEntityInstanceReferenceSyntax.cs" />
     <Compile Include="Syntax\StepEntityInstanceSyntax.cs" />

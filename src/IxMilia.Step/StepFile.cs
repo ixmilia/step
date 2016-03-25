@@ -60,5 +60,20 @@ namespace IxMilia.Step
                 return Load(stream);
             }
         }
+
+        public string GetContentsAsString()
+        {
+            var writer = new StepWriter(this);
+            return writer.GetContents();
+        }
+
+        public void Save(Stream stream)
+        {
+            using (var streamWriter = new StreamWriter(stream))
+            {
+                streamWriter.Write(GetContentsAsString());
+                streamWriter.Flush();
+            }
+        }
     }
 }

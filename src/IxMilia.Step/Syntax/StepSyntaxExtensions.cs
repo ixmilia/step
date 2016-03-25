@@ -37,7 +37,7 @@ namespace IxMilia.Step.Syntax
         public static DateTime GetDateTimeValue(this StepSyntax syntax)
         {
             var str = syntax.GetStringValue();
-            return DateTime.ParseExact(str, "yyyy-MM-ddT", CultureInfo.InvariantCulture);
+            return DateTime.ParseExact(str, StepReader.DateTimeFormat, CultureInfo.InvariantCulture);
         }
 
         public static double GetRealVavlue(this StepSyntax syntax)

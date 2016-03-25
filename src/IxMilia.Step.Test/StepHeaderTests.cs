@@ -1,7 +1,6 @@
 ﻿// Copyright (c) IxMilia.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
-using System.IO;
 using System.Linq;
 using Xunit;
 
@@ -21,6 +20,12 @@ namespace IxMilia.Step.Test
 {StepFile.MagicFooter};
 ";
             return StepFile.Parse(file.Trim());
+        }
+
+        private void AssertFileIs(StepFile file, string expected)
+        {
+            var actual = file.GetContentsAsString();
+            Assert.Equal(expected, actual);
         }
 
         [Fact]
@@ -57,6 +62,53 @@ FILE_SCHEMA(('EXPLICIT_DRAUGHTING'));
             Assert.Equal("originator", file.OriginatingSystem);
             Assert.Equal("authorization", file.Authorization);
             Assert.Equal(StepSchemaTypes.ExplicitDraughting, file.Schemas.Single());
+        }
+
+        [Fact]
+        public void WriteHeaderTest()
+        {
+            var file = new StepFile();
+            file.Description = "some description";
+            file.ImplementationLevel = "2;1";
+            file.Name = "file-name";
+            file.Timestamp = new DateTime(2010, 1, 1);
+            file.Author = "author";
+            file.Organization = "organization";
+            file.PreprocessorVersion = "preprocessor";
+            file.OriginatingSystem = "originator";
+            file.Authorization = "authorization";
+            file.Schemas.Add(StepSchemaTypes.ExplicitDraughting);
+            AssertFileIs(file, @"
+ISO-10303-21;
+HEADER;
+FILE_DESCRIPTION(('some description'),'2;1');
+FILE_NAME('file-name','2010-01-01T',('author'),('organization'),'preprocessor','originator','authorization');
+FILE_SCHEMA(('EXPLICIT_DRAUGHTING'));
+ENDSEC;
+DATA;
+ENDSEC;
+END-ISO-10303-21;
+".TrimStart());
+        }
+
+        [Fact]
+        public void WriteHeaderWithLongDescriptionTest()
+        {
+            var file = new StepFile();
+            file.Description = new string('a', 257);
+            file.Timestamp = new DateTime(2010, 1, 1);
+            file.Schemas.Add(StepSchemaTypes.ExplicitDraughting);
+            AssertFileIs(file, $@"
+ISO-10303-21;
+HEADER;
+FILE_DESCRIPTION(('{new string('a', 256)}','a'),'');
+FILE_NAME('','2010-01-01T',(''),(''),'','','');
+FILE_SCHEMA(('EXPLICIT_DRAUGHTING'));
+ENDSEC;
+DATA;
+ENDSEC;
+END-ISO-10303-21;
+".TrimStart());
         }
     }
 }

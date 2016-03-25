@@ -22,7 +22,7 @@ using (FileStream fs = new FileStream(@"C:\Path\To\File.stp", FileMode.Open))
 
 //---------------------------------------------- or read directly from a string
 StepFile stepFile = StepFile.Parse(@"ISO-10303-21;
-HEADER
+HEADER;
 ...
 END-ISO-103030-21;");
 //-----------------------------------------------------------------------------
@@ -43,10 +43,26 @@ foreach (StepEntity entity in stepFile.Entities)
 Save a STEP file:
 
 ``` C#
-// TODO
+using System.IO;
+using IxMilia.Step;
+using IxMilia.Step.Entities;
+// ...
+
+StepFile stepFile = new StepFile();
+stepFile.Entities.Add(new StepDirection("direction-label", 1.0, 0.0, 0.0));
+// ...
+
+//------------------------------------------------------------- write to a file
+using (FileStream fs = new FileStream(@"C:\Path\To\File.stp", FileMode.Create))
+{
+    stepFile.Save(fs);
+}
+//------------------------------------------------------- or output as a string
+string contents = stepFile.GetContentsAsString();
 ```
 
 ### Specification
 
 Using spec from steptools.com [here](http://www.steptools.com/library/standard/IS_final_p21e3.html).
+
 STEP Application Protocols [here](http://www.steptools.com/support/stdev_docs/express/).
