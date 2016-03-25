@@ -8,7 +8,36 @@ A portable .NET library for reading and writing STEP CAD files.
 Open a STEP file:
 
 ``` C#
-// TODO
+using System.IO;
+using IxMilia.Step;
+using IxMilia.Step.Entities;
+// ...
+
+//------------------------------------------------------------ read from a file
+StepFile stepFile;
+using (FileStream fs = new FileStream(@"C:\Path\To\File.stp", FileMode.Open))
+{
+    stepFile = StepFile.Load(fs);
+}
+
+//---------------------------------------------- or read directly from a string
+StepFile stepFile = StepFile.Parse(@"ISO-10303-21;
+HEADER
+...
+END-ISO-103030-21;");
+//-----------------------------------------------------------------------------
+
+foreach (StepEntity entity in stepFile.Entities)
+{
+    switch (entity.EntityType)
+    {
+        case StepEntityType.Line:
+            StepLine line = (StepLine)entity;
+            // ...
+            break;
+        // ...
+    }
+}
 ```
 
 Save a STEP file:
