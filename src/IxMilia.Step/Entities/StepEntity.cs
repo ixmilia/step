@@ -15,7 +15,7 @@ namespace IxMilia.Step.Entities
             Name = name;
         }
 
-        internal static StepEntity FromTypedParameter(StepTypedParameterSyntax typedParameter)
+        internal static StepEntity FromTypedParameter(StepBinder binder, StepTypedParameterSyntax typedParameter)
         {
             StepEntity entity;
             switch (typedParameter.Keyword)
@@ -25,6 +25,9 @@ namespace IxMilia.Step.Entities
                     break;
                 case "DIRECTION":
                     entity = StepDirection.CreateFromSyntaxList(typedParameter.Parameters);
+                    break;
+                case "VECTOR":
+                    entity = StepVector.CreateFromSyntaxList(binder, typedParameter.Parameters);
                     break;
                 default:
                     entity = null;

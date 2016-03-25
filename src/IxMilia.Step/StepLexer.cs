@@ -91,6 +91,13 @@ namespace IxMilia.Step
                 case StepTokenKind.LeftParen:
                     result = LexSyntaxList();
                     break;
+                case StepTokenKind.Keyword:
+                    result = LexTypedParameter();
+                    break;
+                case StepTokenKind.EntityInstance:
+                    result = new StepEntityInstanceReferenceSyntax((StepEntityInstanceToken)Current);
+                    MoveNext();
+                    break;
                 default:
                     ReportError($"Unexpected syntax token '{Current.Kind}'");
                     result = null; // unreachable
@@ -173,19 +180,25 @@ namespace IxMilia.Step
             var column = Current.Column;
 
             AssertNextTokenKind(StepTokenKind.EntityInstance);
-            var instanceId = ((StepEntityInstanceToken)Current).Id;
+            var reference = (StepEntityInstanceToken)Current;
             MoveNext();
 
             SwallowEquals();
 
+            var typedParameter = LexTypedParameter();
+            SwallowSemicolon();
+
+            return new StepEntityInstanceSyntax(reference, typedParameter);
+        }
+
+        private StepTypedParameterSyntax LexTypedParameter()
+        {
             AssertNextTokenKind(StepTokenKind.Keyword);
             var keyword = (StepKeywordToken)Current;
             MoveNext();
 
             var parameters = LexSyntaxList();
-            SwallowSemicolon();
-
-            return new StepEntityInstanceSyntax(line, column, instanceId, new StepTypedParameterSyntax(keyword, parameters));
+            return new StepTypedParameterSyntax(keyword, parameters);
         }
 
         private bool IsCurrentEndSec()

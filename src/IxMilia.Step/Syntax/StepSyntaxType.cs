@@ -10,6 +10,7 @@ namespace IxMilia.Step.Syntax
         HeaderMacro,
         TypedParameter,
         EntityInstance,
+        EntityInstanceReference,
         Integer,
         Real,
         List,

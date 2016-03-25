@@ -23,6 +23,9 @@
     <Compile Include="Entities\StepEntity.cs" />
     <Compile Include="Entities\StepEntityType.cs" />
     <Compile Include="Entities\StepTriple.cs" />
+    <Compile Include="Entities\StepVector.cs" />
+    <Compile Include="StepBinder.cs" />
+    <Compile Include="StepBoundEntity.cs" />
     <Compile Include="StepFile.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="StepLexer.cs" />
@@ -31,6 +34,7 @@
     <Compile Include="StepReadException.cs" />
     <Compile Include="StepTokenizer.cs" />
     <Compile Include="Syntax\StepDataSectionSyntax.cs" />
+    <Compile Include="Syntax\StepEntityInstanceReferenceSyntax.cs" />
     <Compile Include="Syntax\StepEntityInstanceSyntax.cs" />
     <Compile Include="Syntax\StepFileSyntax.cs" />
     <Compile Include="Syntax\StepHeaderMacroSyntax.cs" />

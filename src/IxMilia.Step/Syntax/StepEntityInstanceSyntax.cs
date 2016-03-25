@@ -1,5 +1,7 @@
 ﻿// Copyright (c) IxMilia.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
+using IxMilia.Step.Tokens;
+
 namespace IxMilia.Step.Syntax
 {
     internal class StepEntityInstanceSyntax : StepSyntax
@@ -9,10 +11,10 @@ namespace IxMilia.Step.Syntax
         public int Id { get; }
         public StepTypedParameterSyntax SimpleEntityInstance { get; }
 
-        public StepEntityInstanceSyntax(int line, int column, int id, StepTypedParameterSyntax entityInstance)
-            : base(line, column)
+        public StepEntityInstanceSyntax(StepEntityInstanceToken instanceId, StepTypedParameterSyntax entityInstance)
+            : base(instanceId.Line, instanceId.Column)
         {
-            Id = id;
+            Id = instanceId.Id;
             SimpleEntityInstance = entityInstance;
         }
     }

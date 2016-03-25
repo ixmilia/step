@@ -1,5 +1,6 @@
 ﻿// Copyright (c) IxMilia.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using IxMilia.Step.Entities;
@@ -27,14 +28,24 @@ namespace IxMilia.Step
                 ApplyHeaderMacro(headerMacro);
             }
 
+            var entityMap = new Dictionary<int, StepEntity>();
+            var binder = new StepBinder(entityMap);
             foreach (var entityInstance in fileSyntax.Data.EntityInstances)
             {
-                var entity = StepEntity.FromTypedParameter(entityInstance.SimpleEntityInstance);
+                if (entityMap.ContainsKey(entityInstance.Id))
+                {
+                    throw new StepReadException("Duplicate entity instance", entityInstance.Line, entityInstance.Column);
+                }
+
+                var entity = StepEntity.FromTypedParameter(binder, entityInstance.SimpleEntityInstance);
                 if (entity != null)
                 {
+                    entityMap.Add(entityInstance.Id, entity);
                     _file.Entities.Add(entity);
                 }
             }
+
+            binder.BindRemainingValues();
 
             return _file;
         }
