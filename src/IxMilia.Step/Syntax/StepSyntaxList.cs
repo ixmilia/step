@@ -3,13 +3,15 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace IxMilia.Step
+namespace IxMilia.Step.Syntax
 {
-    public class StepValueList : StepValue
+    internal class StepSyntaxList : StepSyntax
     {
-        public List<StepValue> Values { get; }
+        public override StepSyntaxType SyntaxType => StepSyntaxType.List;
 
-        public StepValueList(IEnumerable<StepValue> values, int line, int column)
+        public List<StepSyntax> Values { get; }
+
+        public StepSyntaxList(int line, int column, IEnumerable<StepSyntax> values)
             : base(line, column)
         {
             Values = values.ToList();

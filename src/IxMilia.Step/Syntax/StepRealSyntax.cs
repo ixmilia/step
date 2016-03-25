@@ -2,16 +2,18 @@
 
 using IxMilia.Step.Tokens;
 
-namespace IxMilia.Step
+namespace IxMilia.Step.Syntax
 {
-    internal class StepIndividualValue : StepValue
+    internal class StepRealSyntax : StepSyntax
     {
-        public StepToken Value { get; }
+        public override StepSyntaxType SyntaxType => StepSyntaxType.Real;
 
-        public StepIndividualValue(StepToken value)
+        public double Value { get; }
+
+        public StepRealSyntax(StepRealToken value)
             : base(value.Line, value.Column)
         {
-            Value = value;
+            Value = value.Value;
         }
     }
 }

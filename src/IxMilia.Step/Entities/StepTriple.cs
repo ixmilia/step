@@ -1,5 +1,7 @@
 ﻿// Copyright (c) IxMilia.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
+using IxMilia.Step.Syntax;
+
 namespace IxMilia.Step.Entities
 {
     public abstract class StepTriple : StepEntity
@@ -23,15 +25,15 @@ namespace IxMilia.Step.Entities
             Z = z;
         }
 
-        internal static StepTriple AssignTo(StepTriple triple, StepMacro macro)
+        internal static StepTriple AssignTo(StepTriple triple, StepSyntaxList values)
         {
-            macro.Values.AssertValueListCount(2);
-            triple.Name = macro.Values.Values[0].GetStringValue();
-            var pointValues = macro.Values.Values[1].GetValueList();
-            pointValues.AssertValueListCount(triple.MinimumValueCount, 3);
-            triple.X = pointValues.GetDoubleValueOrDefault(0);
-            triple.Y = pointValues.GetDoubleValueOrDefault(1);
-            triple.Z = pointValues.GetDoubleValueOrDefault(2);
+            values.AssertListCount(2);
+            triple.Name = values.Values[0].GetStringValue();
+            var pointValues = values.Values[1].GetValueList();
+            pointValues.AssertListCount(triple.MinimumValueCount, 3);
+            triple.X = pointValues.GetRealValueOrDefault(0);
+            triple.Y = pointValues.GetRealValueOrDefault(1);
+            triple.Z = pointValues.GetRealValueOrDefault(2);
             return triple;
         }
 

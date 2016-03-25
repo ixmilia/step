@@ -1,6 +1,6 @@
 ﻿// Copyright (c) IxMilia.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
-using System.Collections.Generic;
+using IxMilia.Step.Syntax;
 
 namespace IxMilia.Step.Entities
 {
@@ -15,20 +15,16 @@ namespace IxMilia.Step.Entities
             Name = name;
         }
 
-        protected virtual void AfterEntitiesRead(Dictionary<int, StepEntity> entityMap)
-        {
-        }
-
-        internal static StepEntity FromMacro(StepMacro macro)
+        internal static StepEntity FromTypedParameter(StepTypedParameterSyntax typedParameter)
         {
             StepEntity entity;
-            switch (macro.Keyword.Value)
+            switch (typedParameter.Keyword)
             {
                 case "CARTESIAN_POINT":
-                    entity = StepCartesianPoint.CreateFromMacro(macro);
+                    entity = StepCartesianPoint.CreateFromSyntaxList(typedParameter.Parameters);
                     break;
                 case "DIRECTION":
-                    entity = StepDirection.CreateFromMacro(macro);
+                    entity = StepDirection.CreateFromSyntaxList(typedParameter.Parameters);
                     break;
                 default:
                     entity = null;
