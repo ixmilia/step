@@ -17,8 +17,8 @@ namespace IxMilia.Step.Entities
         {
         }
 
-        protected StepTriple(string name, double x, double y, double z)
-            : base(name)
+        protected StepTriple(string label, double x, double y, double z)
+            : base(label)
         {
             X = x;
             Y = y;
@@ -28,7 +28,7 @@ namespace IxMilia.Step.Entities
         internal static StepTriple AssignTo(StepTriple triple, StepSyntaxList values)
         {
             values.AssertListCount(2);
-            triple.Name = values.Values[0].GetStringValue();
+            triple.Label = values.Values[0].GetStringValue();
             var pointValues = values.Values[1].GetValueList();
             pointValues.AssertListCount(triple.MinimumValueCount, 3);
             triple.X = pointValues.GetRealValueOrDefault(0);
@@ -44,7 +44,7 @@ namespace IxMilia.Step.Entities
                 return false;
             }
 
-            return EntityType == other.EntityType && X == other.X && Y == other.Y && Z == other.Z && Name == other.Name;
+            return EntityType == other.EntityType && X == other.X && Y == other.Y && Z == other.Z && Label == other.Label;
         }
 
         public override bool Equals(object obj)

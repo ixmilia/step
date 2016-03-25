@@ -30,8 +30,8 @@ namespace IxMilia.Step.Entities
         {
         }
 
-        public StepVector(string name, StepDirection direction, double length)
-            : base(name)
+        public StepVector(string label, StepDirection direction, double length)
+            : base(label)
         {
             Direction = direction;
             Length = length;
@@ -41,7 +41,7 @@ namespace IxMilia.Step.Entities
         {
             var vector = new StepVector();
             syntaxList.AssertListCount(3);
-            vector.Name = syntaxList.Values[0].GetStringValue();
+            vector.Label = syntaxList.Values[0].GetStringValue();
             binder.BindValue(syntaxList.Values[1], v => vector.Direction = v.AsType<StepDirection>());
             vector.Length = syntaxList.Values[2].GetRealVavlue();
             return vector;

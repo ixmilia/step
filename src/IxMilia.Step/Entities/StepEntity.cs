@@ -8,11 +8,11 @@ namespace IxMilia.Step.Entities
     {
         public abstract StepEntityType EntityType { get; }
 
-        public string Name { get; set; }
+        public string Label { get; set; }
 
-        protected StepEntity(string name)
+        protected StepEntity(string label)
         {
-            Name = name;
+            Label = label;
         }
 
         internal static StepEntity FromTypedParameter(StepBinder binder, StepTypedParameterSyntax typedParameter)
@@ -25,6 +25,9 @@ namespace IxMilia.Step.Entities
                     break;
                 case "DIRECTION":
                     entity = StepDirection.CreateFromSyntaxList(typedParameter.Parameters);
+                    break;
+                case "LINE":
+                    entity = StepLine.CreateFromSyntaxList(binder, typedParameter.Parameters);
                     break;
                 case "VECTOR":
                     entity = StepVector.CreateFromSyntaxList(binder, typedParameter.Parameters);

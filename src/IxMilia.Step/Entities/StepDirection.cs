@@ -13,8 +13,8 @@ namespace IxMilia.Step.Entities
         {
         }
 
-        public StepDirection(string name, double x, double y, double z)
-            : base(name, x, y, z)
+        public StepDirection(string label, double x, double y, double z)
+            : base(label, x, y, z)
         {
         }
 

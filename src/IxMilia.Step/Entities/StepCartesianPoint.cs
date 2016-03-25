@@ -13,8 +13,8 @@ namespace IxMilia.Step.Entities
         {
         }
 
-        public StepCartesianPoint(string name, double x, double y, double z)
-            : base(name, x, y, z)
+        public StepCartesianPoint(string label, double x, double y, double z)
+            : base(label, x, y, z)
         {
         }
 

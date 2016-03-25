@@ -6,6 +6,7 @@ namespace IxMilia.Step.Entities
     {
         CartesianPoint,
         Direction,
+        Line,
         Vector
     }
 }

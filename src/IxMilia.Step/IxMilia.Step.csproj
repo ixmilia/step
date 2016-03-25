@@ -22,6 +22,7 @@
     <Compile Include="Entities\StepDirection.cs" />
     <Compile Include="Entities\StepEntity.cs" />
     <Compile Include="Entities\StepEntityType.cs" />
+    <Compile Include="Entities\StepLine.cs" />
     <Compile Include="Entities\StepTriple.cs" />
     <Compile Include="Entities\StepVector.cs" />
     <Compile Include="StepBinder.cs" />
