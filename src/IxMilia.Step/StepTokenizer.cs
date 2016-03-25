@@ -41,7 +41,8 @@ namespace IxMilia.Step
                 {
                     return null;
                 }
-                else if (_offset >= _currentLine.Length)
+
+                while (_offset >= _currentLine.Length)
                 {
                     ReadNextLine();
                     if (_currentLine == null)

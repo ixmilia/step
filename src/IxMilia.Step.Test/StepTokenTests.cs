@@ -110,5 +110,19 @@ ENDSEC;",
                 Keyword("HEADER"), Semicolon(),
                 Keyword("ENDSEC"), Semicolon());
         }
+
+        [Fact]
+        public void TokensWithEmptylines()
+        {
+            VerifyTokens(@"
+
+HEADER;
+
+ENDSEC;
+
+",
+                Keyword("HEADER"), Semicolon(),
+                Keyword("ENDSEC"), Semicolon());
+        }
     }
 }
