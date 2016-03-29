@@ -4,14 +4,14 @@ using IxMilia.Step.Tokens;
 
 namespace IxMilia.Step.Syntax
 {
-    internal class StepTypedParameterSyntax : StepSyntax
+    internal class StepSimpleEntitySyntax : StepEntitySyntax
     {
-        public override StepSyntaxType SyntaxType => StepSyntaxType.TypedParameter;
+        public override StepSyntaxType SyntaxType => StepSyntaxType.SimpleEntity;
 
         public string Keyword { get; }
         public StepSyntaxList Parameters { get; }
 
-        public StepTypedParameterSyntax(StepKeywordToken keyword, StepSyntaxList parameters)
+        public StepSimpleEntitySyntax(StepKeywordToken keyword, StepSyntaxList parameters)
             : base(keyword.Line, keyword.Column)
         {
             Keyword = keyword.Value;

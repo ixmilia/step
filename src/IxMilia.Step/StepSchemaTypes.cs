@@ -110,58 +110,83 @@ namespace IxMilia.Step
             }
         }
 
-        public static StepSchemaTypes SchemaTypeFromName(string schemaName)
+        public static bool TryGetSchemaTypeFromName(string schemaName, out StepSchemaTypes schemaType)
         {
             switch (schemaName)
             {
                 case AssociativeDraghtingText:
-                    return StepSchemaTypes.AssociativeDraghting;
+                    schemaType = StepSchemaTypes.AssociativeDraghting;
+                    break;
                 case AutomotiveDesignText:
-                    return StepSchemaTypes.AutomotiveDesign;
+                    schemaType = StepSchemaTypes.AutomotiveDesign;
+                    break;
                 case BuildingDesignText:
-                    return StepSchemaTypes.BuildingDeisgn;
+                    schemaType = StepSchemaTypes.BuildingDeisgn;
+                    break;
                 case CastPartsText:
-                    return StepSchemaTypes.CastParts;
+                    schemaType = StepSchemaTypes.CastParts;
+                    break;
                 case ConfigControlDesignText:
                 case ConfigurationControlled3DDesignText:
-                    return StepSchemaTypes.ConfigControlDesign;
+                    schemaType = StepSchemaTypes.ConfigControlDesign;
+                    break;
                 case DimensionalInspectionText:
-                    return StepSchemaTypes.DimensionalInspectionSchema;
+                    schemaType = StepSchemaTypes.DimensionalInspectionSchema;
+                    break;
                 case ElectronicAssemblyInterconnectText:
-                    return StepSchemaTypes.ElectronicAssemblyInterconnect;
+                    schemaType = StepSchemaTypes.ElectronicAssemblyInterconnect;
+                    break;
                 case EngineeringPropertiesText:
-                    return StepSchemaTypes.EngineeringProperties;
+                    schemaType = StepSchemaTypes.EngineeringProperties;
+                    break;
                 case ExplicitDraughtingText:
-                    return StepSchemaTypes.ExplicitDraughting;
+                    schemaType = StepSchemaTypes.ExplicitDraughting;
+                    break;
                 case FeatureBasedProcessPlanningText:
-                    return StepSchemaTypes.FeatureBasedProcessPlanning;
+                    schemaType = StepSchemaTypes.FeatureBasedProcessPlanning;
+                    break;
                 case FunctionalDataAndSchematicsText:
-                    return StepSchemaTypes.FunctionalDataAndSchematics;
+                    schemaType = StepSchemaTypes.FunctionalDataAndSchematics;
+                    break;
                 case FurnitureCatalogAndInteriorDesignText:
-                    return StepSchemaTypes.FurnitureCatalogAndInteriorDesign;
+                    schemaType = StepSchemaTypes.FurnitureCatalogAndInteriorDesign;
+                    break;
                 case IntegratedCNCText:
-                    return StepSchemaTypes.IntegratedCNC;
+                    schemaType = StepSchemaTypes.IntegratedCNC;
+                    break;
                 case ManagedModelBased3DEngineeringText:
-                    return StepSchemaTypes.ManagedModelBased3DEngineering;
+                    schemaType = StepSchemaTypes.ManagedModelBased3DEngineering;
+                    break;
                 case PlantSpatialConfigurationText:
-                    return StepSchemaTypes.PlantSpatialConfiguration;
+                    schemaType = StepSchemaTypes.PlantSpatialConfiguration;
+                    break;
                 case ProcessPlanningText:
-                    return StepSchemaTypes.ProcessPlanning;
+                    schemaType = StepSchemaTypes.ProcessPlanning;
+                    break;
                 case ProductLifeCycleSupportText:
-                    return StepSchemaTypes.ProductLifeCycleSupport;
+                    schemaType = StepSchemaTypes.ProductLifeCycleSupport;
+                    break;
                 case ShipArrangementText:
-                    return StepSchemaTypes.ShipArrangement;
+                    schemaType = StepSchemaTypes.ShipArrangement;
+                    break;
                 case ShipMouldedFormText:
-                    return StepSchemaTypes.ShipMouldedForm;
+                    schemaType = StepSchemaTypes.ShipMouldedForm;
+                    break;
                 case ShipStructuresText:
-                    return StepSchemaTypes.ShipStructures;
+                    schemaType = StepSchemaTypes.ShipStructures;
+                    break;
                 case StructuralAnalysisDesignText:
-                    return StepSchemaTypes.StructuralAnalysisDesign;
+                    schemaType = StepSchemaTypes.StructuralAnalysisDesign;
+                    break;
                 case TechnicalDataPackagingText:
-                    return StepSchemaTypes.TechnicalDataPackaging;
+                    schemaType = StepSchemaTypes.TechnicalDataPackaging;
+                    break;
                 default:
-                    throw new ArgumentException($"Unsupported schema name '{schemaName}'", nameof(schemaName));
+                    schemaType = default(StepSchemaTypes);
+                    return false;
             }
+
+            return true;
         }
     }
 }

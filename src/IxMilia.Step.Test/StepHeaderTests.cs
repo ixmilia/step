@@ -28,6 +28,12 @@ namespace IxMilia.Step.Test
             Assert.Equal(expected, actual);
         }
 
+        private void AssertFileContains(StepFile file, string expected)
+        {
+            var actual = file.GetContentsAsString();
+            Assert.Contains(expected, actual);
+        }
+
         [Fact]
         public void FileDescriptionTest()
         {
@@ -109,6 +115,22 @@ DATA;
 ENDSEC;
 END-ISO-10303-21;
 ".TrimStart());
+        }
+
+        [Fact]
+        public void ReadHeaderWithUnsupportedSchemaTest()
+        {
+            var file = ReadFileFromHeader(@"FILE_SCHEMA(('EXPLICIT_DRAUGHTING','UNSUPPORTED_SCHEMA'));");
+            Assert.Equal(1, file.Schemas.Count);
+            Assert.Equal(1, file.UnsupportedSchemas.Count);
+        }
+
+        [Fact]
+        public void WriteHeaderWithUnsupportedSchemaTest()
+        {
+            var file = new StepFile();
+            file.UnsupportedSchemas.Add("UNSUPPORTED_SCHEMA");
+            AssertFileContains(file, "FILE_SCHEMA(('UNSUPPORTED_SCHEMA'));");
         }
     }
 }

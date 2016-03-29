@@ -93,9 +93,17 @@ namespace IxMilia.Step
         private void ApplyFileSchema(StepSyntaxList valueList)
         {
             valueList.AssertListCount(1);
-            foreach (var schemaType in valueList.Values[0].GetValueList().Values.Select(v => StepSchemaTypeExtensions.SchemaTypeFromName(v.GetStringValue())))
+            foreach (var schemaName in valueList.Values[0].GetValueList().Values.Select(v => v.GetStringValue()))
             {
-                _file.Schemas.Add(schemaType);
+                StepSchemaTypes schemaType;
+                if (StepSchemaTypeExtensions.TryGetSchemaTypeFromName(schemaName, out schemaType))
+                {
+                    _file.Schemas.Add(schemaType);
+                }
+                else
+                {
+                    _file.UnsupportedSchemas.Add(schemaName);
+                }
             }
         }
     }

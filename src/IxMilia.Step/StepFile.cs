@@ -34,6 +34,7 @@ namespace IxMilia.Step
 
         // FILE_SCHEMA values
         public HashSet<StepSchemaTypes> Schemas { get; }
+        public List<string> UnsupportedSchemas { get; }
 
         public List<StepEntity> Entities { get; }
 
@@ -41,6 +42,7 @@ namespace IxMilia.Step
         {
             Timestamp = DateTime.Now;
             Schemas = new HashSet<StepSchemaTypes>();
+            UnsupportedSchemas = new List<string>();
             Entities = new List<StepEntity>();
         }
 

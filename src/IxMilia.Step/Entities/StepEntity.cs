@@ -15,26 +15,31 @@ namespace IxMilia.Step.Entities
             Label = label;
         }
 
-        internal static StepEntity FromTypedParameter(StepBinder binder, StepTypedParameterSyntax typedParameter)
+        internal static StepEntity FromTypedParameter(StepBinder binder, StepEntitySyntax entitySyntax)
         {
-            StepEntity entity;
-            switch (typedParameter.Keyword)
+            StepEntity entity = null;
+            if (entitySyntax is StepSimpleEntitySyntax)
             {
-                case "CARTESIAN_POINT":
-                    entity = StepCartesianPoint.CreateFromSyntaxList(typedParameter.Parameters);
-                    break;
-                case "DIRECTION":
-                    entity = StepDirection.CreateFromSyntaxList(typedParameter.Parameters);
-                    break;
-                case "LINE":
-                    entity = StepLine.CreateFromSyntaxList(binder, typedParameter.Parameters);
-                    break;
-                case "VECTOR":
-                    entity = StepVector.CreateFromSyntaxList(binder, typedParameter.Parameters);
-                    break;
-                default:
-                    entity = null;
-                    break;
+                var simpleEntity = (StepSimpleEntitySyntax)entitySyntax;
+                switch (simpleEntity.Keyword)
+                {
+                    case "CARTESIAN_POINT":
+                        entity = StepCartesianPoint.CreateFromSyntaxList(simpleEntity.Parameters);
+                        break;
+                    case "DIRECTION":
+                        entity = StepDirection.CreateFromSyntaxList(simpleEntity.Parameters);
+                        break;
+                    case "LINE":
+                        entity = StepLine.CreateFromSyntaxList(binder, simpleEntity.Parameters);
+                        break;
+                    case "VECTOR":
+                        entity = StepVector.CreateFromSyntaxList(binder, simpleEntity.Parameters);
+                        break;
+                }
+            }
+            else
+            {
+                // TODO:
             }
 
             return entity;

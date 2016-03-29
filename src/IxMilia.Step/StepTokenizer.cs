@@ -129,6 +129,11 @@ namespace IxMilia.Step
                     Advance();
                     yield return new StepEqualsToken(tokenLine, tokenColumn);
                 }
+                else if (c == '*')
+                {
+                    Advance();
+                    yield return new StepAsteriskToken(tokenLine, tokenColumn);
+                }
                 else if (IsNumberStart(c))
                 {
                     yield return ParseNumber();

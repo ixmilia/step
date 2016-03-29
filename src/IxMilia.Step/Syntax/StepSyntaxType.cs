@@ -8,12 +8,16 @@ namespace IxMilia.Step.Syntax
         HeaderSection,
         DataSection,
         HeaderMacro,
-        TypedParameter,
+        SimpleEntity,
+        ComplexEntity,
         EntityInstance,
         EntityInstanceReference,
         Integer,
         Real,
         List,
-        String
+        String,
+        Auto,
+        Enumeration,
+        Omitted
     }
 }

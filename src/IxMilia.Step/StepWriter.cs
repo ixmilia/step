@@ -28,7 +28,11 @@ namespace IxMilia.Step
             AppendLine(StepFile.HeaderText);
             AppendLine($"{StepFile.FileDescriptionText}{ToString(SplitStringIntoParts(_file.Description), _file.ImplementationLevel)}");
             AppendLine($"{StepFile.FileNameText}{ToString(_file.Name, _file.Timestamp, SplitStringIntoParts(_file.Author), SplitStringIntoParts(_file.Organization), _file.PreprocessorVersion, _file.OriginatingSystem, _file.Authorization)}");
-            AppendLine($"{StepFile.FileSchemaText}({ToString(_file.Schemas.Select(s => s.ToSchemaName()).ToArray())})");
+            var schemas = _file.Schemas.Select(s => s.ToSchemaName())
+                .Concat(_file.UnsupportedSchemas)
+                .Cast<object>()
+                .ToArray();
+            AppendLine($"{StepFile.FileSchemaText}({ToString(schemas)})");
             AppendLine(StepFile.EndSectionText);
 
             // data section

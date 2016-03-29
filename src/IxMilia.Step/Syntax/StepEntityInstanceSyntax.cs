@@ -9,9 +9,9 @@ namespace IxMilia.Step.Syntax
         public override StepSyntaxType SyntaxType => StepSyntaxType.EntityInstance;
 
         public int Id { get; }
-        public StepTypedParameterSyntax SimpleEntityInstance { get; }
+        public StepEntitySyntax SimpleEntityInstance { get; }
 
-        public StepEntityInstanceSyntax(StepEntityInstanceToken instanceId, StepTypedParameterSyntax entityInstance)
+        public StepEntityInstanceSyntax(StepEntityInstanceToken instanceId, StepEntitySyntax entityInstance)
             : base(instanceId.Line, instanceId.Column)
         {
             Id = instanceId.Id;

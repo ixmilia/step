@@ -88,11 +88,23 @@ namespace IxMilia.Step
                     result = new StepStringSyntax((StepStringToken)Current);
                     MoveNext();
                     break;
+                case StepTokenKind.Asterisk:
+                    result = new StepAutoSyntax((StepAsteriskToken)Current);
+                    MoveNext();
+                    break;
+                case StepTokenKind.Omitted:
+                    result = new StepOmittedSyntax((StepOmittedToken)Current);
+                    MoveNext();
+                    break;
+                case StepTokenKind.Enumeration:
+                    result = new StepEnumerationValueSyntax((StepEnumerationToken)Current);
+                    MoveNext();
+                    break;
                 case StepTokenKind.LeftParen:
                     result = LexSyntaxList();
                     break;
                 case StepTokenKind.Keyword:
-                    result = LexTypedParameter();
+                    result = LexSimpleEntity();
                     break;
                 case StepTokenKind.EntityInstance:
                     result = new StepEntityInstanceReferenceSyntax((StepEntityInstanceToken)Current);
@@ -185,20 +197,64 @@ namespace IxMilia.Step
 
             SwallowEquals();
 
-            var typedParameter = LexTypedParameter();
+            AssertTokensRemain();
+            StepEntitySyntax entity = null;
+            switch (Current.Kind)
+            {
+                case StepTokenKind.Keyword:
+                    entity = LexSimpleEntity();
+                    break;
+                case StepTokenKind.LeftParen:
+                    entity = LexComplexEntity();
+                    break;
+                default:
+                    ReportError($"Expected left paren but found {Current.Kind}");
+                    break; // unreachable
+            }
+
             SwallowSemicolon();
 
-            return new StepEntityInstanceSyntax(reference, typedParameter);
+            return new StepEntityInstanceSyntax(reference, entity);
         }
 
-        private StepTypedParameterSyntax LexTypedParameter()
+        private StepSimpleEntitySyntax LexSimpleEntity()
         {
             AssertNextTokenKind(StepTokenKind.Keyword);
             var keyword = (StepKeywordToken)Current;
             MoveNext();
 
             var parameters = LexSyntaxList();
-            return new StepTypedParameterSyntax(keyword, parameters);
+            return new StepSimpleEntitySyntax(keyword, parameters);
+        }
+
+        private StepComplexEntitySyntax LexComplexEntity()
+        {
+            var entities = new List<StepSimpleEntitySyntax>();
+            var entityLine = Current.Line;
+            var entityColumn = Current.Column;
+            SwallowLeftParen();
+            entities.Add(LexSimpleEntity()); // there's always at least one
+
+            bool keepReading = true;
+            while (keepReading)
+            {
+                AssertTokensRemain();
+                switch (Current.Kind)
+                {
+                    case StepTokenKind.RightParen:
+                        SwallowRightParen();
+                        keepReading = false;
+                        break;
+                    case StepTokenKind.Keyword:
+                        entities.Add(LexSimpleEntity());
+                        break;
+                    default:
+                        ReportError($"Expected right paren or keyword but found {Current.Kind}");
+                        break; // unreachable
+                }
+            }
+
+            return new StepComplexEntitySyntax(entityLine, entityColumn, entities);
         }
 
         private bool IsCurrentEndSec()
@@ -231,6 +287,11 @@ namespace IxMilia.Step
         private void SwallowLeftParen()
         {
             SwallowToken(StepTokenKind.LeftParen);
+        }
+
+        private void SwallowRightParen()
+        {
+            SwallowToken(StepTokenKind.RightParen);
         }
 
         private void SwallowEquals()

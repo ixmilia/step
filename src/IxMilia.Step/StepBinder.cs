@@ -20,9 +20,9 @@ namespace IxMilia.Step
 
         public void BindValue(StepSyntax syntax, Action<StepBoundEntity> bindAction)
         {
-            if (syntax is StepTypedParameterSyntax)
+            if (syntax is StepSimpleEntitySyntax)
             {
-                var typedParameter = (StepTypedParameterSyntax)syntax;
+                var typedParameter = (StepSimpleEntitySyntax)syntax;
                 var entity = StepEntity.FromTypedParameter(this, typedParameter);
                 var boundEntity = new StepBoundEntity(entity, syntax);
                 bindAction(boundEntity);

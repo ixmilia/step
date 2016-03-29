@@ -18,6 +18,7 @@ namespace IxMilia.Step.Tokens
         RightParen,
         Comma,
         Equals,
+        Asterisk,
         Keyword
     }
 }
