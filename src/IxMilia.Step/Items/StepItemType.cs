@@ -7,6 +7,7 @@ namespace IxMilia.Step.Items
     public enum StepItemType
     {
         AxisPlacement2D,
+        AxisPlacement3D,
         CartesianPoint,
         Circle,
         Direction,
@@ -17,7 +18,8 @@ namespace IxMilia.Step.Items
 
     internal static class StepItemTypeExtensions
     {
-        public const string AxisPlacement2DText = "AXIS2_PLACEMENT_2D";
+        public const string Axis2Placement2DText = "AXIS2_PLACEMENT_2D";
+        public const string Axis2Placement3DText = "AXIS2_PLACEMENT_3D";
         public const string CartesianPointText = "CARTESIAN_POINT";
         public const string CircleText = "CIRCLE";
         public const string DirectionText = "DIRECTION";
@@ -30,7 +32,9 @@ namespace IxMilia.Step.Items
             switch (type)
             {
                 case StepItemType.AxisPlacement2D:
-                    return AxisPlacement2DText;
+                    return Axis2Placement2DText;
+                case StepItemType.AxisPlacement3D:
+                    return Axis2Placement2DText;
                 case StepItemType.CartesianPoint:
                     return CartesianPointText;
                 case StepItemType.Circle:

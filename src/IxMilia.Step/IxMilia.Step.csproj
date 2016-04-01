@@ -18,7 +18,9 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' " />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' " />
   <ItemGroup>
-    <Compile Include="Items\StepAxisPlacement2D.cs" />
+    <Compile Include="Items\StepAxis2Placement.cs" />
+    <Compile Include="Items\StepAxis2Placement3D.cs" />
+    <Compile Include="Items\StepAxis2Placement2D.cs" />
     <Compile Include="Items\StepCartesianPoint.cs" />
     <Compile Include="Items\StepCircle.cs" />
     <Compile Include="Items\StepConic.cs" />

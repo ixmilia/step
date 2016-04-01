@@ -10,9 +10,9 @@ namespace IxMilia.Step.Items
     {
         public override StepItemType ItemType => StepItemType.Circle;
 
-        private StepAxisPlacement2D _position;
+        private StepAxis2Placement _position;
 
-        public StepAxisPlacement2D Position
+        public StepAxis2Placement Position
         {
             get { return _position; }
             set
@@ -33,7 +33,7 @@ namespace IxMilia.Step.Items
         {
         }
 
-        public StepCircle(string label, StepAxisPlacement2D position, double radius)
+        public StepCircle(string label, StepAxis2Placement position, double radius)
             : base(label)
         {
             Position = position;
@@ -61,7 +61,7 @@ namespace IxMilia.Step.Items
             var circle = new StepCircle();
             syntaxList.AssertListCount(3);
             circle.Name = syntaxList.Values[0].GetStringValue();
-            binder.BindValue(syntaxList.Values[1], v => circle.Position = v.AsType<StepAxisPlacement2D>());
+            binder.BindValue(syntaxList.Values[1], v => circle.Position = v.AsType<StepAxis2Placement>());
             circle.Radius = syntaxList.Values[2].GetRealVavlue();
             return circle;
         }

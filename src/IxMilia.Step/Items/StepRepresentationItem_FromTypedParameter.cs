@@ -14,8 +14,11 @@ namespace IxMilia.Step.Items
                 var simpleitem = (StepSimpleItemSyntax)itemSyntax;
                 switch (simpleitem.Keyword)
                 {
-                    case StepItemTypeExtensions.AxisPlacement2DText:
-                        item = StepAxisPlacement2D.CreateFromSyntaxList(binder, simpleitem.Parameters);
+                    case StepItemTypeExtensions.Axis2Placement2DText:
+                        item = StepAxis2Placement2D.CreateFromSyntaxList(binder, simpleitem.Parameters);
+                        break;
+                    case StepItemTypeExtensions.Axis2Placement3DText:
+                        item = StepAxis2Placement3D.CreateFromSyntaxList(binder, simpleitem.Parameters);
                         break;
                     case StepItemTypeExtensions.CartesianPointText:
                         item = StepCartesianPoint.CreateFromSyntaxList(simpleitem.Parameters);

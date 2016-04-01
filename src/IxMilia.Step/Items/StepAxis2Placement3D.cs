@@ -6,12 +6,13 @@ using IxMilia.Step.Syntax;
 
 namespace IxMilia.Step.Items
 {
-    public class StepAxisPlacement2D : StepPlacement
+    public class StepAxis2Placement3D : StepAxis2Placement
     {
-        public override StepItemType ItemType => StepItemType.AxisPlacement2D;
+        public override StepItemType ItemType => StepItemType.AxisPlacement3D;
 
         private StepCartesianPoint _location;
-        private StepDirection _direction;
+        private StepDirection _axis;
+        private StepDirection _refDirection;
 
         public StepCartesianPoint Location
         {
@@ -27,9 +28,9 @@ namespace IxMilia.Step.Items
             }
         }
 
-        public StepDirection Direction
+        public StepDirection Axis
         {
-            get { return _direction; }
+            get { return _axis; }
             set
             {
                 if (value == null)
@@ -37,26 +38,42 @@ namespace IxMilia.Step.Items
                     throw new ArgumentNullException();
                 }
 
-                _direction = value;
+                _axis = value;
             }
         }
 
-        private StepAxisPlacement2D()
+        public StepDirection RefDirection
+        {
+            get { return _refDirection; }
+            set
+            {
+                if (value == null)
+                {
+                    throw new ArgumentNullException();
+                }
+
+                _refDirection = value;
+            }
+        }
+
+        private StepAxis2Placement3D()
             : base(string.Empty)
         {
         }
 
-        public StepAxisPlacement2D(string label, StepCartesianPoint location, StepDirection direction)
-            : base(label)
+        public StepAxis2Placement3D(string name, StepCartesianPoint location, StepDirection axis, StepDirection refDirection)
+            : base(name)
         {
             Location = location;
-            Direction = direction;
+            Axis = axis;
+            RefDirection = refDirection;
         }
 
         internal override IEnumerable<StepRepresentationItem> GetReferencedItems()
         {
             yield return Location;
-            yield return Direction;
+            yield return Axis;
+            yield return RefDirection;
         }
 
         internal override IEnumerable<StepSyntax> GetParameters(StepWriter writer)
@@ -67,16 +84,18 @@ namespace IxMilia.Step.Items
             }
 
             yield return writer.GetItemSyntax(Location);
-            yield return writer.GetItemSyntax(Direction);
+            yield return writer.GetItemSyntax(Axis);
+            yield return writer.GetItemSyntax(RefDirection);
         }
 
-        internal static StepAxisPlacement2D CreateFromSyntaxList(StepBinder binder, StepSyntaxList syntaxList)
+        internal static StepAxis2Placement3D CreateFromSyntaxList(StepBinder binder, StepSyntaxList syntaxList)
         {
-            var axis = new StepAxisPlacement2D();
-            syntaxList.AssertListCount(3);
+            var axis = new StepAxis2Placement3D();
+            syntaxList.AssertListCount(4);
             axis.Name = syntaxList.Values[0].GetStringValue();
             binder.BindValue(syntaxList.Values[1], v => axis.Location = v.AsType<StepCartesianPoint>());
-            binder.BindValue(syntaxList.Values[2], v => axis.Direction = v.AsType<StepDirection>());
+            binder.BindValue(syntaxList.Values[2], v => axis.Axis = v.AsType<StepDirection>());
+            binder.BindValue(syntaxList.Values[3], v => axis.RefDirection = v.AsType<StepDirection>());
             return axis;
         }
     }

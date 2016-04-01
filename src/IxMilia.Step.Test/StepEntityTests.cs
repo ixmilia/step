@@ -157,15 +157,15 @@ END-ISO-10303-21;
 #4=CIRCLE('',#3,5.0);
 ");
             var circle = file.Items.OfType<StepCircle>().Single();
-            Assert.Equal(new StepCartesianPoint("", 1.0, 2.0, 3.0), circle.Position.Location);
-            Assert.Equal(new StepDirection("", 0.0, 0.0, 1.0), circle.Position.Direction);
+            Assert.Equal(new StepCartesianPoint("", 1.0, 2.0, 3.0), ((StepAxis2Placement2D)circle.Position).Location);
+            Assert.Equal(new StepDirection("", 0.0, 0.0, 1.0), ((StepAxis2Placement2D)circle.Position).RefDirection);
             Assert.Equal(5.0, circle.Radius);
         }
 
         [Fact]
         public void WriteCircleTest()
         {
-            var circle = new StepCircle("", new StepAxisPlacement2D("", new StepCartesianPoint("", 1.0, 2.0, 3.0), new StepDirection("", 0.0, 0.0, 1.0)), 5.0);
+            var circle = new StepCircle("", new StepAxis2Placement2D("", new StepCartesianPoint("", 1.0, 2.0, 3.0), new StepDirection("", 0.0, 0.0, 1.0)), 5.0);
             AssertFileContains(circle, @"
 #1=CARTESIAN_POINT('',(1.0,2.0,3.0));
 #2=DIRECTION('',(0.0,0.0,1.0));
@@ -185,7 +185,7 @@ END-ISO-10303-21;
 ");
             var ellipse = file.Items.OfType<StepEllipse>().Single();
             Assert.Equal(new StepCartesianPoint("", 1.0, 2.0, 3.0), ellipse.Position.Location);
-            Assert.Equal(new StepDirection("", 0.0, 0.0, 1.0), ellipse.Position.Direction);
+            Assert.Equal(new StepDirection("", 0.0, 0.0, 1.0), ellipse.Position.RefDirection);
             Assert.Equal(3.0, ellipse.SemiAxis1);
             Assert.Equal(4.0, ellipse.SemiAxis2);
         }
@@ -193,7 +193,7 @@ END-ISO-10303-21;
         [Fact]
         public void WriteEllipseTest()
         {
-            var ellipse = new StepEllipse("", new StepAxisPlacement2D("", new StepCartesianPoint("", 1.0, 2.0, 3.0), new StepDirection("", 0.0, 0.0, 1.0)), 3.0, 4.0);
+            var ellipse = new StepEllipse("", new StepAxis2Placement2D("", new StepCartesianPoint("", 1.0, 2.0, 3.0), new StepDirection("", 0.0, 0.0, 1.0)), 3.0, 4.0);
             AssertFileContains(ellipse, @"
 #1=CARTESIAN_POINT('',(1.0,2.0,3.0));
 #2=DIRECTION('',(0.0,0.0,1.0));
