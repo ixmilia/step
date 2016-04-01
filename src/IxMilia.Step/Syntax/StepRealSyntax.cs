@@ -10,10 +10,21 @@ namespace IxMilia.Step.Syntax
 
         public double Value { get; }
 
+        public StepRealSyntax(double value)
+            : base(-1, -1)
+        {
+            Value = value;
+        }
+
         public StepRealSyntax(StepRealToken value)
             : base(value.Line, value.Column)
         {
             Value = value.Value;
+        }
+
+        public override string ToString(StepWriter writer)
+        {
+            return writer.ToString(Value);
         }
     }
 }

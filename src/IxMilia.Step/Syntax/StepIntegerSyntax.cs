@@ -15,5 +15,10 @@ namespace IxMilia.Step.Syntax
         {
             Value = value.Value;
         }
+
+        public override string ToString(StepWriter writer)
+        {
+            return writer.ToString(Value);
+        }
     }
 }

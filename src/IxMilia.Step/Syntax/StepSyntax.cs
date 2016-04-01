@@ -14,5 +14,7 @@ namespace IxMilia.Step.Syntax
             Line = line;
             Column = column;
         }
+
+        public abstract string ToString(StepWriter writer);
     }
 }

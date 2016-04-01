@@ -1,6 +1,7 @@
 ﻿// Copyright (c) IxMilia.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
+using System.Collections.Generic;
 using IxMilia.Step.Syntax;
 
 namespace IxMilia.Step.Entities
@@ -50,6 +51,19 @@ namespace IxMilia.Step.Entities
         {
             Point = point;
             Vector = vector;
+        }
+
+        internal override IEnumerable<StepEntity> GetReferencedEntities()
+        {
+            yield return Point;
+            yield return Vector;
+        }
+
+        internal override IEnumerable<StepSyntax> GetParameters(StepWriter writer)
+        {
+            yield return new StepStringSyntax(Label);
+            yield return writer.GetEntitySyntax(Point);
+            yield return writer.GetEntitySyntax(Vector);
         }
 
         internal static StepLine CreateFromSyntaxList(StepBinder binder, StepSyntaxList syntaxList)

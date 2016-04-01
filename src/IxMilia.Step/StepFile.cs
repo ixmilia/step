@@ -63,17 +63,17 @@ namespace IxMilia.Step
             }
         }
 
-        public string GetContentsAsString()
+        public string GetContentsAsString(bool inlineReferences = false)
         {
-            var writer = new StepWriter(this);
+            var writer = new StepWriter(this, inlineReferences);
             return writer.GetContents();
         }
 
-        public void Save(Stream stream)
+        public void Save(Stream stream, bool inlineReferences = false)
         {
             using (var streamWriter = new StreamWriter(stream))
             {
-                streamWriter.Write(GetContentsAsString());
+                streamWriter.Write(GetContentsAsString(inlineReferences));
                 streamWriter.Flush();
             }
         }

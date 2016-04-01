@@ -1,10 +1,11 @@
 ﻿// Copyright (c) IxMilia.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using IxMilia.Step.Entities;
+using IxMilia.Step.Syntax;
 
 namespace IxMilia.Step
 {
@@ -12,12 +13,17 @@ namespace IxMilia.Step
     {
         private StepFile _file;
         private StringBuilder _builder;
+        private bool _inlineReferences;
+        private Dictionary<StepEntity, int> _entityMap;
+        private int _nextId;
         private const string Semicolon = ";";
 
-        public StepWriter(StepFile stepFile)
+        public StepWriter(StepFile stepFile, bool inlineReferences)
         {
             _file = stepFile;
             _builder = new StringBuilder();
+            _entityMap = new Dictionary<StepEntity, int>();
+            _inlineReferences = inlineReferences;
         }
 
         internal string GetContents()
@@ -37,6 +43,10 @@ namespace IxMilia.Step
 
             // data section
             AppendLine(StepFile.DataText);
+            foreach (var entity in _file.Entities)
+            {
+                WriteEntity(entity);
+            }
 
             AppendLine(StepFile.EndSectionText);
 
@@ -45,13 +55,61 @@ namespace IxMilia.Step
             return _builder.ToString();
         }
 
+        private int WriteEntity(StepEntity entity)
+        {
+            if (!_inlineReferences)
+            {
+                // not inlining references, need to write out entities as we see them
+                foreach (var referencedEntity in entity.GetReferencedEntities())
+                {
+                    if (!_entityMap.ContainsKey(referencedEntity))
+                    {
+                        var refid = WriteEntity(referencedEntity);
+                    }
+                }
+            }
+
+            var id = ++_nextId;
+            var syntax = GetEntitySyntax(entity, id);
+            AppendLine($"#{id}={syntax.ToString(this)}");
+            return id;
+        }
+
+        private StepSyntax GetEntitySyntax(StepEntity entity, int expectedId)
+        {
+            if (!_entityMap.ContainsKey(entity))
+            {
+                var parameters = new StepSyntaxList(-1, -1, entity.GetParameters(this));
+                var syntax = new StepSimpleEntitySyntax(entity.EntityType.GetEntityTypeString(), parameters);
+                _entityMap.Add(entity, expectedId);
+                return syntax;
+            }
+            else
+            {
+                return GetEntitySyntax(entity);
+            }
+        }
+
+        public StepSyntax GetEntitySyntax(StepEntity entity)
+        {
+            if (_inlineReferences)
+            {
+                var parameters = new StepSyntaxList(-1, -1, entity.GetParameters(this));
+                return new StepSimpleEntitySyntax(entity.EntityType.GetEntityTypeString(), parameters);
+            }
+            else
+            {
+                return new StepEntityInstanceReferenceSyntax(_entityMap[entity]);
+            }
+        }
+
         private void AppendLine(string contents)
         {
             _builder.Append(contents);
             _builder.AppendLine(Semicolon);
         }
 
-        private string ToString(object obj)
+        public string ToString(object obj)
         {
             if (obj == null)
             {
@@ -60,7 +118,7 @@ namespace IxMilia.Step
             }
             if (obj is double)
             {
-                return ((double)obj).ToString(".0");
+                return ((double)obj).ToString("0.0");
             }
             else if (obj is string)
             {

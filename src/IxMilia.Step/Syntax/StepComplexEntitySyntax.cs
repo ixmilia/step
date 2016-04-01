@@ -16,5 +16,10 @@ namespace IxMilia.Step.Syntax
         {
             Entities = entities.ToList();
         }
+
+        public override string ToString(StepWriter writer)
+        {
+            return string.Join(string.Empty, Entities.Select(e => e.ToString(writer)));
+        }
     }
 }

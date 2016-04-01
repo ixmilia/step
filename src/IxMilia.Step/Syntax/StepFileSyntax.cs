@@ -1,5 +1,7 @@
 ﻿// Copyright (c) IxMilia.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
+using System;
+
 namespace IxMilia.Step.Syntax
 {
     internal class StepFileSyntax : StepSyntax
@@ -14,6 +16,11 @@ namespace IxMilia.Step.Syntax
         {
             Header = header;
             Data = data;
+        }
+
+        public override string ToString(StepWriter writer)
+        {
+            throw new NotImplementedException();
         }
     }
 }

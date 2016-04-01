@@ -1,6 +1,7 @@
 ﻿// Copyright (c) IxMilia.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
+using System.Collections.Generic;
 using IxMilia.Step.Syntax;
 
 namespace IxMilia.Step.Entities
@@ -35,6 +36,18 @@ namespace IxMilia.Step.Entities
         {
             Direction = direction;
             Length = length;
+        }
+
+        internal override IEnumerable<StepEntity> GetReferencedEntities()
+        {
+            yield return Direction;
+        }
+
+        internal override IEnumerable<StepSyntax> GetParameters(StepWriter writer)
+        {
+            yield return new StepStringSyntax(Label);
+            yield return writer.GetEntitySyntax(Direction);
+            yield return new StepRealSyntax(Length);
         }
 
         internal static StepVector CreateFromSyntaxList(StepBinder binder, StepSyntaxList syntaxList)

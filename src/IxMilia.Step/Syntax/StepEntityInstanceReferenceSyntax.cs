@@ -10,10 +10,21 @@ namespace IxMilia.Step.Syntax
 
         public int Id { get; }
 
+        public StepEntityInstanceReferenceSyntax(int id)
+            : base(-1, -1)
+        {
+            Id = id;
+        }
+
         public StepEntityInstanceReferenceSyntax(StepEntityInstanceToken entityInstance)
             : base(entityInstance.Line, entityInstance.Column)
         {
             Id = entityInstance.Id;
+        }
+
+        public override string ToString(StepWriter writer)
+        {
+            return "#" + Id;
         }
     }
 }

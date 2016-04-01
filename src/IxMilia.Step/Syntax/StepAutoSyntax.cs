@@ -12,5 +12,10 @@ namespace IxMilia.Step.Syntax
             : base(value.Line, value.Column)
         {
         }
+
+        public override string ToString(StepWriter writer)
+        {
+            return "*";
+        }
     }
 }

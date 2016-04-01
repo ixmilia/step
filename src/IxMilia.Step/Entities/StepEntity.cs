@@ -1,5 +1,6 @@
 ﻿// Copyright (c) IxMilia.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
+using System.Collections.Generic;
 using IxMilia.Step.Syntax;
 
 namespace IxMilia.Step.Entities
@@ -23,16 +24,16 @@ namespace IxMilia.Step.Entities
                 var simpleEntity = (StepSimpleEntitySyntax)entitySyntax;
                 switch (simpleEntity.Keyword)
                 {
-                    case "CARTESIAN_POINT":
+                    case StepEntityTypeExtensions.CartesianPointText:
                         entity = StepCartesianPoint.CreateFromSyntaxList(simpleEntity.Parameters);
                         break;
-                    case "DIRECTION":
+                    case StepEntityTypeExtensions.DirectionText:
                         entity = StepDirection.CreateFromSyntaxList(simpleEntity.Parameters);
                         break;
-                    case "LINE":
+                    case StepEntityTypeExtensions.LineText:
                         entity = StepLine.CreateFromSyntaxList(binder, simpleEntity.Parameters);
                         break;
-                    case "VECTOR":
+                    case StepEntityTypeExtensions.VectorText:
                         entity = StepVector.CreateFromSyntaxList(binder, simpleEntity.Parameters);
                         break;
                 }
@@ -44,5 +45,12 @@ namespace IxMilia.Step.Entities
 
             return entity;
         }
+
+        internal virtual IEnumerable<StepEntity> GetReferencedEntities()
+        {
+            yield break;
+        }
+
+        internal abstract IEnumerable<StepSyntax> GetParameters(StepWriter writer);
     }
 }

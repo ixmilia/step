@@ -29,6 +29,12 @@ END-ISO-10303-21;
             return file.Entities.Single();
         }
 
+        private void AssertFileContains(StepFile file, string expected, bool inlineReferences = false)
+        {
+            var actual = file.GetContentsAsString(inlineReferences);
+            Assert.Contains(expected, actual.Trim());
+        }
+
         [Fact]
         public void ReadCartesianPointTest1()
         {
@@ -111,6 +117,27 @@ END-ISO-10303-21;
             Assert.Equal(new StepCartesianPoint("", 1.0, 2.0, 3.0), line.Point);
             Assert.Equal(15.0, line.Vector.Length);
             Assert.Equal(new StepDirection("", 0.0, 0.0, 1.0), line.Vector.Direction);
+        }
+
+        [Fact]
+        public void WriteLineTest()
+        {
+            var file = new StepFile();
+            file.Entities.Add(new StepLine("", new StepCartesianPoint("", 1.0, 2.0, 3.0), new StepVector("", new StepDirection("", 1.0, 0.0, 0.0), 4.0)));
+            AssertFileContains(file, @"
+#1=CARTESIAN_POINT('',(1.0,2.0,3.0));
+#2=DIRECTION('',(1.0,0.0,0.0));
+#3=VECTOR('',#2,4.0);
+#4=LINE('',#1,#3);
+");
+        }
+
+        [Fact]
+        public void WriteLineWithInlineReferencesTest()
+        {
+            var file = new StepFile();
+            file.Entities.Add(new StepLine("", new StepCartesianPoint("", 1.0, 2.0, 3.0), new StepVector("", new StepDirection("", 1.0, 0.0, 0.0), 4.0)));
+            AssertFileContains(file, "#1=LINE('',CARTESIAN_POINT('',(1.0,2.0,3.0)),VECTOR('',DIRECTION('',(1.0,0.0,0.0)),4.0));", inlineReferences: true);
         }
     }
 }
