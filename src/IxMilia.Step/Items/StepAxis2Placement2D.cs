@@ -10,37 +10,6 @@ namespace IxMilia.Step.Items
     {
         public override StepItemType ItemType => StepItemType.AxisPlacement2D;
 
-        private StepCartesianPoint _location;
-        private StepDirection _refDirection;
-
-        public StepCartesianPoint Location
-        {
-            get { return _location; }
-            set
-            {
-                if (value == null)
-                {
-                    throw new ArgumentNullException();
-                }
-
-                _location = value;
-            }
-        }
-
-        public StepDirection RefDirection
-        {
-            get { return _refDirection; }
-            set
-            {
-                if (value == null)
-                {
-                    throw new ArgumentNullException();
-                }
-
-                _refDirection = value;
-            }
-        }
-
         private StepAxis2Placement2D()
             : base(string.Empty)
         {
