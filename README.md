@@ -10,7 +10,7 @@ Open a STEP file:
 ``` C#
 using System.IO;
 using IxMilia.Step;
-using IxMilia.Step.Entities;
+using IxMilia.Step.Items;
 // ...
 
 //------------------------------------------------------------ read from a file
@@ -27,12 +27,12 @@ HEADER;
 END-ISO-103030-21;");
 //-----------------------------------------------------------------------------
 
-foreach (StepEntity entity in stepFile.Entities)
+foreach (StepRepresentationItem item in stepFile.Items)
 {
-    switch (entity.EntityType)
+    switch (item.ItemType)
     {
-        case StepEntityType.Line:
-            StepLine line = (StepLine)entity;
+        case StepItemType.Line:
+            StepLine line = (StepLine)item;
             // ...
             break;
         // ...
@@ -45,11 +45,11 @@ Save a STEP file:
 ``` C#
 using System.IO;
 using IxMilia.Step;
-using IxMilia.Step.Entities;
+using IxMilia.Step.Items;
 // ...
 
 StepFile stepFile = new StepFile();
-stepFile.Entities.Add(new StepDirection("direction-label", 1.0, 0.0, 0.0));
+stepFile.Items.Add(new StepDirection("direction-label", 1.0, 0.0, 0.0));
 // ...
 
 //------------------------------------------------------------- write to a file
@@ -57,6 +57,7 @@ using (FileStream fs = new FileStream(@"C:\Path\To\File.stp", FileMode.Create))
 {
     stepFile.Save(fs);
 }
+
 //------------------------------------------------------- or output as a string
 string contents = stepFile.GetContentsAsString();
 ```
