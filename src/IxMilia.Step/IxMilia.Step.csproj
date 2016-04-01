@@ -18,10 +18,13 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' " />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' " />
   <ItemGroup>
+    <Compile Include="Entities\StepAxisPlacement2D.cs" />
     <Compile Include="Entities\StepCartesianPoint.cs" />
+    <Compile Include="Entities\StepCircle.cs" />
     <Compile Include="Entities\StepDirection.cs" />
     <Compile Include="Entities\StepEntity.cs" />
     <Compile Include="Entities\StepEntityType.cs" />
+    <Compile Include="Entities\StepEntity_FromTypedParameter.cs" />
     <Compile Include="Entities\StepLine.cs" />
     <Compile Include="Entities\StepTriple.cs" />
     <Compile Include="Entities\StepVector.cs" />

@@ -6,7 +6,9 @@ namespace IxMilia.Step.Entities
 {
     public enum StepEntityType
     {
+        AxisPlacement2D,
         CartesianPoint,
+        Circle,
         Direction,
         Line,
         Vector
@@ -14,7 +16,9 @@ namespace IxMilia.Step.Entities
 
     internal static class StepEntityTypeExtensions
     {
+        public const string AxisPlacement2DText = "AXIS2_PLACEMENT_2D";
         public const string CartesianPointText = "CARTESIAN_POINT";
+        public const string CircleText = "CIRCLE";
         public const string DirectionText = "DIRECTION";
         public const string LineText = "LINE";
         public const string VectorText = "VECTOR";
@@ -23,8 +27,12 @@ namespace IxMilia.Step.Entities
         {
             switch (type)
             {
+                case StepEntityType.AxisPlacement2D:
+                    return AxisPlacement2DText;
                 case StepEntityType.CartesianPoint:
                     return CartesianPointText;
+                case StepEntityType.Circle:
+                    return CircleText;
                 case StepEntityType.Direction:
                     return DirectionText;
                 case StepEntityType.Line:

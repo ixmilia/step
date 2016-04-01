@@ -5,7 +5,7 @@ using IxMilia.Step.Syntax;
 
 namespace IxMilia.Step.Entities
 {
-    public abstract class StepEntity
+    public abstract partial class StepEntity
     {
         public abstract StepEntityType EntityType { get; }
 
@@ -14,36 +14,6 @@ namespace IxMilia.Step.Entities
         protected StepEntity(string label)
         {
             Label = label;
-        }
-
-        internal static StepEntity FromTypedParameter(StepBinder binder, StepEntitySyntax entitySyntax)
-        {
-            StepEntity entity = null;
-            if (entitySyntax is StepSimpleEntitySyntax)
-            {
-                var simpleEntity = (StepSimpleEntitySyntax)entitySyntax;
-                switch (simpleEntity.Keyword)
-                {
-                    case StepEntityTypeExtensions.CartesianPointText:
-                        entity = StepCartesianPoint.CreateFromSyntaxList(simpleEntity.Parameters);
-                        break;
-                    case StepEntityTypeExtensions.DirectionText:
-                        entity = StepDirection.CreateFromSyntaxList(simpleEntity.Parameters);
-                        break;
-                    case StepEntityTypeExtensions.LineText:
-                        entity = StepLine.CreateFromSyntaxList(binder, simpleEntity.Parameters);
-                        break;
-                    case StepEntityTypeExtensions.VectorText:
-                        entity = StepVector.CreateFromSyntaxList(binder, simpleEntity.Parameters);
-                        break;
-                }
-            }
-            else
-            {
-                // TODO:
-            }
-
-            return entity;
         }
 
         internal virtual IEnumerable<StepEntity> GetReferencedEntities()

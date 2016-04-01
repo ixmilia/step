@@ -35,6 +35,13 @@ END-ISO-10303-21;
             Assert.Contains(expected, actual.Trim());
         }
 
+        private void AssertFileContains(StepEntity entity, string expected)
+        {
+            var file = new StepFile();
+            file.Entities.Add(entity);
+            AssertFileContains(file, expected);
+        }
+
         [Fact]
         public void ReadCartesianPointTest1()
         {
@@ -138,6 +145,33 @@ END-ISO-10303-21;
             var file = new StepFile();
             file.Entities.Add(new StepLine("", new StepCartesianPoint("", 1.0, 2.0, 3.0), new StepVector("", new StepDirection("", 1.0, 0.0, 0.0), 4.0)));
             AssertFileContains(file, "#1=LINE('',CARTESIAN_POINT('',(1.0,2.0,3.0)),VECTOR('',DIRECTION('',(1.0,0.0,0.0)),4.0));", inlineReferences: true);
+        }
+
+        [Fact]
+        public void ReadCircleTest()
+        {
+            var file = ReadFile(@"
+#1=CARTESIAN_POINT('',(1.0,2.0,3.0));
+#2=DIRECTION('',(0.0,0.0,1.0));
+#3=AXIS2_PLACEMENT_2D('',#1,#2);
+#4=CIRCLE('',#3,5.0);
+");
+            var circle = file.Entities.OfType<StepCircle>().Single();
+            Assert.Equal(new StepCartesianPoint("", 1.0, 2.0, 3.0), circle.Position.Location);
+            Assert.Equal(new StepDirection("", 0.0, 0.0, 1.0), circle.Position.Direction);
+            Assert.Equal(5.0, circle.Radius);
+        }
+
+        [Fact]
+        public void WriteCircleTest()
+        {
+            var circle = new StepCircle("", new StepAxisPlacement2D("", new StepCartesianPoint("", 1.0, 2.0, 3.0), new StepDirection("", 0.0, 0.0, 1.0)), 5.0);
+            AssertFileContains(circle, @"
+#1=CARTESIAN_POINT('',(1.0,2.0,3.0));
+#2=DIRECTION('',(0.0,0.0,1.0));
+#3=AXIS2_PLACEMENT_2D('',#1,#2);
+#4=CIRCLE('',#3,5.0);
+");
         }
     }
 }
