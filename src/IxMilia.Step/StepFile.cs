@@ -3,7 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using IxMilia.Step.Entities;
+using IxMilia.Step.Items;
 
 namespace IxMilia.Step
 {
@@ -36,14 +36,14 @@ namespace IxMilia.Step
         public HashSet<StepSchemaTypes> Schemas { get; }
         public List<string> UnsupportedSchemas { get; }
 
-        public List<StepEntity> Entities { get; }
+        public List<StepRepresentationItem> Items { get; }
 
         public StepFile()
         {
             Timestamp = DateTime.Now;
             Schemas = new HashSet<StepSchemaTypes>();
             UnsupportedSchemas = new List<string>();
-            Entities = new List<StepEntity>();
+            Items = new List<StepRepresentationItem>();
         }
 
         public static StepFile Load(Stream stream)

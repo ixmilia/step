@@ -18,18 +18,23 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' " />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' " />
   <ItemGroup>
-    <Compile Include="Entities\StepAxisPlacement2D.cs" />
-    <Compile Include="Entities\StepCartesianPoint.cs" />
-    <Compile Include="Entities\StepCircle.cs" />
-    <Compile Include="Entities\StepDirection.cs" />
-    <Compile Include="Entities\StepEntity.cs" />
-    <Compile Include="Entities\StepEntityType.cs" />
-    <Compile Include="Entities\StepEntity_FromTypedParameter.cs" />
-    <Compile Include="Entities\StepLine.cs" />
-    <Compile Include="Entities\StepTriple.cs" />
-    <Compile Include="Entities\StepVector.cs" />
+    <Compile Include="Items\StepAxisPlacement2D.cs" />
+    <Compile Include="Items\StepCartesianPoint.cs" />
+    <Compile Include="Items\StepCircle.cs" />
+    <Compile Include="Items\StepConic.cs" />
+    <Compile Include="Items\StepCurve.cs" />
+    <Compile Include="Items\StepDirection.cs" />
+    <Compile Include="Items\StepItemType.cs" />
+    <Compile Include="Items\StepPlacement.cs" />
+    <Compile Include="Items\StepRepresentationItem_FromTypedParameter.cs" />
+    <Compile Include="Items\StepGeometricRepresentationItem.cs" />
+    <Compile Include="Items\StepLine.cs" />
+    <Compile Include="Items\StepPoint.cs" />
+    <Compile Include="Items\StepRepresentationItem.cs" />
+    <Compile Include="Items\StepTriple.cs" />
+    <Compile Include="Items\StepVector.cs" />
     <Compile Include="StepBinder.cs" />
-    <Compile Include="StepBoundEntity.cs" />
+    <Compile Include="StepBoundItem.cs" />
     <Compile Include="StepFile.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="StepLexer.cs" />
@@ -39,11 +44,11 @@
     <Compile Include="StepTokenizer.cs" />
     <Compile Include="StepWriter.cs" />
     <Compile Include="Syntax\StepAutoSyntax.cs" />
-    <Compile Include="Syntax\StepComplexEntitySyntax.cs" />
+    <Compile Include="Syntax\StepComplexItemSyntax.cs" />
     <Compile Include="Syntax\StepDataSectionSyntax.cs" />
     <Compile Include="Syntax\StepEntityInstanceReferenceSyntax.cs" />
     <Compile Include="Syntax\StepEntityInstanceSyntax.cs" />
-    <Compile Include="Syntax\StepEntitySyntax.cs" />
+    <Compile Include="Syntax\StepItemSyntax.cs" />
     <Compile Include="Syntax\StepEnumerationValueSyntax.cs" />
     <Compile Include="Syntax\StepFileSyntax.cs" />
     <Compile Include="Syntax\StepHeaderMacroSyntax.cs" />
@@ -56,7 +61,7 @@
     <Compile Include="Syntax\StepSyntaxExtensions.cs" />
     <Compile Include="Syntax\StepSyntaxList.cs" />
     <Compile Include="Syntax\StepSyntaxType.cs" />
-    <Compile Include="Syntax\StepSimpleEntitySyntax.cs" />
+    <Compile Include="Syntax\StepSimpleItemSyntax.cs" />
     <Compile Include="Tokens\StepAsteriskToken.cs" />
     <Compile Include="Tokens\StepCommaToken.cs" />
     <Compile Include="Tokens\StepConstantValueToken.cs" />

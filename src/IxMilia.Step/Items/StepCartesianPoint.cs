@@ -2,11 +2,11 @@
 
 using IxMilia.Step.Syntax;
 
-namespace IxMilia.Step.Entities
+namespace IxMilia.Step.Items
 {
     public class StepCartesianPoint : StepTriple
     {
-        public override StepEntityType EntityType => StepEntityType.CartesianPoint;
+        public override StepItemType ItemType => StepItemType.CartesianPoint;
         protected override int MinimumValueCount => 1;
 
         private StepCartesianPoint()

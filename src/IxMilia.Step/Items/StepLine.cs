@@ -4,11 +4,11 @@ using System;
 using System.Collections.Generic;
 using IxMilia.Step.Syntax;
 
-namespace IxMilia.Step.Entities
+namespace IxMilia.Step.Items
 {
-    public class StepLine : StepEntity
+    public class StepLine : StepCurve
     {
-        public override StepEntityType EntityType => StepEntityType.Line;
+        public override StepItemType ItemType => StepItemType.Line;
 
         private StepCartesianPoint _point;
         private StepVector _vector;
@@ -53,7 +53,7 @@ namespace IxMilia.Step.Entities
             Vector = vector;
         }
 
-        internal override IEnumerable<StepEntity> GetReferencedEntities()
+        internal override IEnumerable<StepRepresentationItem> GetReferencedItems()
         {
             yield return Point;
             yield return Vector;
@@ -61,16 +61,20 @@ namespace IxMilia.Step.Entities
 
         internal override IEnumerable<StepSyntax> GetParameters(StepWriter writer)
         {
-            yield return new StepStringSyntax(Label);
-            yield return writer.GetEntitySyntax(Point);
-            yield return writer.GetEntitySyntax(Vector);
+            foreach (var parameter in base.GetParameters(writer))
+            {
+                yield return parameter;
+            }
+
+            yield return writer.GetItemSyntax(Point);
+            yield return writer.GetItemSyntax(Vector);
         }
 
         internal static StepLine CreateFromSyntaxList(StepBinder binder, StepSyntaxList syntaxList)
         {
             var line = new StepLine();
             syntaxList.AssertListCount(3);
-            line.Label = syntaxList.Values[0].GetStringValue();
+            line.Name = syntaxList.Values[0].GetStringValue();
             binder.BindValue(syntaxList.Values[1], v => line.Point = v.AsType<StepCartesianPoint>());
             binder.BindValue(syntaxList.Values[2], v => line.Vector = v.AsType<StepVector>());
             return line;

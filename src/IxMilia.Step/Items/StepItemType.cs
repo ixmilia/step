@@ -2,9 +2,9 @@
 
 using System;
 
-namespace IxMilia.Step.Entities
+namespace IxMilia.Step.Items
 {
-    public enum StepEntityType
+    public enum StepItemType
     {
         AxisPlacement2D,
         CartesianPoint,
@@ -14,7 +14,7 @@ namespace IxMilia.Step.Entities
         Vector
     }
 
-    internal static class StepEntityTypeExtensions
+    internal static class StepItemTypeExtensions
     {
         public const string AxisPlacement2DText = "AXIS2_PLACEMENT_2D";
         public const string CartesianPointText = "CARTESIAN_POINT";
@@ -23,24 +23,24 @@ namespace IxMilia.Step.Entities
         public const string LineText = "LINE";
         public const string VectorText = "VECTOR";
 
-        public static string GetEntityTypeString(this StepEntityType type)
+        public static string GetItemTypeString(this StepItemType type)
         {
             switch (type)
             {
-                case StepEntityType.AxisPlacement2D:
+                case StepItemType.AxisPlacement2D:
                     return AxisPlacement2DText;
-                case StepEntityType.CartesianPoint:
+                case StepItemType.CartesianPoint:
                     return CartesianPointText;
-                case StepEntityType.Circle:
+                case StepItemType.Circle:
                     return CircleText;
-                case StepEntityType.Direction:
+                case StepItemType.Direction:
                     return DirectionText;
-                case StepEntityType.Line:
+                case StepItemType.Line:
                     return LineText;
-                case StepEntityType.Vector:
+                case StepItemType.Vector:
                     return VectorText;
                 default:
-                    throw new InvalidOperationException("Unexpected entity type " + type);
+                    throw new InvalidOperationException("Unexpected item type " + type);
             }
         }
     }

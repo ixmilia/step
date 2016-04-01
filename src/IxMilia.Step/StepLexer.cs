@@ -104,7 +104,7 @@ namespace IxMilia.Step
                     result = LexSyntaxList();
                     break;
                 case StepTokenKind.Keyword:
-                    result = LexSimpleEntity();
+                    result = LexSimpleItem();
                     break;
                 case StepTokenKind.EntityInstance:
                     result = new StepEntityInstanceReferenceSyntax((StepEntityInstanceToken)Current);
@@ -175,18 +175,18 @@ namespace IxMilia.Step
             var dataLine = Current.Line;
             var dataColumn = Current.Column;
             SwallowKeywordAndSemicolon(StepFile.DataText);
-            var entityInstsances = new List<StepEntityInstanceSyntax>();
+            var itemInstsances = new List<StepEntityInstanceSyntax>();
             while (TokensRemain() && Current.Kind == StepTokenKind.EntityInstance)
             {
-                var entityInstance = LexEntityInstance();
-                entityInstsances.Add(entityInstance);
+                var itemInstance = LexItemInstance();
+                itemInstsances.Add(itemInstance);
             }
 
             SwallowKeywordAndSemicolon(StepFile.EndSectionText);
-            return new StepDataSectionSyntax(dataLine, dataColumn, entityInstsances);
+            return new StepDataSectionSyntax(dataLine, dataColumn, itemInstsances);
         }
 
-        private StepEntityInstanceSyntax LexEntityInstance()
+        private StepEntityInstanceSyntax LexItemInstance()
         {
             var line = Current.Line;
             var column = Current.Column;
@@ -198,14 +198,14 @@ namespace IxMilia.Step
             SwallowEquals();
 
             AssertTokensRemain();
-            StepEntitySyntax entity = null;
+            StepItemSyntax item = null;
             switch (Current.Kind)
             {
                 case StepTokenKind.Keyword:
-                    entity = LexSimpleEntity();
+                    item = LexSimpleItem();
                     break;
                 case StepTokenKind.LeftParen:
-                    entity = LexComplexEntity();
+                    item = LexComplexItem();
                     break;
                 default:
                     ReportError($"Expected left paren but found {Current.Kind}");
@@ -214,26 +214,26 @@ namespace IxMilia.Step
 
             SwallowSemicolon();
 
-            return new StepEntityInstanceSyntax(reference, entity);
+            return new StepEntityInstanceSyntax(reference, item);
         }
 
-        private StepSimpleEntitySyntax LexSimpleEntity()
+        private StepSimpleItemSyntax LexSimpleItem()
         {
             AssertNextTokenKind(StepTokenKind.Keyword);
             var keyword = (StepKeywordToken)Current;
             MoveNext();
 
             var parameters = LexSyntaxList();
-            return new StepSimpleEntitySyntax(keyword, parameters);
+            return new StepSimpleItemSyntax(keyword, parameters);
         }
 
-        private StepComplexEntitySyntax LexComplexEntity()
+        private StepComplexItemSyntax LexComplexItem()
         {
-            var entities = new List<StepSimpleEntitySyntax>();
-            var entityLine = Current.Line;
-            var entityColumn = Current.Column;
+            var entities = new List<StepSimpleItemSyntax>();
+            var itemLine = Current.Line;
+            var itemColumn = Current.Column;
             SwallowLeftParen();
-            entities.Add(LexSimpleEntity()); // there's always at least one
+            entities.Add(LexSimpleItem()); // there's always at least one
 
             bool keepReading = true;
             while (keepReading)
@@ -246,7 +246,7 @@ namespace IxMilia.Step
                         keepReading = false;
                         break;
                     case StepTokenKind.Keyword:
-                        entities.Add(LexSimpleEntity());
+                        entities.Add(LexSimpleItem());
                         break;
                     default:
                         ReportError($"Expected right paren or keyword but found {Current.Kind}");
@@ -254,7 +254,7 @@ namespace IxMilia.Step
                 }
             }
 
-            return new StepComplexEntitySyntax(entityLine, entityColumn, entities);
+            return new StepComplexItemSyntax(itemLine, itemColumn, entities);
         }
 
         private bool IsCurrentEndSec()

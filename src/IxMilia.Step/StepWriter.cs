@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using IxMilia.Step.Entities;
+using IxMilia.Step.Items;
 using IxMilia.Step.Syntax;
 
 namespace IxMilia.Step
@@ -14,7 +14,7 @@ namespace IxMilia.Step
         private StepFile _file;
         private StringBuilder _builder;
         private bool _inlineReferences;
-        private Dictionary<StepEntity, int> _entityMap;
+        private Dictionary<StepRepresentationItem, int> _itemMap;
         private int _nextId;
         private const string Semicolon = ";";
 
@@ -22,7 +22,7 @@ namespace IxMilia.Step
         {
             _file = stepFile;
             _builder = new StringBuilder();
-            _entityMap = new Dictionary<StepEntity, int>();
+            _itemMap = new Dictionary<StepRepresentationItem, int>();
             _inlineReferences = inlineReferences;
         }
 
@@ -43,9 +43,9 @@ namespace IxMilia.Step
 
             // data section
             AppendLine(StepFile.DataText);
-            foreach (var entity in _file.Entities)
+            foreach (var item in _file.Items)
             {
-                WriteEntity(entity);
+                WriteItem(item);
             }
 
             AppendLine(StepFile.EndSectionText);
@@ -55,51 +55,51 @@ namespace IxMilia.Step
             return _builder.ToString();
         }
 
-        private int WriteEntity(StepEntity entity)
+        private int WriteItem(StepRepresentationItem item)
         {
             if (!_inlineReferences)
             {
                 // not inlining references, need to write out entities as we see them
-                foreach (var referencedEntity in entity.GetReferencedEntities())
+                foreach (var referencedItem in item.GetReferencedItems())
                 {
-                    if (!_entityMap.ContainsKey(referencedEntity))
+                    if (!_itemMap.ContainsKey(referencedItem))
                     {
-                        var refid = WriteEntity(referencedEntity);
+                        var refid = WriteItem(referencedItem);
                     }
                 }
             }
 
             var id = ++_nextId;
-            var syntax = GetEntitySyntax(entity, id);
+            var syntax = GetItemSyntax(item, id);
             AppendLine($"#{id}={syntax.ToString(this)}");
             return id;
         }
 
-        private StepSyntax GetEntitySyntax(StepEntity entity, int expectedId)
+        private StepSyntax GetItemSyntax(StepRepresentationItem item, int expectedId)
         {
-            if (!_entityMap.ContainsKey(entity))
+            if (!_itemMap.ContainsKey(item))
             {
-                var parameters = new StepSyntaxList(-1, -1, entity.GetParameters(this));
-                var syntax = new StepSimpleEntitySyntax(entity.EntityType.GetEntityTypeString(), parameters);
-                _entityMap.Add(entity, expectedId);
+                var parameters = new StepSyntaxList(-1, -1, item.GetParameters(this));
+                var syntax = new StepSimpleItemSyntax(item.ItemType.GetItemTypeString(), parameters);
+                _itemMap.Add(item, expectedId);
                 return syntax;
             }
             else
             {
-                return GetEntitySyntax(entity);
+                return GetItemSyntax(item);
             }
         }
 
-        public StepSyntax GetEntitySyntax(StepEntity entity)
+        public StepSyntax GetItemSyntax(StepRepresentationItem item)
         {
             if (_inlineReferences)
             {
-                var parameters = new StepSyntaxList(-1, -1, entity.GetParameters(this));
-                return new StepSimpleEntitySyntax(entity.EntityType.GetEntityTypeString(), parameters);
+                var parameters = new StepSyntaxList(-1, -1, item.GetParameters(this));
+                return new StepSimpleItemSyntax(item.ItemType.GetItemTypeString(), parameters);
             }
             else
             {
-                return new StepEntityInstanceReferenceSyntax(_entityMap[entity]);
+                return new StepEntityInstanceReferenceSyntax(_itemMap[item]);
             }
         }
 

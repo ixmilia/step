@@ -4,11 +4,11 @@ using System;
 using System.Collections.Generic;
 using IxMilia.Step.Syntax;
 
-namespace IxMilia.Step.Entities
+namespace IxMilia.Step.Items
 {
-    public class StepCircle : StepEntity
+    public class StepCircle : StepConic
     {
-        public override StepEntityType EntityType => StepEntityType.Circle;
+        public override StepItemType ItemType => StepItemType.Circle;
 
         private StepAxisPlacement2D _position;
 
@@ -40,15 +40,19 @@ namespace IxMilia.Step.Entities
             Radius = radius;
         }
 
-        internal override IEnumerable<StepEntity> GetReferencedEntities()
+        internal override IEnumerable<StepRepresentationItem> GetReferencedItems()
         {
             yield return Position;
         }
 
         internal override IEnumerable<StepSyntax> GetParameters(StepWriter writer)
         {
-            yield return new StepStringSyntax(Label);
-            yield return writer.GetEntitySyntax(Position);
+            foreach (var parameter in base.GetParameters(writer))
+            {
+                yield return parameter;
+            }
+
+            yield return writer.GetItemSyntax(Position);
             yield return new StepRealSyntax(Radius);
         }
 
@@ -56,7 +60,7 @@ namespace IxMilia.Step.Entities
         {
             var circle = new StepCircle();
             syntaxList.AssertListCount(3);
-            circle.Label = syntaxList.Values[0].GetStringValue();
+            circle.Name = syntaxList.Values[0].GetStringValue();
             binder.BindValue(syntaxList.Values[1], v => circle.Position = v.AsType<StepAxisPlacement2D>());
             circle.Radius = syntaxList.Values[2].GetRealVavlue();
             return circle;

@@ -16,10 +16,10 @@ namespace IxMilia.Step.Syntax
             Id = id;
         }
 
-        public StepEntityInstanceReferenceSyntax(StepEntityInstanceToken entityInstance)
-            : base(entityInstance.Line, entityInstance.Column)
+        public StepEntityInstanceReferenceSyntax(StepEntityInstanceToken itemInstance)
+            : base(itemInstance.Line, itemInstance.Column)
         {
-            Id = entityInstance.Id;
+            Id = itemInstance.Id;
         }
 
         public override string ToString(StepWriter writer)

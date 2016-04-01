@@ -3,7 +3,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using IxMilia.Step.Entities;
+using IxMilia.Step.Items;
 using IxMilia.Step.Syntax;
 
 namespace IxMilia.Step
@@ -30,20 +30,20 @@ namespace IxMilia.Step
                 ApplyHeaderMacro(headerMacro);
             }
 
-            var entityMap = new Dictionary<int, StepEntity>();
-            var binder = new StepBinder(entityMap);
-            foreach (var entityInstance in fileSyntax.Data.EntityInstances)
+            var itemMap = new Dictionary<int, StepRepresentationItem>();
+            var binder = new StepBinder(itemMap);
+            foreach (var itemInstance in fileSyntax.Data.ItemInstances)
             {
-                if (entityMap.ContainsKey(entityInstance.Id))
+                if (itemMap.ContainsKey(itemInstance.Id))
                 {
-                    throw new StepReadException("Duplicate entity instance", entityInstance.Line, entityInstance.Column);
+                    throw new StepReadException("Duplicate item instance", itemInstance.Line, itemInstance.Column);
                 }
 
-                var entity = StepEntity.FromTypedParameter(binder, entityInstance.SimpleEntityInstance);
-                if (entity != null)
+                var item = StepRepresentationItem.FromTypedParameter(binder, itemInstance.SimpleItemInstance);
+                if (item != null)
                 {
-                    entityMap.Add(entityInstance.Id, entity);
-                    _file.Entities.Add(entity);
+                    itemMap.Add(itemInstance.Id, item);
+                    _file.Items.Add(item);
                 }
             }
 

@@ -2,19 +2,19 @@
 
 using IxMilia.Step.Syntax;
 
-namespace IxMilia.Step.Entities
+namespace IxMilia.Step.Items
 {
     public class StepDirection : StepTriple
     {
-        public override StepEntityType EntityType => StepEntityType.Direction;
+        public override StepItemType ItemType => StepItemType.Direction;
         protected override int MinimumValueCount => 2;
 
         private StepDirection()
         {
         }
 
-        public StepDirection(string label, double x, double y, double z)
-            : base(label, x, y, z)
+        public StepDirection(string name, double x, double y, double z)
+            : base(name, x, y, z)
         {
         }
 

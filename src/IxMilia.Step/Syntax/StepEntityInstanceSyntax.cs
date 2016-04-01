@@ -10,13 +10,13 @@ namespace IxMilia.Step.Syntax
         public override StepSyntaxType SyntaxType => StepSyntaxType.EntityInstance;
 
         public int Id { get; }
-        public StepEntitySyntax SimpleEntityInstance { get; }
+        public StepItemSyntax SimpleItemInstance { get; }
 
-        public StepEntityInstanceSyntax(StepEntityInstanceToken instanceId, StepEntitySyntax entityInstance)
+        public StepEntityInstanceSyntax(StepEntityInstanceToken instanceId, StepItemSyntax itemInstance)
             : base(instanceId.Line, instanceId.Column)
         {
             Id = instanceId.Id;
-            SimpleEntityInstance = entityInstance;
+            SimpleItemInstance = itemInstance;
         }
 
         public override string ToString(StepWriter writer)

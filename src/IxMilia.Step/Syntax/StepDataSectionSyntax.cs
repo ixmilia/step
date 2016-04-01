@@ -10,12 +10,12 @@ namespace IxMilia.Step.Syntax
     {
         public override StepSyntaxType SyntaxType => StepSyntaxType.DataSection;
 
-        public List<StepEntityInstanceSyntax> EntityInstances { get; }
+        public List<StepEntityInstanceSyntax> ItemInstances { get; }
 
-        public StepDataSectionSyntax(int line, int column, IEnumerable<StepEntityInstanceSyntax> entityInstances)
+        public StepDataSectionSyntax(int line, int column, IEnumerable<StepEntityInstanceSyntax> itemInstances)
             : base(line, column)
         {
-            EntityInstances = entityInstances.ToList();
+            ItemInstances = itemInstances.ToList();
         }
 
         public override string ToString(StepWriter writer)

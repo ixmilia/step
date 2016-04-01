@@ -5,21 +5,21 @@ using IxMilia.Step.Tokens;
 
 namespace IxMilia.Step.Syntax
 {
-    internal class StepSimpleEntitySyntax : StepEntitySyntax
+    internal class StepSimpleItemSyntax : StepItemSyntax
     {
-        public override StepSyntaxType SyntaxType => StepSyntaxType.SimpleEntity;
+        public override StepSyntaxType SyntaxType => StepSyntaxType.SimpleItem;
 
         public string Keyword { get; }
         public StepSyntaxList Parameters { get; }
 
-        public StepSimpleEntitySyntax(string keyword, StepSyntaxList parameters)
+        public StepSimpleItemSyntax(string keyword, StepSyntaxList parameters)
             : base(-1, -1)
         {
             Keyword = keyword;
             Parameters = parameters;
         }
 
-        public StepSimpleEntitySyntax(StepKeywordToken keyword, StepSyntaxList parameters)
+        public StepSimpleItemSyntax(StepKeywordToken keyword, StepSyntaxList parameters)
             : base(keyword.Line, keyword.Column)
         {
             Keyword = keyword.Value;

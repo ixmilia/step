@@ -1,11 +1,11 @@
 ﻿// Copyright (c) IxMilia.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
-namespace IxMilia.Step.Syntax
+namespace IxMilia.Step.Items
 {
-    internal abstract class StepEntitySyntax : StepSyntax
+    public abstract class StepPlacement : StepGeometricRepresentationItem
     {
-        protected StepEntitySyntax(int line, int column)
-            : base(line, column)
+        protected StepPlacement(string name)
+            : base(name)
         {
         }
     }

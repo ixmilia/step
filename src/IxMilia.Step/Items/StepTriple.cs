@@ -3,9 +3,9 @@
 using System.Collections.Generic;
 using IxMilia.Step.Syntax;
 
-namespace IxMilia.Step.Entities
+namespace IxMilia.Step.Items
 {
-    public abstract class StepTriple : StepEntity
+    public abstract class StepTriple : StepPoint
     {
         public double X { get; set; }
         public double Y { get; set; }
@@ -18,8 +18,8 @@ namespace IxMilia.Step.Entities
         {
         }
 
-        protected StepTriple(string label, double x, double y, double z)
-            : base(label)
+        protected StepTriple(string name, double x, double y, double z)
+            : base(name)
         {
             X = x;
             Y = y;
@@ -28,7 +28,11 @@ namespace IxMilia.Step.Entities
 
         internal override IEnumerable<StepSyntax> GetParameters(StepWriter writer)
         {
-            yield return new StepStringSyntax(Label);
+            foreach (var parameter in base.GetParameters(writer))
+            {
+                yield return parameter;
+            }
+
             yield return new StepSyntaxList(
                 new StepRealSyntax(X),
                 new StepRealSyntax(Y),
@@ -39,7 +43,7 @@ namespace IxMilia.Step.Entities
         internal static StepTriple AssignTo(StepTriple triple, StepSyntaxList values)
         {
             values.AssertListCount(2);
-            triple.Label = values.Values[0].GetStringValue();
+            triple.Name = values.Values[0].GetStringValue();
             var pointValues = values.Values[1].GetValueList();
             pointValues.AssertListCount(triple.MinimumValueCount, 3);
             triple.X = pointValues.GetRealValueOrDefault(0);
@@ -55,7 +59,7 @@ namespace IxMilia.Step.Entities
                 return false;
             }
 
-            return EntityType == other.EntityType && X == other.X && Y == other.Y && Z == other.Z && Label == other.Label;
+            return ItemType == other.ItemType && X == other.X && Y == other.Y && Z == other.Z && Name == other.Name;
         }
 
         public override bool Equals(object obj)
