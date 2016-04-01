@@ -26,6 +26,9 @@ namespace IxMilia.Step.Items
                     case StepItemTypeExtensions.DirectionText:
                         item = StepDirection.CreateFromSyntaxList(simpleitem.Parameters);
                         break;
+                    case StepItemTypeExtensions.EllipseText:
+                        item = StepEllipse.CreateFromSyntaxList(binder, simpleitem.Parameters);
+                        break;
                     case StepItemTypeExtensions.LineText:
                         item = StepLine.CreateFromSyntaxList(binder, simpleitem.Parameters);
                         break;

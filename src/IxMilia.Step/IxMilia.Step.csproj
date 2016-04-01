@@ -24,6 +24,7 @@
     <Compile Include="Items\StepConic.cs" />
     <Compile Include="Items\StepCurve.cs" />
     <Compile Include="Items\StepDirection.cs" />
+    <Compile Include="Items\StepEllipse.cs" />
     <Compile Include="Items\StepItemType.cs" />
     <Compile Include="Items\StepPlacement.cs" />
     <Compile Include="Items\StepRepresentationItem_FromTypedParameter.cs" />

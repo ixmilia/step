@@ -173,5 +173,33 @@ END-ISO-10303-21;
 #4=CIRCLE('',#3,5.0);
 ");
         }
+
+        [Fact]
+        public void ReadEllipseTest()
+        {
+            var file = ReadFile(@"
+#1=CARTESIAN_POINT('',(1.0,2.0,3.0));
+#2=DIRECTION('',(0.0,0.0,1.0));
+#3=AXIS2_PLACEMENT_2D('',#1,#2);
+#4=ELLIPSE('',#3,3.0,4.0);
+");
+            var ellipse = file.Items.OfType<StepEllipse>().Single();
+            Assert.Equal(new StepCartesianPoint("", 1.0, 2.0, 3.0), ellipse.Position.Location);
+            Assert.Equal(new StepDirection("", 0.0, 0.0, 1.0), ellipse.Position.Direction);
+            Assert.Equal(3.0, ellipse.SemiAxis1);
+            Assert.Equal(4.0, ellipse.SemiAxis2);
+        }
+
+        [Fact]
+        public void WriteEllipseTest()
+        {
+            var ellipse = new StepEllipse("", new StepAxisPlacement2D("", new StepCartesianPoint("", 1.0, 2.0, 3.0), new StepDirection("", 0.0, 0.0, 1.0)), 3.0, 4.0);
+            AssertFileContains(ellipse, @"
+#1=CARTESIAN_POINT('',(1.0,2.0,3.0));
+#2=DIRECTION('',(0.0,0.0,1.0));
+#3=AXIS2_PLACEMENT_2D('',#1,#2);
+#4=ELLIPSE('',#3,3.0,4.0);
+");
+        }
     }
 }

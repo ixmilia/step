@@ -10,6 +10,7 @@ namespace IxMilia.Step.Items
         CartesianPoint,
         Circle,
         Direction,
+        Ellipse,
         Line,
         Vector
     }
@@ -20,6 +21,7 @@ namespace IxMilia.Step.Items
         public const string CartesianPointText = "CARTESIAN_POINT";
         public const string CircleText = "CIRCLE";
         public const string DirectionText = "DIRECTION";
+        public const string EllipseText = "ELLIPSE";
         public const string LineText = "LINE";
         public const string VectorText = "VECTOR";
 
@@ -35,6 +37,8 @@ namespace IxMilia.Step.Items
                     return CircleText;
                 case StepItemType.Direction:
                     return DirectionText;
+                case StepItemType.Ellipse:
+                    return EllipseText;
                 case StepItemType.Line:
                     return LineText;
                 case StepItemType.Vector:
