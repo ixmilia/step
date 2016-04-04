@@ -50,6 +50,32 @@ namespace IxMilia.Step.Syntax
             return ((StepRealSyntax)syntax).Value;
         }
 
+        public static string GetEnumerationValue(this StepSyntax syntax)
+        {
+            if (syntax.SyntaxType != StepSyntaxType.Enumeration)
+            {
+                ReportError("Expected enumeration value", syntax);
+            }
+
+            return ((StepEnumerationValueSyntax)syntax).Value;
+        }
+
+        public static bool GetBooleanValue(this StepSyntax syntax)
+        {
+            switch (syntax.GetEnumerationValue().ToUpperInvariant())
+            {
+                case "T":
+                case "TRUE":
+                    return true;
+                case "F":
+                case "FALSE":
+                    return false;
+                default:
+                    ReportError("Expected boolean value", syntax);
+                    return false; // unreachable
+            }
+        }
+
         public static double GetRealValueOrDefault(this StepSyntaxList syntaxList, int index)
         {
             return syntaxList.GetRealValueOrDefault(index, 0.0);

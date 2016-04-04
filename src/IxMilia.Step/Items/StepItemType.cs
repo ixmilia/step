@@ -29,7 +29,7 @@ namespace IxMilia.Step.Items
         public const string EllipseText = "ELLIPSE";
         public const string LineText = "LINE";
         public const string VectorText = "VECTOR";
-        public const string VertexText = "VERTEX";
+        public const string VertexText = "VERTEX_POINT";
 
         public static string GetItemTypeString(this StepItemType type)
         {

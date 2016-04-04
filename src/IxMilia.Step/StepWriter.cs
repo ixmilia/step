@@ -103,6 +103,12 @@ namespace IxMilia.Step
             }
         }
 
+        public static StepEnumerationValueSyntax GetBooleanSyntax(bool value)
+        {
+            var text = value ? "T" : "F";
+            return new StepEnumerationValueSyntax(text);
+        }
+
         private void AppendLine(string contents)
         {
             _builder.Append(contents);

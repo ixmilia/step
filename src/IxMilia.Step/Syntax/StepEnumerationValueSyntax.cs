@@ -10,6 +10,12 @@ namespace IxMilia.Step.Syntax
 
         public string Value { get; }
 
+        public StepEnumerationValueSyntax(string value)
+            : base(-1, -1)
+        {
+            Value = value;
+        }
+
         public StepEnumerationValueSyntax(StepEnumerationToken value)
             : base(value.Line, value.Column)
         {

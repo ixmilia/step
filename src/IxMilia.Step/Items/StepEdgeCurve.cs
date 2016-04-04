@@ -26,15 +26,18 @@ namespace IxMilia.Step.Items
             }
         }
 
+        public bool IsSameSense { get; set; }
+
         private StepEdgeCurve()
             : base()
         {
         }
 
-        public StepEdgeCurve(string name, StepVertex edgeStart, StepVertex edgeEnd, StepCurve edgeGeometry)
+        public StepEdgeCurve(string name, StepVertex edgeStart, StepVertex edgeEnd, StepCurve edgeGeometry, bool isSameSense)
             : base(name, edgeStart, edgeEnd)
         {
             EdgeGeometry = edgeGeometry;
+            IsSameSense = isSameSense;
         }
 
         internal override IEnumerable<StepRepresentationItem> GetReferencedItems()
@@ -55,16 +58,18 @@ namespace IxMilia.Step.Items
             }
 
             yield return writer.GetItemSyntax(EdgeGeometry);
+            yield return StepWriter.GetBooleanSyntax(IsSameSense);
         }
 
         internal static StepEdgeCurve CreateFromSyntaxList(StepBinder binder, StepSyntaxList syntaxList)
         {
             var edgeCurve = new StepEdgeCurve();
-            syntaxList.AssertListCount(4);
+            syntaxList.AssertListCount(5);
             edgeCurve.Name = syntaxList.Values[0].GetStringValue();
             binder.BindValue(syntaxList.Values[1], v => edgeCurve.EdgeStart = v.AsType<StepVertex>());
             binder.BindValue(syntaxList.Values[2], v => edgeCurve.EdgeEnd = v.AsType<StepVertex>());
             binder.BindValue(syntaxList.Values[3], v => edgeCurve.EdgeGeometry = v.AsType<StepCurve>());
+            edgeCurve.IsSameSense = syntaxList.Values[4].GetBooleanValue();
             return edgeCurve;
         }
     }
