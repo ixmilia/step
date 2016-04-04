@@ -11,9 +11,11 @@ namespace IxMilia.Step.Items
         CartesianPoint,
         Circle,
         Direction,
+        EdgeCurve,
         Ellipse,
         Line,
-        Vector
+        Vector,
+        Vertex
     }
 
     internal static class StepItemTypeExtensions
@@ -23,9 +25,11 @@ namespace IxMilia.Step.Items
         public const string CartesianPointText = "CARTESIAN_POINT";
         public const string CircleText = "CIRCLE";
         public const string DirectionText = "DIRECTION";
+        public const string EdgeCurveText = "EDGE_CURVE";
         public const string EllipseText = "ELLIPSE";
         public const string LineText = "LINE";
         public const string VectorText = "VECTOR";
+        public const string VertexText = "VERTEX";
 
         public static string GetItemTypeString(this StepItemType type)
         {
@@ -41,12 +45,16 @@ namespace IxMilia.Step.Items
                     return CircleText;
                 case StepItemType.Direction:
                     return DirectionText;
+                case StepItemType.EdgeCurve:
+                    return EdgeCurveText;
                 case StepItemType.Ellipse:
                     return EllipseText;
                 case StepItemType.Line:
                     return LineText;
                 case StepItemType.Vector:
                     return VectorText;
+                case StepItemType.Vertex:
+                    return VertexText;
                 default:
                     throw new InvalidOperationException("Unexpected item type " + type);
             }

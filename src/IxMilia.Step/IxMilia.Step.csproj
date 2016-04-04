@@ -26,6 +26,8 @@
     <Compile Include="Items\StepConic.cs" />
     <Compile Include="Items\StepCurve.cs" />
     <Compile Include="Items\StepDirection.cs" />
+    <Compile Include="Items\StepEdge.cs" />
+    <Compile Include="Items\StepEdgeCurve.cs" />
     <Compile Include="Items\StepEllipse.cs" />
     <Compile Include="Items\StepItemType.cs" />
     <Compile Include="Items\StepPlacement.cs" />
@@ -34,8 +36,10 @@
     <Compile Include="Items\StepLine.cs" />
     <Compile Include="Items\StepPoint.cs" />
     <Compile Include="Items\StepRepresentationItem.cs" />
+    <Compile Include="Items\StepTopologicalRepresentationItem.cs" />
     <Compile Include="Items\StepTriple.cs" />
     <Compile Include="Items\StepVector.cs" />
+    <Compile Include="Items\StepVertex.cs" />
     <Compile Include="StepBinder.cs" />
     <Compile Include="StepBoundItem.cs" />
     <Compile Include="StepFile.cs" />

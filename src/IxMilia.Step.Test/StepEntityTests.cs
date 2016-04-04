@@ -201,5 +201,39 @@ END-ISO-10303-21;
 #4=ELLIPSE('',#3,3.0,4.0);
 ");
         }
+
+        [Fact]
+        public void ReadEdgeCurveTest()
+        {
+            var file = ReadFile(@"
+#1=CIRCLE('',AXIS2_PLACEMENT_2D('',CARTESIAN_POINT('',(0.0,0.0,0.0)),DIRECTION('',(0.0,0.0,1.0))),5.0);
+#2=EDGE_CURVE('',VERTEX('',CARTESIAN_POINT('',(1.0,2.0,3.0))),VERTEX('',CARTESIAN_POINT('',(4.0,5.0,6.0))),#1);
+");
+            var edgeCurve = file.Items.OfType<StepEdgeCurve>().Single();
+            Assert.IsType<StepCircle>(edgeCurve.EdgeGeometry);
+        }
+
+        [Fact]
+        public void WriteEdgeCurveTest()
+        {
+            var edgeCurve = new StepEdgeCurve(
+                "",
+                new StepVertex("", new StepCartesianPoint("", 1.0, 2.0, 3.0)),
+                new StepVertex("", new StepCartesianPoint("", 4.0, 5.0, 6.0)),
+                new StepCircle("",
+                    new StepAxis2Placement2D("", new StepCartesianPoint("", 7.0, 8.0, 9.0), new StepDirection("", 0.0, 0.0, 1.0)),
+                    5.0));
+            AssertFileContains(edgeCurve, @"
+#1=CARTESIAN_POINT('',(1.0,2.0,3.0));
+#2=VERTEX('',#1);
+#3=CARTESIAN_POINT('',(4.0,5.0,6.0));
+#4=VERTEX('',#3);
+#5=CARTESIAN_POINT('',(7.0,8.0,9.0));
+#6=DIRECTION('',(0.0,0.0,1.0));
+#7=AXIS2_PLACEMENT_2D('',#5,#6);
+#8=CIRCLE('',#7,5.0);
+#9=EDGE_CURVE('',#2,#4,#8);
+");
+        }
     }
 }

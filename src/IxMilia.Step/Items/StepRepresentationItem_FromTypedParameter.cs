@@ -29,6 +29,9 @@ namespace IxMilia.Step.Items
                     case StepItemTypeExtensions.DirectionText:
                         item = StepDirection.CreateFromSyntaxList(simpleitem.Parameters);
                         break;
+                    case StepItemTypeExtensions.EdgeCurveText:
+                        item = StepEdgeCurve.CreateFromSyntaxList(binder, simpleitem.Parameters);
+                        break;
                     case StepItemTypeExtensions.EllipseText:
                         item = StepEllipse.CreateFromSyntaxList(binder, simpleitem.Parameters);
                         break;
@@ -37,6 +40,9 @@ namespace IxMilia.Step.Items
                         break;
                     case StepItemTypeExtensions.VectorText:
                         item = StepVector.CreateFromSyntaxList(binder, simpleitem.Parameters);
+                        break;
+                    case StepItemTypeExtensions.VertexText:
+                        item = StepVertex.CreateFromSyntaxList(binder, simpleitem.Parameters);
                         break;
                 }
             }
