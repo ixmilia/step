@@ -41,8 +41,8 @@ namespace IxMilia.Step.Items
                     case StepItemTypeExtensions.VectorText:
                         item = StepVector.CreateFromSyntaxList(binder, simpleitem.Parameters);
                         break;
-                    case StepItemTypeExtensions.VertexText:
-                        item = StepVertex.CreateFromSyntaxList(binder, simpleitem.Parameters);
+                    case StepItemTypeExtensions.VertexPointText:
+                        item = StepVertexPoint.CreateFromSyntaxList(binder, simpleitem.Parameters);
                         break;
                 }
             }

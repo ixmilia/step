@@ -219,8 +219,8 @@ END-ISO-10303-21;
         {
             var edgeCurve = new StepEdgeCurve(
                 "",
-                new StepVertex("", new StepCartesianPoint("", 1.0, 2.0, 3.0)),
-                new StepVertex("", new StepCartesianPoint("", 4.0, 5.0, 6.0)),
+                new StepVertexPoint("", new StepCartesianPoint("", 1.0, 2.0, 3.0)),
+                new StepVertexPoint("", new StepCartesianPoint("", 4.0, 5.0, 6.0)),
                 new StepCircle("",
                     new StepAxis2Placement2D("", new StepCartesianPoint("", 7.0, 8.0, 9.0), new StepDirection("", 0.0, 0.0, 1.0)),
                     5.0),

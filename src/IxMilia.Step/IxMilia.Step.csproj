@@ -40,6 +40,7 @@
     <Compile Include="Items\StepTriple.cs" />
     <Compile Include="Items\StepVector.cs" />
     <Compile Include="Items\StepVertex.cs" />
+    <Compile Include="Items\StepVertexPoint.cs" />
     <Compile Include="StepBinder.cs" />
     <Compile Include="StepBoundItem.cs" />
     <Compile Include="StepFile.cs" />

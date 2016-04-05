@@ -15,7 +15,7 @@ namespace IxMilia.Step.Items
         Ellipse,
         Line,
         Vector,
-        Vertex
+        VertexPoint
     }
 
     internal static class StepItemTypeExtensions
@@ -29,7 +29,7 @@ namespace IxMilia.Step.Items
         public const string EllipseText = "ELLIPSE";
         public const string LineText = "LINE";
         public const string VectorText = "VECTOR";
-        public const string VertexText = "VERTEX_POINT";
+        public const string VertexPointText = "VERTEX_POINT";
 
         public static string GetItemTypeString(this StepItemType type)
         {
@@ -53,8 +53,8 @@ namespace IxMilia.Step.Items
                     return LineText;
                 case StepItemType.Vector:
                     return VectorText;
-                case StepItemType.Vertex:
-                    return VertexText;
+                case StepItemType.VertexPoint:
+                    return VertexPointText;
                 default:
                     throw new InvalidOperationException("Unexpected item type " + type);
             }
