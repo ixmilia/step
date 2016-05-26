@@ -33,7 +33,7 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(OutputPath)' == ''">
-    <OutputPath>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)\..\Binaries\$(Configuration)'))\</OutputPath>
+    <OutputPath>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)\..\Binaries\$(Configuration)'))</OutputPath>
   </PropertyGroup>
 
 </Project>
