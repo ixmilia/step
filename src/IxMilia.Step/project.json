@@ -7,7 +7,6 @@
     },
     ".NETPortable,Version=v4.5,Profile=Profile111": {
       "frameworkAssemblies": {
-        "System": "",
         "System.Collections": "",
         "System.Globalization": "",
         "System.IO": "",
