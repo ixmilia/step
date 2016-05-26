@@ -99,4 +99,16 @@
     <None Include="project.json" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
+  <ItemGroup>
+    <FilesToCopy Include="$(OutputPath)\portable45-net45+win8+wpa81\$(AssemblyName).dll" />
+    <FilesToCopy Include="$(OutputPath)\portable45-net45+win8+wpa81\$(AssemblyName).pdb" />
+  </ItemGroup>
+  <Target Name="BeforeBuild">
+    <Exec Command="dotnet restore" />
+  </Target>
+  <Target Name="AfterBuild">
+    <Exec Command="dotnet build --output &quot;$(OutputPath)\netstandard1.0&quot; --framework netstandard1.0" />
+    <Exec Command="dotnet build --output &quot;$(OutputPath)\portable45-net45+win8+wpa81&quot; --framework portable45-net45+win8+wpa81" />
+    <Copy SourceFiles="@(FilesToCopy)" DestinationFolder="$(OutputPath)" />
+  </Target>
 </Project>
