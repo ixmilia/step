@@ -107,8 +107,8 @@
     <Exec Command="dotnet restore" />
   </Target>
   <Target Name="AfterBuild">
-    <Exec Command="dotnet build --output &quot;$(OutputPath)\netstandard1.0&quot; --framework netstandard1.0" />
-    <Exec Command="dotnet build --output &quot;$(OutputPath)\portable45-net45+win8+wpa81&quot; --framework portable45-net45+win8+wpa81" />
+    <Exec Command="dotnet build --configuration $(Configuration) --output &quot;$(OutputPath)\netstandard1.0&quot; --framework netstandard1.0" />
+    <Exec Command="dotnet build --configuration $(Configuration) --output &quot;$(OutputPath)\portable45-net45+win8+wpa81&quot; --framework portable45-net45+win8+wpa81" />
     <Copy SourceFiles="@(FilesToCopy)" DestinationFolder="$(OutputPath)" />
   </Target>
 </Project>
