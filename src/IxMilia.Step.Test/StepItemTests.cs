@@ -6,7 +6,7 @@ using Xunit;
 
 namespace IxMilia.Step.Test
 {
-    public class StepEntityTests
+    public class StepItemTests
     {
         private StepFile ReadFile(string data)
         {

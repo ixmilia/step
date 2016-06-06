@@ -31,8 +31,8 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="StepEntityTests.cs" />
     <Compile Include="StepHeaderTests.cs" />
+    <Compile Include="StepItemTests.cs" />
     <Compile Include="StepTokenTests.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
