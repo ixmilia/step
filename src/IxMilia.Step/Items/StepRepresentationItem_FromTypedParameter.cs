@@ -42,6 +42,9 @@ namespace IxMilia.Step.Items
                     case StepItemTypeExtensions.LineText:
                         item = StepLine.CreateFromSyntaxList(binder, simpleitem.Parameters);
                         break;
+                    case StepItemTypeExtensions.PlaneText:
+                        item = StepPlane.CreateFromSyntaxList(binder, simpleitem.Parameters);
+                        break;
                     case StepItemTypeExtensions.VectorText:
                         item = StepVector.CreateFromSyntaxList(binder, simpleitem.Parameters);
                         break;

@@ -264,5 +264,34 @@ END-ISO-10303-21;
 #9=EDGE_CURVE('',#2,#4,#8,.T.);
 ");
         }
+
+        [Fact]
+        public void ReadPlaneTest()
+        {
+            var file = ReadFile(@"
+#1=CARTESIAN_POINT('',(0.0,0.0,0.0));
+#2=DIRECTION('',(0.0,0.0,1.0));
+#3=DIRECTION('',(1.0,0.0,0.0));
+#4=AXIS2_PLACEMENT_3D('',#1,#2,#3);
+#5=PLANE('',#4);
+");
+
+            var plane = file.Items.OfType<StepPlane>().Single();
+        }
+
+        [Fact]
+        public void WritePlaneTest()
+        {
+            var plane = new StepPlane(
+                "",
+                new StepAxis2Placement3D("", new StepCartesianPoint("", 1.0, 2.0, 3.0), new StepDirection("", 0.0, 0.0, 1.0), new StepDirection("", 1.0, 0.0, 0.0)));
+            AssertFileContains(plane, @"
+#1=CARTESIAN_POINT('',(1.0,2.0,3.0));
+#2=DIRECTION('',(0.0,0.0,1.0));
+#3=DIRECTION('',(1.0,0.0,0.0));
+#4=AXIS2_PLACEMENT_3D('',#1,#2,#3);
+#5=PLANE('',#4);
+");
+        }
     }
 }
