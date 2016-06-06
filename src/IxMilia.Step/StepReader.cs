@@ -32,6 +32,7 @@ namespace IxMilia.Step
 
             var itemMap = new Dictionary<int, StepRepresentationItem>();
             var binder = new StepBinder(itemMap);
+            StepRepresentationItem.UnsupportedItemTypes.Clear();
             foreach (var itemInstance in fileSyntax.Data.ItemInstances)
             {
                 if (itemMap.ContainsKey(itemInstance.Id))

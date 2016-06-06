@@ -1,11 +1,15 @@
 ﻿// Copyright (c) IxMilia.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
+using System.Collections.Generic;
+using System.Diagnostics;
 using IxMilia.Step.Syntax;
 
 namespace IxMilia.Step.Items
 {
     public abstract partial class StepRepresentationItem
     {
+        internal static HashSet<string> UnsupportedItemTypes { get; }  = new HashSet<string>();
+
         internal static StepRepresentationItem FromTypedParameter(StepBinder binder, StepItemSyntax itemSyntax)
         {
             StepRepresentationItem item = null;
@@ -43,6 +47,12 @@ namespace IxMilia.Step.Items
                         break;
                     case StepItemTypeExtensions.VertexPointText:
                         item = StepVertexPoint.CreateFromSyntaxList(binder, simpleitem.Parameters);
+                        break;
+                    default:
+                        if (UnsupportedItemTypes.Add(simpleitem.Keyword))
+                        {
+                            Debug.WriteLine($"Unsupported item {simpleitem.Keyword} at {simpleitem.Line}, {simpleitem.Column}");
+                        }
                         break;
                 }
             }
