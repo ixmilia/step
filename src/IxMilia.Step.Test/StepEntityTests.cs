@@ -23,10 +23,10 @@ END-ISO-10303-21;
             return file;
         }
 
-        private StepRepresentationItem ReadItem(string data)
+        private StepRepresentationItem ReadTopLevelItem(string data)
         {
             var file = ReadFile(data);
-            return file.Items.Single();
+            return file.GetTopLevelitems().Single();
         }
 
         private void AssertFileContains(StepFile file, string expected, bool inlineReferences = false)
@@ -45,7 +45,7 @@ END-ISO-10303-21;
         [Fact]
         public void ReadCartesianPointTest1()
         {
-            var point = (StepCartesianPoint)ReadItem("#1=CARTESIAN_POINT('name',(1.0,2.0,3.0));");
+            var point = (StepCartesianPoint)ReadTopLevelItem("#1=CARTESIAN_POINT('name',(1.0,2.0,3.0));");
             Assert.Equal("name", point.Name);
             Assert.Equal(1.0, point.X);
             Assert.Equal(2.0, point.Y);
@@ -55,7 +55,7 @@ END-ISO-10303-21;
         [Fact]
         public void ReadCartesianPointTest2()
         {
-            var point = (StepCartesianPoint)ReadItem("#1=CARTESIAN_POINT('name',(1.0));");
+            var point = (StepCartesianPoint)ReadTopLevelItem("#1=CARTESIAN_POINT('name',(1.0));");
             Assert.Equal("name", point.Name);
             Assert.Equal(1.0, point.X);
             Assert.Equal(0.0, point.Y);
@@ -65,7 +65,7 @@ END-ISO-10303-21;
         [Fact]
         public void ReadDirectionTest()
         {
-            var direction = (StepDirection)ReadItem("#1=DIRECTION('name',(1.0,2.0,3.0));");
+            var direction = (StepDirection)ReadTopLevelItem("#1=DIRECTION('name',(1.0,2.0,3.0));");
             Assert.Equal("name", direction.Name);
             Assert.Equal(1.0, direction.X);
             Assert.Equal(2.0, direction.Y);
@@ -75,7 +75,7 @@ END-ISO-10303-21;
         [Fact]
         public void ReadSubReferencedItemTest()
         {
-            var vector = (StepVector)ReadItem("#1=VECTOR('name',DIRECTION('',(0.0,0.0,1.0)),15.0);");
+            var vector = (StepVector)ReadTopLevelItem("#1=VECTOR('name',DIRECTION('',(0.0,0.0,1.0)),15.0);");
             Assert.Equal(new StepDirection("", 0.0, 0.0, 1.0), vector.Direction);
             Assert.Equal(15.0, vector.Length);
         }
@@ -83,14 +83,10 @@ END-ISO-10303-21;
         [Fact]
         public void ReadPreviouslyReferencedItemsTest()
         {
-            var file = ReadFile(@"
+            var vector = (StepVector)ReadTopLevelItem(@"
 #1=DIRECTION('',(0.0,0.0,1.0));
 #2=VECTOR('',#1,15.0);
 ");
-            Assert.Equal(2, file.Items.Count);
-            Assert.IsType<StepDirection>(file.Items.First());
-            Assert.IsType<StepVector>(file.Items.Last());
-            var vector = (StepVector)file.Items.Last();
             Assert.Equal(new StepDirection("", 0.0, 0.0, 1.0), vector.Direction);
             Assert.Equal(15.0, vector.Length);
         }
@@ -98,14 +94,10 @@ END-ISO-10303-21;
         [Fact]
         public void ReadPostReferencedItemTest()
         {
-            var file = ReadFile(@"
+            var vector = (StepVector)ReadTopLevelItem(@"
 #1=VECTOR('',#2,15.0);
 #2=DIRECTION('',(0.0,0.0,1.0));
 ");
-            Assert.Equal(2, file.Items.Count);
-            Assert.IsType<StepVector>(file.Items.First());
-            Assert.IsType<StepDirection>(file.Items.Last());
-            var vector = (StepVector)file.Items.First();
             Assert.Equal(new StepDirection("", 0.0, 0.0, 1.0), vector.Direction);
             Assert.Equal(15.0, vector.Length);
         }
@@ -113,14 +105,12 @@ END-ISO-10303-21;
         [Fact]
         public void ReadLineTest()
         {
-            var file = ReadFile(@"
+            var line = (StepLine)ReadTopLevelItem(@"
 #1=CARTESIAN_POINT('',(1.0,2.0,3.0));
 #2=DIRECTION('',(0.0,0.0,1.0));
 #3=VECTOR('',#2,15.0);
 #4=LINE('',#1,#3);
 ");
-            Assert.Equal(4, file.Items.Count);
-            var line = file.Items.OfType<StepLine>().Single();
             Assert.Equal(new StepCartesianPoint("", 1.0, 2.0, 3.0), line.Point);
             Assert.Equal(15.0, line.Vector.Length);
             Assert.Equal(new StepDirection("", 0.0, 0.0, 1.0), line.Vector.Direction);
@@ -150,13 +140,12 @@ END-ISO-10303-21;
         [Fact]
         public void ReadCircleTest()
         {
-            var file = ReadFile(@"
+            var circle = (StepCircle)ReadTopLevelItem(@"
 #1=CARTESIAN_POINT('',(1.0,2.0,3.0));
 #2=DIRECTION('',(0.0,0.0,1.0));
 #3=AXIS2_PLACEMENT_2D('',#1,#2);
 #4=CIRCLE('',#3,5.0);
 ");
-            var circle = file.Items.OfType<StepCircle>().Single();
             Assert.Equal(new StepCartesianPoint("", 1.0, 2.0, 3.0), ((StepAxis2Placement2D)circle.Position).Location);
             Assert.Equal(new StepDirection("", 0.0, 0.0, 1.0), ((StepAxis2Placement2D)circle.Position).RefDirection);
             Assert.Equal(5.0, circle.Radius);
@@ -177,13 +166,12 @@ END-ISO-10303-21;
         [Fact]
         public void ReadEllipseTest()
         {
-            var file = ReadFile(@"
+            var ellipse = (StepEllipse)ReadTopLevelItem(@"
 #1=CARTESIAN_POINT('',(1.0,2.0,3.0));
 #2=DIRECTION('',(0.0,0.0,1.0));
 #3=AXIS2_PLACEMENT_2D('',#1,#2);
 #4=ELLIPSE('',#3,3.0,4.0);
 ");
-            var ellipse = file.Items.OfType<StepEllipse>().Single();
             Assert.Equal(new StepCartesianPoint("", 1.0, 2.0, 3.0), ellipse.Position.Location);
             Assert.Equal(new StepDirection("", 0.0, 0.0, 1.0), ellipse.Position.RefDirection);
             Assert.Equal(3.0, ellipse.SemiAxis1);
@@ -232,11 +220,10 @@ END-ISO-10303-21;
         [Fact]
         public void ReadEdgeCurveTest()
         {
-            var file = ReadFile(@"
+            var edgeCurve = (StepEdgeCurve)ReadTopLevelItem(@"
 #1=CIRCLE('',AXIS2_PLACEMENT_2D('',CARTESIAN_POINT('',(0.0,0.0,0.0)),DIRECTION('',(0.0,0.0,1.0))),5.0);
 #2=EDGE_CURVE('',VERTEX_POINT('',CARTESIAN_POINT('',(1.0,2.0,3.0))),VERTEX_POINT('',CARTESIAN_POINT('',(4.0,5.0,6.0))),#1,.T.);
 ");
-            var edgeCurve = file.Items.OfType<StepEdgeCurve>().Single();
             Assert.IsType<StepCircle>(edgeCurve.EdgeGeometry);
             Assert.True(edgeCurve.IsSameSense);
         }
@@ -268,15 +255,13 @@ END-ISO-10303-21;
         [Fact]
         public void ReadPlaneTest()
         {
-            var file = ReadFile(@"
+            var plane = (StepPlane)ReadTopLevelItem(@"
 #1=CARTESIAN_POINT('',(0.0,0.0,0.0));
 #2=DIRECTION('',(0.0,0.0,1.0));
 #3=DIRECTION('',(1.0,0.0,0.0));
 #4=AXIS2_PLACEMENT_3D('',#1,#2,#3);
 #5=PLANE('',#4);
 ");
-
-            var plane = file.Items.OfType<StepPlane>().Single();
         }
 
         [Fact]
@@ -297,12 +282,11 @@ END-ISO-10303-21;
         [Fact]
         public void ReadOrientedEdgeTest()
         {
-            var file = ReadFile(@"
+            var orientedEdge = (StepOrientedEdge)ReadTopLevelItem(@"
 #1=CIRCLE('',AXIS2_PLACEMENT_2D('',CARTESIAN_POINT('',(0.0,0.0,0.0)),DIRECTION('',(0.0,0.0,1.0))),5.0);
 #2=EDGE_CURVE('',VERTEX_POINT('',CARTESIAN_POINT('',(1.0,2.0,3.0))),VERTEX_POINT('',CARTESIAN_POINT('',(4.0,5.0,6.0))),#1,.T.);
 #3=ORIENTED_EDGE('',*,*,#2,.T.);
 ");
-            var orientedEdge = (StepOrientedEdge)file.GetTopLevelitems().Single();
             Assert.True(orientedEdge.Orientation);
         }
 
