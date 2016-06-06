@@ -47,6 +47,10 @@ namespace IxMilia.Step
                     _unboundPointers[itemInstance.Id].Add(Tuple.Create(syntax, bindAction));
                 }
             }
+            else if (syntax is StepAutoSyntax)
+            {
+                bindAction(StepBoundItem.AutoItem(syntax));
+            }
             else
             {
                 throw new StepReadException("Unable to bind pointer, this should be unreachable", syntax.Line, syntax.Column);

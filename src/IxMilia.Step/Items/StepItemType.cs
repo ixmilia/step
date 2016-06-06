@@ -14,6 +14,7 @@ namespace IxMilia.Step.Items
         EdgeCurve,
         Ellipse,
         Line,
+        OrientedEdge,
         Plane,
         Vector,
         VertexPoint
@@ -29,6 +30,7 @@ namespace IxMilia.Step.Items
         public const string EdgeCurveText = "EDGE_CURVE";
         public const string EllipseText = "ELLIPSE";
         public const string LineText = "LINE";
+        public const string OrientedEdgeText = "ORIENTED_EDGE";
         public const string PlaneText = "PLANE";
         public const string VectorText = "VECTOR";
         public const string VertexPointText = "VERTEX_POINT";
@@ -53,6 +55,8 @@ namespace IxMilia.Step.Items
                     return EllipseText;
                 case StepItemType.Line:
                     return LineText;
+                case StepItemType.OrientedEdge:
+                    return OrientedEdgeText;
                 case StepItemType.Plane:
                     return PlaneText;
                 case StepItemType.Vector:

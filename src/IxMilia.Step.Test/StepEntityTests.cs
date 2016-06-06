@@ -293,5 +293,47 @@ END-ISO-10303-21;
 #5=PLANE('',#4);
 ");
         }
+
+        [Fact]
+        public void ReadOrientedEdgeTest()
+        {
+            var file = ReadFile(@"
+#1=CIRCLE('',AXIS2_PLACEMENT_2D('',CARTESIAN_POINT('',(0.0,0.0,0.0)),DIRECTION('',(0.0,0.0,1.0))),5.0);
+#2=EDGE_CURVE('',VERTEX_POINT('',CARTESIAN_POINT('',(1.0,2.0,3.0))),VERTEX_POINT('',CARTESIAN_POINT('',(4.0,5.0,6.0))),#1,.T.);
+#3=ORIENTED_EDGE('',*,*,#2,.T.);
+");
+            var orientedEdge = (StepOrientedEdge)file.GetTopLevelitems().Single();
+            Assert.True(orientedEdge.Orientation);
+        }
+
+        [Fact]
+        public void WriteOrientedEdgeTest()
+        {
+            var orientedEdge = new StepOrientedEdge(
+                "",
+                null,
+                null,
+                new StepEdgeCurve(
+                    "",
+                    new StepVertexPoint("", new StepCartesianPoint("", 1.0, 2.0, 3.0)),
+                    new StepVertexPoint("", new StepCartesianPoint("", 4.0, 5.0, 6.0)),
+                    new StepCircle("",
+                        new StepAxis2Placement2D("", new StepCartesianPoint("", 7.0, 8.0, 9.0), new StepDirection("", 0.0, 0.0, 1.0)),
+                        5.0),
+                    true),
+                true);
+            AssertFileContains(orientedEdge, @"
+#1=CARTESIAN_POINT('',(1.0,2.0,3.0));
+#2=VERTEX_POINT('',#1);
+#3=CARTESIAN_POINT('',(4.0,5.0,6.0));
+#4=VERTEX_POINT('',#3);
+#5=CARTESIAN_POINT('',(7.0,8.0,9.0));
+#6=DIRECTION('',(0.0,0.0,1.0));
+#7=AXIS2_PLACEMENT_2D('',#5,#6);
+#8=CIRCLE('',#7,5.0);
+#9=EDGE_CURVE('',#2,#4,#8,.T.);
+#10=ORIENTED_EDGE('',*,*,#9,.T.);
+");
+        }
     }
 }

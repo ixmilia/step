@@ -103,6 +103,13 @@ namespace IxMilia.Step
             }
         }
 
+        public StepSyntax GetItemSyntaxOrAuto(StepRepresentationItem item)
+        {
+            return item == null
+                ? new StepAutoSyntax()
+                : GetItemSyntax(item);
+        }
+
         public static StepEnumerationValueSyntax GetBooleanSyntax(bool value)
         {
             var text = value ? "T" : "F";

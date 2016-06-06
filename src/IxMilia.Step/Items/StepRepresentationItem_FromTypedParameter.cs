@@ -15,46 +15,49 @@ namespace IxMilia.Step.Items
             StepRepresentationItem item = null;
             if (itemSyntax is StepSimpleItemSyntax)
             {
-                var simpleitem = (StepSimpleItemSyntax)itemSyntax;
-                switch (simpleitem.Keyword)
+                var simpleItem = (StepSimpleItemSyntax)itemSyntax;
+                switch (simpleItem.Keyword)
                 {
                     case StepItemTypeExtensions.Axis2Placement2DText:
-                        item = StepAxis2Placement2D.CreateFromSyntaxList(binder, simpleitem.Parameters);
+                        item = StepAxis2Placement2D.CreateFromSyntaxList(binder, simpleItem.Parameters);
                         break;
                     case StepItemTypeExtensions.Axis2Placement3DText:
-                        item = StepAxis2Placement3D.CreateFromSyntaxList(binder, simpleitem.Parameters);
+                        item = StepAxis2Placement3D.CreateFromSyntaxList(binder, simpleItem.Parameters);
                         break;
                     case StepItemTypeExtensions.CartesianPointText:
-                        item = StepCartesianPoint.CreateFromSyntaxList(simpleitem.Parameters);
+                        item = StepCartesianPoint.CreateFromSyntaxList(simpleItem.Parameters);
                         break;
                     case StepItemTypeExtensions.CircleText:
-                        item = StepCircle.CreateFromSyntaxList(binder, simpleitem.Parameters);
+                        item = StepCircle.CreateFromSyntaxList(binder, simpleItem.Parameters);
                         break;
                     case StepItemTypeExtensions.DirectionText:
-                        item = StepDirection.CreateFromSyntaxList(simpleitem.Parameters);
+                        item = StepDirection.CreateFromSyntaxList(simpleItem.Parameters);
                         break;
                     case StepItemTypeExtensions.EdgeCurveText:
-                        item = StepEdgeCurve.CreateFromSyntaxList(binder, simpleitem.Parameters);
+                        item = StepEdgeCurve.CreateFromSyntaxList(binder, simpleItem.Parameters);
                         break;
                     case StepItemTypeExtensions.EllipseText:
-                        item = StepEllipse.CreateFromSyntaxList(binder, simpleitem.Parameters);
+                        item = StepEllipse.CreateFromSyntaxList(binder, simpleItem.Parameters);
                         break;
                     case StepItemTypeExtensions.LineText:
-                        item = StepLine.CreateFromSyntaxList(binder, simpleitem.Parameters);
+                        item = StepLine.CreateFromSyntaxList(binder, simpleItem.Parameters);
+                        break;
+                    case StepItemTypeExtensions.OrientedEdgeText:
+                        item = StepOrientedEdge.CreateFromSyntaxList(binder, simpleItem.Parameters);
                         break;
                     case StepItemTypeExtensions.PlaneText:
-                        item = StepPlane.CreateFromSyntaxList(binder, simpleitem.Parameters);
+                        item = StepPlane.CreateFromSyntaxList(binder, simpleItem.Parameters);
                         break;
                     case StepItemTypeExtensions.VectorText:
-                        item = StepVector.CreateFromSyntaxList(binder, simpleitem.Parameters);
+                        item = StepVector.CreateFromSyntaxList(binder, simpleItem.Parameters);
                         break;
                     case StepItemTypeExtensions.VertexPointText:
-                        item = StepVertexPoint.CreateFromSyntaxList(binder, simpleitem.Parameters);
+                        item = StepVertexPoint.CreateFromSyntaxList(binder, simpleItem.Parameters);
                         break;
                     default:
-                        if (UnsupportedItemTypes.Add(simpleitem.Keyword))
+                        if (UnsupportedItemTypes.Add(simpleItem.Keyword))
                         {
-                            Debug.WriteLine($"Unsupported item {simpleitem.Keyword} at {simpleitem.Line}, {simpleitem.Column}");
+                            Debug.WriteLine($"Unsupported item {simpleItem.Keyword} at {simpleItem.Line}, {simpleItem.Column}");
                         }
                         break;
                 }

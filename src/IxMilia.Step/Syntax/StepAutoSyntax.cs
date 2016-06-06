@@ -8,6 +8,11 @@ namespace IxMilia.Step.Syntax
     {
         public override StepSyntaxType SyntaxType => StepSyntaxType.Auto;
 
+        public StepAutoSyntax()
+            : this(new StepAsteriskToken(-1, -1))
+        {
+        }
+
         public StepAutoSyntax(StepAsteriskToken value)
             : base(value.Line, value.Column)
         {
