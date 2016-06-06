@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using IxMilia.Step.Items;
 
 namespace IxMilia.Step
@@ -75,6 +76,34 @@ namespace IxMilia.Step
             {
                 streamWriter.Write(GetContentsAsString(inlineReferences));
                 streamWriter.Flush();
+            }
+        }
+
+        /// <summary>
+        /// Gets all top-level items (i.e., not referenced by any other item) in the file.
+        /// </summary>
+        public IEnumerable<StepRepresentationItem> GetTopLevelitems()
+        {
+            var visitedItems = new HashSet<StepRepresentationItem>();
+            var referencedItems = new HashSet<StepRepresentationItem>();
+            foreach (var item in Items)
+            {
+                MarkReferencedItems(item, visitedItems, referencedItems);
+            }
+
+            return Items.Where(item => !referencedItems.Contains(item));
+        }
+
+        private static void MarkReferencedItems(StepRepresentationItem item, HashSet<StepRepresentationItem> visitedItems, HashSet<StepRepresentationItem> referencedItems)
+        {
+            if (visitedItems.Add(item))
+            {
+                foreach (var referenced in item.GetReferencedItems())
+                {
+                    visitedItems.Add(referenced);
+                    referencedItems.Add(referenced);
+                    MarkReferencedItems(referenced, visitedItems, referencedItems);
+                }
             }
         }
     }

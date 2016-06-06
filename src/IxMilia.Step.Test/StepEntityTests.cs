@@ -191,6 +191,33 @@ END-ISO-10303-21;
         }
 
         [Fact]
+        public void ReadTopLevelReferencedItemsTest()
+        {
+            var file = ReadFile(@"
+#1=CARTESIAN_POINT('',(1.0,2.0,3.0));
+#2=DIRECTION('',(0.0,0.0,1.0));
+#3=AXIS2_PLACEMENT_2D('',#1,#2);
+#4=ELLIPSE('',#3,3.0,4.0);
+");
+
+            Assert.Equal(4, file.Items.Count);
+
+            // only ELLIPSE() isn't referenced by another item
+            var ellipse = (StepEllipse)file.GetTopLevelitems().Single();
+        }
+
+        [Fact]
+        public void ReadTopLevelInlinedItemsTest()
+        {
+            var file = ReadFile("#1=ELLIPSE('',AXIS2_PLACEMENT_2D('',CARTESIAN_POINT('',(1.0,2.0,3.0)),DIRECTION('',(0.0,0.0,1.0))),3.0,4.0);");
+
+            Assert.Equal(1, file.Items.Count);
+
+            // only ELLIPSE() isn't referenced by another item
+            var ellipse = (StepEllipse)file.GetTopLevelitems().Single();
+        }
+
+        [Fact]
         public void WriteEllipseTest()
         {
             var ellipse = new StepEllipse("", new StepAxis2Placement2D("", new StepCartesianPoint("", 1.0, 2.0, 3.0), new StepDirection("", 0.0, 0.0, 1.0)), 3.0, 4.0);
