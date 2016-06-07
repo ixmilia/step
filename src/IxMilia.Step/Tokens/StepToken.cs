@@ -14,5 +14,10 @@ namespace IxMilia.Step.Tokens
             Line = line;
             Column = column;
         }
+
+        public virtual string ToString(StepWriter writer)
+        {
+            return ToString();
+        }
     }
 }

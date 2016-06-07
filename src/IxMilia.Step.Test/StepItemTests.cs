@@ -134,7 +134,10 @@ END-ISO-10303-21;
         {
             var file = new StepFile();
             file.Items.Add(new StepLine("", new StepCartesianPoint("", 1.0, 2.0, 3.0), new StepVector("", new StepDirection("", 1.0, 0.0, 0.0), 4.0)));
-            AssertFileContains(file, "#1=LINE('',CARTESIAN_POINT('',(1.0,2.0,3.0)),VECTOR('',DIRECTION('',(1.0,0.0,0.0)),4.0));", inlineReferences: true);
+            AssertFileContains(file, @"
+#1=LINE('',CARTESIAN_POINT('',(1.0,2.0,3.0)),VECTOR('',DIRECTION('',(1.0,0.0,0.0
+)),4.0));
+", inlineReferences: true);
         }
 
         [Fact]

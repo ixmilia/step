@@ -6,56 +6,82 @@ using System.Linq;
 using System.Text;
 using IxMilia.Step.Items;
 using IxMilia.Step.Syntax;
+using IxMilia.Step.Tokens;
 
 namespace IxMilia.Step
 {
     internal class StepWriter
     {
         private StepFile _file;
-        private StringBuilder _builder;
+        private int _currentLineLength;
+        private bool _honorLineLength = true;
         private bool _inlineReferences;
         private Dictionary<StepRepresentationItem, int> _itemMap;
         private int _nextId;
-        private const string Semicolon = ";";
+
+        private static StepSemicolonToken Semicolon = new StepSemicolonToken(-1, -1);
+        private static StepCommaToken Comma = new StepCommaToken(-1, -1);
+        private static StepLeftParenToken LeftParen = new StepLeftParenToken(-1, -1);
+        private static StepRightParenToken RightParen = new StepRightParenToken(-1, -1);
+
+        private const int MaxLineLength = 80;
 
         public StepWriter(StepFile stepFile, bool inlineReferences)
         {
             _file = stepFile;
-            _builder = new StringBuilder();
             _itemMap = new Dictionary<StepRepresentationItem, int>();
             _inlineReferences = inlineReferences;
         }
 
-        internal string GetContents()
+        public string GetContents()
         {
-            AppendLine(StepFile.MagicHeader);
+            var builder = new StringBuilder();
+
+            _honorLineLength = false;
+            WriteDelimitedLine(StepFile.MagicHeader, builder);
 
             // output header
-            AppendLine(StepFile.HeaderText);
-            AppendLine($"{StepFile.FileDescriptionText}{ToString(SplitStringIntoParts(_file.Description), _file.ImplementationLevel)}");
-            AppendLine($"{StepFile.FileNameText}{ToString(_file.Name, _file.Timestamp, SplitStringIntoParts(_file.Author), SplitStringIntoParts(_file.Organization), _file.PreprocessorVersion, _file.OriginatingSystem, _file.Authorization)}");
+            WriteDelimitedLine(StepFile.HeaderText, builder);
+
+            WriteText(StepFile.FileDescriptionText, builder);
+            WriteText(ToString(SplitStringIntoParts(_file.Description), _file.ImplementationLevel), builder);
+            WriteToken(Semicolon, builder);
+            WriteNewLine(builder);
+
+            WriteText(StepFile.FileNameText, builder);
+            WriteText(ToString(_file.Name, _file.Timestamp, SplitStringIntoParts(_file.Author), SplitStringIntoParts(_file.Organization), _file.PreprocessorVersion, _file.OriginatingSystem, _file.Authorization), builder);
+            WriteToken(Semicolon, builder);
+            WriteNewLine(builder);
+
             var schemas = _file.Schemas.Select(s => s.ToSchemaName())
                 .Concat(_file.UnsupportedSchemas)
                 .Cast<object>()
                 .ToArray();
-            AppendLine($"{StepFile.FileSchemaText}({ToString(schemas)})");
-            AppendLine(StepFile.EndSectionText);
+            WriteText(StepFile.FileSchemaText, builder);
+            WriteToken(LeftParen, builder);
+            WriteText(ToString(schemas), builder);
+            WriteToken(RightParen, builder);
+            WriteToken(Semicolon, builder);
+            WriteNewLine(builder);
+
+            WriteDelimitedLine(StepFile.EndSectionText, builder);
+
+            _honorLineLength = true;
 
             // data section
-            AppendLine(StepFile.DataText);
+            WriteDelimitedLine(StepFile.DataText, builder);
             foreach (var item in _file.Items)
             {
-                WriteItem(item);
+                WriteItem(item, builder);
             }
 
-            AppendLine(StepFile.EndSectionText);
+            WriteDelimitedLine(StepFile.EndSectionText, builder);
+            WriteDelimitedLine(StepFile.MagicFooter, builder);
 
-            AppendLine(StepFile.MagicFooter);
-
-            return _builder.ToString();
+            return builder.ToString();
         }
 
-        private int WriteItem(StepRepresentationItem item)
+        private int WriteItem(StepRepresentationItem item, StringBuilder builder)
         {
             if (!_inlineReferences)
             {
@@ -64,15 +90,59 @@ namespace IxMilia.Step
                 {
                     if (!_itemMap.ContainsKey(referencedItem))
                     {
-                        var refid = WriteItem(referencedItem);
+                        var refid = WriteItem(referencedItem, builder);
                     }
                 }
             }
 
             var id = ++_nextId;
             var syntax = GetItemSyntax(item, id);
-            AppendLine($"#{id}={syntax.ToString(this)}");
+            WriteToken(new StepEntityInstanceToken(id, -1, -1), builder);
+            WriteToken(new StepEqualsToken(-1, -1), builder);
+            WriteTokens(syntax.GetTokens(), builder);
+            WriteToken(Semicolon, builder);
+            WriteNewLine(builder);
             return id;
+        }
+
+        /// <summary>
+        /// Internal for testing.
+        /// </summary>
+        internal void WriteTokens(IEnumerable<StepToken> tokens, StringBuilder builder)
+        {
+            foreach (var token in tokens)
+            {
+                WriteToken(token, builder);
+            }
+        }
+
+        private void WriteToken(StepToken token, StringBuilder builder)
+        {
+            WriteText(token.ToString(this), builder);
+        }
+
+        private void WriteDelimitedLine(string text, StringBuilder builder)
+        {
+            WriteText(text, builder);
+            WriteToken(Semicolon, builder);
+            WriteNewLine(builder);
+        }
+
+        private void WriteText(string text, StringBuilder builder)
+        {
+            if (_honorLineLength && _currentLineLength + text.Length > MaxLineLength)
+            {
+                WriteNewLine(builder);
+            }
+
+            builder.Append(text);
+            _currentLineLength += text.Length;
+        }
+
+        private void WriteNewLine(StringBuilder builder)
+        {
+            builder.AppendLine();
+            _currentLineLength = 0;
         }
 
         private StepSyntax GetItemSyntax(StepRepresentationItem item, int expectedId)
@@ -116,12 +186,6 @@ namespace IxMilia.Step
             return new StepEnumerationValueSyntax(text);
         }
 
-        private void AppendLine(string contents)
-        {
-            _builder.Append(contents);
-            _builder.AppendLine(Semicolon);
-        }
-
         public string ToString(object obj)
         {
             if (obj == null)
@@ -129,14 +193,9 @@ namespace IxMilia.Step
                 // assume empty string
                 return "''";
             }
-            if (obj is double)
-            {
-                return ((double)obj).ToString("0.0#");
-            }
             else if (obj is string)
             {
-                // TODO: escaping
-                return "'" + (string)obj + "'";
+                return new StepStringToken((string)obj, -1, -1).ToString();
             }
             else if (obj is DateTime)
             {

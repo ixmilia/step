@@ -13,5 +13,10 @@ namespace IxMilia.Step.Tokens
         {
             Id = id;
         }
+
+        public override string ToString()
+        {
+            return "@" + Id.ToString();
+        }
     }
 }

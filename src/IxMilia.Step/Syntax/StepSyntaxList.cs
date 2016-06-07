@@ -1,8 +1,8 @@
 ﻿// Copyright (c) IxMilia.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
+using IxMilia.Step.Tokens;
 
 namespace IxMilia.Step.Syntax
 {
@@ -23,9 +23,23 @@ namespace IxMilia.Step.Syntax
             Values = values.ToList();
         }
 
-        public override string ToString(StepWriter writer)
+        public override IEnumerable<StepToken> GetTokens()
         {
-            return "(" + string.Join(",", Values.Select(v => v.ToString(writer))) + ")";
+            yield return new StepLeftParenToken(-1, -1);
+            for (int i = 0; i < Values.Count; i++)
+            {
+                foreach (var token in Values[i].GetTokens())
+                {
+                    yield return token;
+                }
+
+                if (i < Values.Count - 1)
+                {
+                    yield return new StepCommaToken(-1, -1);
+                }
+            }
+
+            yield return new StepRightParenToken(-1, -1);
         }
     }
 }

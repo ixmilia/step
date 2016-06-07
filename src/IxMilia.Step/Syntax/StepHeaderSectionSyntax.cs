@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using IxMilia.Step.Tokens;
 
 namespace IxMilia.Step.Syntax
 {
@@ -18,9 +19,9 @@ namespace IxMilia.Step.Syntax
             Macros = macros.ToList();
         }
 
-        public override string ToString(StepWriter writer)
+        public override IEnumerable<StepToken> GetTokens()
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException();
         }
     }
 }

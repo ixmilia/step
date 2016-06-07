@@ -1,8 +1,10 @@
 ﻿// Copyright (c) IxMilia.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using IxMilia.Step.Tokens;
 using Xunit;
 
@@ -123,6 +125,30 @@ ENDSEC;
 ",
                 Keyword("HEADER"), Semicolon(),
                 Keyword("ENDSEC"), Semicolon());
+        }
+
+        [Fact]
+        public void WriteTokensPastLineLengthTest()
+        {
+            var tokens = new List<StepToken>();
+            var maxItems = 22;
+            for (int i = 0; i < maxItems; i++)
+            {
+                tokens.Add(new StepRealToken(0.0, -1, -1));
+                if (i < maxItems - 1)
+                {
+                    tokens.Add(new StepCommaToken(-1, -1));
+                }
+            }
+
+            // should wrap at 80 characters
+            var writer = new StepWriter(null, false);
+            var sb = new StringBuilder();
+            writer.WriteTokens(tokens, sb);
+            Assert.Equal(@"
+0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,
+0.0,0.0
+".Trim(), sb.ToString());
         }
     }
 }

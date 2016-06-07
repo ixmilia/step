@@ -1,5 +1,8 @@
 ﻿// Copyright (c) IxMilia.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
+using System.Collections.Generic;
+using IxMilia.Step.Tokens;
+
 namespace IxMilia.Step.Syntax
 {
     internal abstract class StepSyntax
@@ -15,6 +18,6 @@ namespace IxMilia.Step.Syntax
             Column = column;
         }
 
-        public abstract string ToString(StepWriter writer);
+        public abstract IEnumerable<StepToken> GetTokens();
     }
 }

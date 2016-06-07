@@ -13,5 +13,11 @@ namespace IxMilia.Step.Tokens
         {
             Value = value;
         }
+
+        public override string ToString()
+        {
+            // TODO: escaping
+            return "'" + Value + "'";
+        }
     }
 }

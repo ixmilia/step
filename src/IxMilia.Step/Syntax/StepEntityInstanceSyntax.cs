@@ -1,6 +1,6 @@
 ﻿// Copyright (c) IxMilia.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
-using System;
+using System.Collections.Generic;
 using IxMilia.Step.Tokens;
 
 namespace IxMilia.Step.Syntax
@@ -19,9 +19,13 @@ namespace IxMilia.Step.Syntax
             SimpleItemInstance = itemInstance;
         }
 
-        public override string ToString(StepWriter writer)
+        public override IEnumerable<StepToken> GetTokens()
         {
-            throw new NotImplementedException();
+            yield return new StepEntityInstanceToken(Id, -1, -1);
+            foreach (var token in SimpleItemInstance.GetTokens())
+            {
+                yield return token;
+            }
         }
     }
 }

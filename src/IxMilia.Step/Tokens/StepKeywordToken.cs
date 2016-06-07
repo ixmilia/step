@@ -13,5 +13,10 @@ namespace IxMilia.Step.Tokens
         {
             Value = value;
         }
+
+        public override string ToString()
+        {
+            return Value;
+        }
     }
 }

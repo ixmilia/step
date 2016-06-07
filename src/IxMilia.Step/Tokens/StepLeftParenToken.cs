@@ -10,5 +10,10 @@ namespace IxMilia.Step.Tokens
             : base(line, column)
         {
         }
+
+        public override string ToString()
+        {
+            return "(";
+        }
     }
 }

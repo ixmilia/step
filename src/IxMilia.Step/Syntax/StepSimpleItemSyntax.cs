@@ -1,6 +1,6 @@
 ﻿// Copyright (c) IxMilia.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
-using System.Linq;
+using System.Collections.Generic;
 using IxMilia.Step.Tokens;
 
 namespace IxMilia.Step.Syntax
@@ -26,9 +26,13 @@ namespace IxMilia.Step.Syntax
             Parameters = parameters;
         }
 
-        public override string ToString(StepWriter writer)
+        public override IEnumerable<StepToken> GetTokens()
         {
-            return Keyword + Parameters.ToString(writer);
+            yield return new StepKeywordToken(Keyword, -1, -1);
+            foreach (var token in Parameters.GetTokens())
+            {
+                yield return token;
+            }
         }
     }
 }

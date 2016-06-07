@@ -2,6 +2,7 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using IxMilia.Step.Tokens;
 
 namespace IxMilia.Step.Syntax
 {
@@ -17,9 +18,9 @@ namespace IxMilia.Step.Syntax
             Items = items.ToList();
         }
 
-        public override string ToString(StepWriter writer)
+        public override IEnumerable<StepToken> GetTokens()
         {
-            return string.Join(string.Empty, Items.Select(e => e.ToString(writer)));
+            return Items.SelectMany(i => i.GetTokens());
         }
     }
 }
