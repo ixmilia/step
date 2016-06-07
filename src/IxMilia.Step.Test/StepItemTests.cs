@@ -319,5 +319,48 @@ END-ISO-10303-21;
 #10=ORIENTED_EDGE('',*,*,#9,.T.);
 ");
         }
+
+        [Fact]
+        public void ReadEdgeLoopTest()
+        {
+            var edgeLoop = (StepEdgeLoop)ReadTopLevelItem(@"
+#1=CARTESIAN_POINT('',(1.0,2.0,3.0));
+#2=DIRECTION('',(0.6,0.6,0.6));
+#3=VECTOR('',#2,5.2);
+#4=LINE('',#1,#3);
+#5=EDGE_CURVE('',*,*,#4,.T.);
+#6=ORIENTED_EDGE('',*,*,#5,.T.);
+#7=CARTESIAN_POINT('',(7.0,8.0,9.0));
+#8=VECTOR('',#2,5.2);
+#9=LINE('',#7,#8);
+#10=EDGE_CURVE('',*,*,#9,.F.);
+#11=ORIENTED_EDGE('',*,*,#10,.F.);
+#12=EDGE_LOOP('',(#6,#11));
+");
+            Assert.Equal(2, edgeLoop.EdgeList.Count);
+        }
+
+        [Fact]
+        public void WriteEdgeLoopTest()
+        {
+            var edgeLoop = new StepEdgeLoop(
+                "",
+                new StepOrientedEdge("", null, null, new StepEdgeCurve("", null, null, StepLine.FromPoints(1.0, 2.0, 3.0, 4.0, 5.0, 6.0), true), true),
+                new StepOrientedEdge("", null, null, new StepEdgeCurve("", null, null, StepLine.FromPoints(7.0, 8.0, 9.0, 10.0, 11.0, 12.0), false), false));
+            AssertFileContains(edgeLoop, @"
+#1=CARTESIAN_POINT('',(1.0,2.0,3.0));
+#2=DIRECTION('',(0.6,0.6,0.6));
+#3=VECTOR('',#2,5.2);
+#4=LINE('',#1,#3);
+#5=EDGE_CURVE('',*,*,#4,.T.);
+#6=ORIENTED_EDGE('',*,*,#5,.T.);
+#7=CARTESIAN_POINT('',(7.0,8.0,9.0));
+#8=VECTOR('',#2,5.2);
+#9=LINE('',#7,#8);
+#10=EDGE_CURVE('',*,*,#9,.F.);
+#11=ORIENTED_EDGE('',*,*,#10,.F.);
+#12=EDGE_LOOP('',(#6,#11));
+");
+        }
     }
 }

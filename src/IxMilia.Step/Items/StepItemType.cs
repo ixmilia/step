@@ -12,6 +12,7 @@ namespace IxMilia.Step.Items
         Circle,
         Direction,
         EdgeCurve,
+        EdgeLoop,
         Ellipse,
         Line,
         OrientedEdge,
@@ -28,6 +29,7 @@ namespace IxMilia.Step.Items
         public const string CircleText = "CIRCLE";
         public const string DirectionText = "DIRECTION";
         public const string EdgeCurveText = "EDGE_CURVE";
+        public const string EdgeLoopText = "EDGE_LOOP";
         public const string EllipseText = "ELLIPSE";
         public const string LineText = "LINE";
         public const string OrientedEdgeText = "ORIENTED_EDGE";
@@ -51,6 +53,8 @@ namespace IxMilia.Step.Items
                     return DirectionText;
                 case StepItemType.EdgeCurve:
                     return EdgeCurveText;
+                case StepItemType.EdgeLoop:
+                    return EdgeLoopText;
                 case StepItemType.Ellipse:
                     return EllipseText;
                 case StepItemType.Line:

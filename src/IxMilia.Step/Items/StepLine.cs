@@ -53,6 +53,20 @@ namespace IxMilia.Step.Items
             Vector = vector;
         }
 
+        public static StepLine FromPoints(double x1, double y1, double z1, double x2, double y2, double z2)
+        {
+            var start = new StepCartesianPoint("", x1, y1, z1);
+            var dx = x2 - x1;
+            var dy = y2 - y1;
+            var dz = z2 - z1;
+            var length = Math.Sqrt(dx * dx + dy * dy + dz * dz);
+            var dxn = dx / length;
+            var dyn = dy / length;
+            var dzn = dz / length;
+            var vector = new StepVector("", new StepDirection("", dxn, dyn, dzn), length);
+            return new StepLine("", start, vector);
+        }
+
         internal override IEnumerable<StepRepresentationItem> GetReferencedItems()
         {
             yield return Point;

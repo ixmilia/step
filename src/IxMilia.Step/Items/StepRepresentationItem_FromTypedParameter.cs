@@ -36,6 +36,9 @@ namespace IxMilia.Step.Items
                     case StepItemTypeExtensions.EdgeCurveText:
                         item = StepEdgeCurve.CreateFromSyntaxList(binder, simpleItem.Parameters);
                         break;
+                    case StepItemTypeExtensions.EdgeLoopText:
+                        item = StepEdgeLoop.CreateFromSyntaxList(binder, simpleItem.Parameters);
+                        break;
                     case StepItemTypeExtensions.EllipseText:
                         item = StepEllipse.CreateFromSyntaxList(binder, simpleItem.Parameters);
                         break;
