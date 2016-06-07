@@ -131,7 +131,7 @@ namespace IxMilia.Step
             }
             if (obj is double)
             {
-                return ((double)obj).ToString("0.0");
+                return ((double)obj).ToString("0.0#");
             }
             else if (obj is string)
             {

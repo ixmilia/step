@@ -325,7 +325,7 @@ END-ISO-10303-21;
         {
             var edgeLoop = (StepEdgeLoop)ReadTopLevelItem(@"
 #1=CARTESIAN_POINT('',(1.0,2.0,3.0));
-#2=DIRECTION('',(0.6,0.6,0.6));
+#2=DIRECTION('',(0.58,0.58,0.58));
 #3=VECTOR('',#2,5.2);
 #4=LINE('',#1,#3);
 #5=EDGE_CURVE('',*,*,#4,.T.);
@@ -349,7 +349,7 @@ END-ISO-10303-21;
                 new StepOrientedEdge("", null, null, new StepEdgeCurve("", null, null, StepLine.FromPoints(7.0, 8.0, 9.0, 10.0, 11.0, 12.0), false), false));
             AssertFileContains(edgeLoop, @"
 #1=CARTESIAN_POINT('',(1.0,2.0,3.0));
-#2=DIRECTION('',(0.6,0.6,0.6));
+#2=DIRECTION('',(0.58,0.58,0.58));
 #3=VECTOR('',#2,5.2);
 #4=LINE('',#1,#3);
 #5=EDGE_CURVE('',*,*,#4,.T.);
