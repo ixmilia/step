@@ -12,7 +12,7 @@ namespace IxMilia.Step.Items
         public StepLoop Bound { get; set; }
         public bool Orientation { get; set; }
 
-        private StepFaceBound()
+        protected StepFaceBound()
             : base(string.Empty)
         {
         }

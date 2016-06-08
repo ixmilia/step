@@ -35,6 +35,7 @@
     <Compile Include="Items\StepElementarySurface.cs" />
     <Compile Include="Items\StepEllipse.cs" />
     <Compile Include="Items\StepFaceBound.cs" />
+    <Compile Include="Items\StepFaceOuterBound.cs" />
     <Compile Include="Items\StepItemType.cs" />
     <Compile Include="Items\StepLoop.cs" />
     <Compile Include="Items\StepOrientedEdge.cs" />

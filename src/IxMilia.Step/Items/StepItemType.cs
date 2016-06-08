@@ -15,6 +15,7 @@ namespace IxMilia.Step.Items
         EdgeLoop,
         Ellipse,
         FaceBound,
+        FaceOuterBound,
         Line,
         OrientedEdge,
         Plane,
@@ -33,6 +34,7 @@ namespace IxMilia.Step.Items
         public const string EdgeLoopText = "EDGE_LOOP";
         public const string EllipseText = "ELLIPSE";
         public const string FaceBoundText = "FACE_BOUND";
+        public const string FaceOuterBoundText = "FACE_OUTER_BOUND";
         public const string LineText = "LINE";
         public const string OrientedEdgeText = "ORIENTED_EDGE";
         public const string PlaneText = "PLANE";
@@ -61,6 +63,8 @@ namespace IxMilia.Step.Items
                     return EllipseText;
                 case StepItemType.FaceBound:
                     return FaceBoundText;
+                case StepItemType.FaceOuterBound:
+                    return FaceOuterBoundText;
                 case StepItemType.Line:
                     return LineText;
                 case StepItemType.OrientedEdge:

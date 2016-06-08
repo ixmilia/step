@@ -45,6 +45,9 @@ namespace IxMilia.Step.Items
                     case StepItemTypeExtensions.FaceBoundText:
                         item = StepFaceBound.CreateFromSyntaxList(binder, simpleItem.Parameters);
                         break;
+                    case StepItemTypeExtensions.FaceOuterBoundText:
+                        item = StepFaceOuterBound.CreateFromSyntaxList(binder, simpleItem.Parameters);
+                        break;
                     case StepItemTypeExtensions.LineText:
                         item = StepLine.CreateFromSyntaxList(binder, simpleItem.Parameters);
                         break;
