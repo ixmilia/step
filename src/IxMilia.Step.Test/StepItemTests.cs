@@ -365,5 +365,52 @@ END-ISO-10303-21;
 #12=EDGE_LOOP('',(#6,#11));
 ");
         }
+
+        [Fact]
+        public void ReadFaceBoundTest()
+        {
+            var faceBound = (StepFaceBound)ReadTopLevelItem(@"
+#1=CARTESIAN_POINT('',(0.0,0.0,0.0));
+#2=DIRECTION('',(1.0,0.0,0.0));
+#3=VECTOR('',#2,1.0);
+#4=LINE('',#1,#3);
+#5=EDGE_CURVE('',*,*,#4,.T.);
+#6=ORIENTED_EDGE('',*,*,#5,.T.);
+#7=EDGE_LOOP('',(#6));
+#8=FACE_BOUND('',#7,.T.);
+");
+            Assert.True(faceBound.Orientation);
+        }
+
+        [Fact]
+        public void WriteFaceBoundTest()
+        {
+            var faceBound = new StepFaceBound(
+                "",
+                new StepEdgeLoop(
+                    "",
+                    new StepOrientedEdge(
+                        "",
+                        null,
+                        null,
+                        new StepEdgeCurve(
+                            "",
+                            null,
+                            null,
+                            StepLine.FromPoints(0.0, 0.0, 0.0, 1.0, 0.0, 0.0),
+                            true),
+                        true)),
+                true);
+            AssertFileContains(faceBound, @"
+#1=CARTESIAN_POINT('',(0.0,0.0,0.0));
+#2=DIRECTION('',(1.0,0.0,0.0));
+#3=VECTOR('',#2,1.0);
+#4=LINE('',#1,#3);
+#5=EDGE_CURVE('',*,*,#4,.T.);
+#6=ORIENTED_EDGE('',*,*,#5,.T.);
+#7=EDGE_LOOP('',(#6));
+#8=FACE_BOUND('',#7,.T.);
+");
+        }
     }
 }

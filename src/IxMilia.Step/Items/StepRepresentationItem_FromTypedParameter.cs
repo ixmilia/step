@@ -42,6 +42,9 @@ namespace IxMilia.Step.Items
                     case StepItemTypeExtensions.EllipseText:
                         item = StepEllipse.CreateFromSyntaxList(binder, simpleItem.Parameters);
                         break;
+                    case StepItemTypeExtensions.FaceBoundText:
+                        item = StepFaceBound.CreateFromSyntaxList(binder, simpleItem.Parameters);
+                        break;
                     case StepItemTypeExtensions.LineText:
                         item = StepLine.CreateFromSyntaxList(binder, simpleItem.Parameters);
                         break;
