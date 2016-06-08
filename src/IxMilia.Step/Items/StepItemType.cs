@@ -10,6 +10,7 @@ namespace IxMilia.Step.Items
         AxisPlacement3D,
         CartesianPoint,
         Circle,
+        CylindricalSurface,
         Direction,
         EdgeCurve,
         EdgeLoop,
@@ -29,6 +30,7 @@ namespace IxMilia.Step.Items
         public const string Axis2Placement3DText = "AXIS2_PLACEMENT_3D";
         public const string CartesianPointText = "CARTESIAN_POINT";
         public const string CircleText = "CIRCLE";
+        public const string CylindricalSurfaceText = "CYLINDRICAL_SURFACE";
         public const string DirectionText = "DIRECTION";
         public const string EdgeCurveText = "EDGE_CURVE";
         public const string EdgeLoopText = "EDGE_LOOP";
@@ -53,6 +55,8 @@ namespace IxMilia.Step.Items
                     return CartesianPointText;
                 case StepItemType.Circle:
                     return CircleText;
+                case StepItemType.CylindricalSurface:
+                    return CylindricalSurfaceText;
                 case StepItemType.Direction:
                     return DirectionText;
                 case StepItemType.EdgeCurve:

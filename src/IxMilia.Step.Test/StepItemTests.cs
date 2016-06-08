@@ -459,5 +459,38 @@ END-ISO-10303-21;
 #8=FACE_OUTER_BOUND('',#7,.T.);
 ");
         }
+
+        [Fact]
+        public void ReadCylindricalSurfaceTest()
+        {
+            var surface = (StepCylindricalSurface)ReadTopLevelItem(@"
+#1=CARTESIAN_POINT('',(1.0,2.0,3.0));
+#2=DIRECTION('',(0.0,0.0,1.0));
+#3=DIRECTION('',(1.0,0.0,0.0));
+#4=AXIS2_PLACEMENT_3D('',#1,#2,#3);
+#5=CYLINDRICAL_SURFACE('',#4,12.0);
+");
+            Assert.Equal(12.0, surface.Radius);
+        }
+
+        [Fact]
+        public void WriteCylindricalSurfaceTest()
+        {
+            var surface = new StepCylindricalSurface(
+                "",
+                new StepAxis2Placement3D(
+                    "",
+                    new StepCartesianPoint("", 1.0, 2.0, 3.0),
+                    new StepDirection("", 0.0, 0.0, 1.0),
+                    new StepDirection("", 1.0, 0.0, 0.0)),
+                12.0);
+            AssertFileContains(surface, @"
+#1=CARTESIAN_POINT('',(1.0,2.0,3.0));
+#2=DIRECTION('',(0.0,0.0,1.0));
+#3=DIRECTION('',(1.0,0.0,0.0));
+#4=AXIS2_PLACEMENT_3D('',#1,#2,#3);
+#5=CYLINDRICAL_SURFACE('',#4,12.0);
+");
+        }
     }
 }

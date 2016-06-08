@@ -30,6 +30,9 @@ namespace IxMilia.Step.Items
                     case StepItemTypeExtensions.CircleText:
                         item = StepCircle.CreateFromSyntaxList(binder, simpleItem.Parameters);
                         break;
+                    case StepItemTypeExtensions.CylindricalSurfaceText:
+                        item = StepCylindricalSurface.CreateFromSyntaxList(binder, simpleItem.Parameters);
+                        break;
                     case StepItemTypeExtensions.DirectionText:
                         item = StepDirection.CreateFromSyntaxList(simpleItem.Parameters);
                         break;

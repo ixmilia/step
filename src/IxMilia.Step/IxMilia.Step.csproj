@@ -28,6 +28,7 @@
     <Compile Include="Items\StepCircle.cs" />
     <Compile Include="Items\StepConic.cs" />
     <Compile Include="Items\StepCurve.cs" />
+    <Compile Include="Items\StepCylindricalSurface.cs" />
     <Compile Include="Items\StepDirection.cs" />
     <Compile Include="Items\StepEdge.cs" />
     <Compile Include="Items\StepEdgeCurve.cs" />
