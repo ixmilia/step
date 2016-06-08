@@ -17,6 +17,11 @@ namespace IxMilia.Step.Syntax
         {
         }
 
+        public StepSyntaxList(IEnumerable<StepSyntax> values)
+            : this(-1, -1, values)
+        {
+        }
+
         public StepSyntaxList(int line, int column, IEnumerable<StepSyntax> values)
             : base(line, column)
         {

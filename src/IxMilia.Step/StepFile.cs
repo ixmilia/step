@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using IxMilia.Step.Items;
+using IxMilia.Step.Syntax;
 
 namespace IxMilia.Step
 {
@@ -105,6 +106,38 @@ namespace IxMilia.Step
                     MarkReferencedItems(referenced, visitedItems, referencedItems);
                 }
             }
+        }
+
+        internal StepHeaderSectionSyntax GetHeaderSyntax()
+        {
+            var macros = new List<StepHeaderMacroSyntax>()
+            {
+                new StepHeaderMacroSyntax(
+                    FileDescriptionText,
+                    new StepSyntaxList(
+                        new StepSyntaxList(StepWriter.SplitStringIntoParts(Description).Select(s => new StepStringSyntax(s))),
+                        new StepStringSyntax(ImplementationLevel))),
+                new StepHeaderMacroSyntax(
+                    FileNameText,
+                    new StepSyntaxList(
+                        new StepStringSyntax(Name),
+                        new StepStringSyntax(Timestamp.ToString(StepReader.DateTimeFormat)),
+                        new StepSyntaxList(StepWriter.SplitStringIntoParts(Author).Select(s => new StepStringSyntax(s))),
+                        new StepSyntaxList(StepWriter.SplitStringIntoParts(Organization).Select(s => new StepStringSyntax(s))),
+                        new StepStringSyntax(PreprocessorVersion),
+                        new StepStringSyntax(OriginatingSystem),
+                        new StepStringSyntax(Authorization))),
+                new StepHeaderMacroSyntax(
+                    FileSchemaText,
+                    new StepSyntaxList(
+                        new StepSyntaxList(
+                            Schemas
+                            .Select(s => s.ToSchemaName())
+                            .Concat(UnsupportedSchemas)
+                            .Select(s => new StepStringSyntax(s)))))
+            };
+
+            return new StepHeaderSectionSyntax(-1, -1, macros);
         }
     }
 }

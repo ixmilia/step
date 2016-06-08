@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using IxMilia.Step.Items;
 using IxMilia.Step.Syntax;
@@ -20,10 +19,6 @@ namespace IxMilia.Step
         private int _nextId;
 
         private static StepSemicolonToken Semicolon = new StepSemicolonToken(-1, -1);
-        private static StepCommaToken Comma = new StepCommaToken(-1, -1);
-        private static StepLeftParenToken LeftParen = new StepLeftParenToken(-1, -1);
-        private static StepRightParenToken RightParen = new StepRightParenToken(-1, -1);
-
         private const int MaxLineLength = 80;
 
         public StepWriter(StepFile stepFile, bool inlineReferences)
@@ -42,27 +37,11 @@ namespace IxMilia.Step
 
             // output header
             WriteDelimitedLine(StepFile.HeaderText, builder);
-
-            WriteText(StepFile.FileDescriptionText, builder);
-            WriteText(ToString(SplitStringIntoParts(_file.Description), _file.ImplementationLevel), builder);
-            WriteToken(Semicolon, builder);
-            WriteNewLine(builder);
-
-            WriteText(StepFile.FileNameText, builder);
-            WriteText(ToString(_file.Name, _file.Timestamp, SplitStringIntoParts(_file.Author), SplitStringIntoParts(_file.Organization), _file.PreprocessorVersion, _file.OriginatingSystem, _file.Authorization), builder);
-            WriteToken(Semicolon, builder);
-            WriteNewLine(builder);
-
-            var schemas = _file.Schemas.Select(s => s.ToSchemaName())
-                .Concat(_file.UnsupportedSchemas)
-                .Cast<object>()
-                .ToArray();
-            WriteText(StepFile.FileSchemaText, builder);
-            WriteToken(LeftParen, builder);
-            WriteText(ToString(schemas), builder);
-            WriteToken(RightParen, builder);
-            WriteToken(Semicolon, builder);
-            WriteNewLine(builder);
+            var headerSyntax = _file.GetHeaderSyntax();
+            foreach (var macro in headerSyntax.Macros)
+            {
+                WriteHeaderMacro(macro, builder);
+            }
 
             WriteDelimitedLine(StepFile.EndSectionText, builder);
 
@@ -79,6 +58,14 @@ namespace IxMilia.Step
             WriteDelimitedLine(StepFile.MagicFooter, builder);
 
             return builder.ToString();
+        }
+
+        private void WriteHeaderMacro(StepHeaderMacroSyntax macro, StringBuilder builder)
+        {
+            WriteText(macro.Name, builder);
+            WriteTokens(macro.Values.GetTokens(), builder);
+            WriteToken(Semicolon, builder);
+            WriteNewLine(builder);
         }
 
         private int WriteItem(StepRepresentationItem item, StringBuilder builder)
@@ -186,39 +173,7 @@ namespace IxMilia.Step
             return new StepEnumerationValueSyntax(text);
         }
 
-        public string ToString(object obj)
-        {
-            if (obj == null)
-            {
-                // assume empty string
-                return "''";
-            }
-            else if (obj is string)
-            {
-                return new StepStringToken((string)obj, -1, -1).ToString();
-            }
-            else if (obj is DateTime)
-            {
-                var dt = (DateTime)obj;
-                return "'" + dt.ToString(StepReader.DateTimeFormat) + "'";
-            }
-            else if (obj is object[])
-            {
-                var array = (object[])obj;
-                return "(" + string.Join(",", array.Select(ToString)) + ")";
-            }
-            else
-            {
-                throw new Exception("Unsupported object type: " + obj.GetType().Name);
-            }
-        }
-
-        private string ToString(params object[] items)
-        {
-            return ToString((object)items);
-        }
-
-        private object[] SplitStringIntoParts(string str, int maxLength = 256)
+        internal static IEnumerable<string> SplitStringIntoParts(string str, int maxLength = 256)
         {
             var parts = new List<string>();
             if (str != null)
@@ -236,7 +191,7 @@ namespace IxMilia.Step
                 parts.Add(string.Empty);
             }
 
-            return parts.Cast<object>().ToArray();
+            return parts;
         }
     }
 }
