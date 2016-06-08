@@ -15,5 +15,7 @@ namespace IxMilia.Step.Tokens
         {
             return "(";
         }
+
+        public static StepLeftParenToken Instance { get; } = new StepLeftParenToken(-1, -1);
     }
 }

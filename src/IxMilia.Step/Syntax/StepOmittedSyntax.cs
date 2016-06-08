@@ -16,7 +16,7 @@ namespace IxMilia.Step.Syntax
 
         public override IEnumerable<StepToken> GetTokens()
         {
-            yield return new StepOmittedToken(-1, -1);
+            yield return StepOmittedToken.Instance;
         }
     }
 }

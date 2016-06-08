@@ -15,5 +15,7 @@ namespace IxMilia.Step.Tokens
         {
             return ",";
         }
+
+        public static StepCommaToken Instance { get; } = new StepCommaToken(-1, -1);
     }
 }

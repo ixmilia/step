@@ -12,7 +12,7 @@ namespace IxMilia.Step.Syntax
         public StepAsteriskToken Token { get; private set; }
 
         public StepAutoSyntax()
-            : this(new StepAsteriskToken(-1, -1))
+            : this(StepAsteriskToken.Instance)
         {
         }
 

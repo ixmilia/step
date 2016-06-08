@@ -18,7 +18,6 @@ namespace IxMilia.Step
         private Dictionary<StepRepresentationItem, int> _itemMap;
         private int _nextId;
 
-        private static StepSemicolonToken Semicolon = new StepSemicolonToken(-1, -1);
         private const int MaxLineLength = 80;
 
         public StepWriter(StepFile stepFile, bool inlineReferences)
@@ -64,7 +63,7 @@ namespace IxMilia.Step
         {
             WriteText(macro.Name, builder);
             WriteTokens(macro.Values.GetTokens(), builder);
-            WriteToken(Semicolon, builder);
+            WriteToken(StepSemicolonToken.Instance, builder);
             WriteNewLine(builder);
         }
 
@@ -85,9 +84,9 @@ namespace IxMilia.Step
             var id = ++_nextId;
             var syntax = GetItemSyntax(item, id);
             WriteToken(new StepEntityInstanceToken(id, -1, -1), builder);
-            WriteToken(new StepEqualsToken(-1, -1), builder);
+            WriteToken(StepEqualsToken.Instance, builder);
             WriteTokens(syntax.GetTokens(), builder);
-            WriteToken(Semicolon, builder);
+            WriteToken(StepSemicolonToken.Instance, builder);
             WriteNewLine(builder);
             return id;
         }
@@ -111,7 +110,7 @@ namespace IxMilia.Step
         private void WriteDelimitedLine(string text, StringBuilder builder)
         {
             WriteText(text, builder);
-            WriteToken(Semicolon, builder);
+            WriteToken(StepSemicolonToken.Instance, builder);
             WriteNewLine(builder);
         }
 

@@ -15,5 +15,7 @@ namespace IxMilia.Step.Tokens
         {
             return "*";
         }
+
+        public static StepAsteriskToken Instance { get; } = new StepAsteriskToken(-1, -1);
     }
 }

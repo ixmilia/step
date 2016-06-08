@@ -15,5 +15,7 @@ namespace IxMilia.Step.Tokens
         {
             return ";";
         }
+
+        public static StepSemicolonToken Instance { get; } = new StepSemicolonToken(-1, -1);
     }
 }

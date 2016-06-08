@@ -15,5 +15,7 @@ namespace IxMilia.Step.Tokens
         {
             return "$";
         }
+
+        public static StepOmittedToken Instance { get; } = new StepOmittedToken(-1, -1);
     }
 }

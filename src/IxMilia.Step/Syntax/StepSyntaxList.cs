@@ -30,7 +30,7 @@ namespace IxMilia.Step.Syntax
 
         public override IEnumerable<StepToken> GetTokens()
         {
-            yield return new StepLeftParenToken(-1, -1);
+            yield return StepLeftParenToken.Instance;
             for (int i = 0; i < Values.Count; i++)
             {
                 foreach (var token in Values[i].GetTokens())
@@ -40,11 +40,11 @@ namespace IxMilia.Step.Syntax
 
                 if (i < Values.Count - 1)
                 {
-                    yield return new StepCommaToken(-1, -1);
+                    yield return StepCommaToken.Instance;
                 }
             }
 
-            yield return new StepRightParenToken(-1, -1);
+            yield return StepRightParenToken.Instance;
         }
     }
 }

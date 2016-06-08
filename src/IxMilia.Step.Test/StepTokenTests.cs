@@ -137,7 +137,7 @@ ENDSEC;
                 tokens.Add(new StepRealToken(0.0, -1, -1));
                 if (i < maxItems - 1)
                 {
-                    tokens.Add(new StepCommaToken(-1, -1));
+                    tokens.Add(StepCommaToken.Instance);
                 }
             }
 
