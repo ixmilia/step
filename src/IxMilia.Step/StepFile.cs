@@ -83,7 +83,7 @@ namespace IxMilia.Step
         /// <summary>
         /// Gets all top-level items (i.e., not referenced by any other item) in the file.
         /// </summary>
-        public IEnumerable<StepRepresentationItem> GetTopLevelitems()
+        public IEnumerable<StepRepresentationItem> GetTopLevelItems()
         {
             var visitedItems = new HashSet<StepRepresentationItem>();
             var referencedItems = new HashSet<StepRepresentationItem>();

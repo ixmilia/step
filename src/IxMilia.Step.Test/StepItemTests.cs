@@ -26,7 +26,7 @@ END-ISO-10303-21;
         private StepRepresentationItem ReadTopLevelItem(string data)
         {
             var file = ReadFile(data);
-            return file.GetTopLevelitems().Single();
+            return file.GetTopLevelItems().Single();
         }
 
         private void AssertFileContains(StepFile file, string expected, bool inlineReferences = false)
@@ -194,7 +194,7 @@ END-ISO-10303-21;
             Assert.Equal(4, file.Items.Count);
 
             // only ELLIPSE() isn't referenced by another item
-            var ellipse = (StepEllipse)file.GetTopLevelitems().Single();
+            var ellipse = (StepEllipse)file.GetTopLevelItems().Single();
         }
 
         [Fact]
@@ -205,7 +205,7 @@ END-ISO-10303-21;
             Assert.Equal(1, file.Items.Count);
 
             // only ELLIPSE() isn't referenced by another item
-            var ellipse = (StepEllipse)file.GetTopLevelitems().Single();
+            var ellipse = (StepEllipse)file.GetTopLevelItems().Single();
         }
 
         [Fact]
