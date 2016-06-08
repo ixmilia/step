@@ -1,6 +1,7 @@
 ﻿// Copyright (c) IxMilia.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using IxMilia.Step.Items;
@@ -67,7 +68,7 @@ namespace IxMilia.Step
                     ApplyFileSchema(macro.Values);
                     break;
                 default:
-                    // TODO:
+                    Debug.WriteLine($"Unsupported header macro '{macro.Name}' at {macro.Line}, {macro.Column}");
                     break;
             }
         }
