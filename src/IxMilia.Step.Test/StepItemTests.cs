@@ -63,6 +63,13 @@ END-ISO-10303-21;
         }
 
         [Fact]
+        public void ReadCartesianPointWithOmittedNameTest()
+        {
+            var point = (StepCartesianPoint)ReadTopLevelItem("#1=CARTESIAN_POINT($,(0.0,0.0,0.0));");
+            Assert.Equal(string.Empty, point.Name);
+        }
+
+        [Fact]
         public void ReadDirectionTest()
         {
             var direction = (StepDirection)ReadTopLevelItem("#1=DIRECTION('name',(1.0,2.0,3.0));");

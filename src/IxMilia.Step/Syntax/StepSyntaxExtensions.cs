@@ -28,12 +28,16 @@ namespace IxMilia.Step.Syntax
 
         public static string GetStringValue(this StepSyntax syntax)
         {
-            if (syntax.SyntaxType != StepSyntaxType.String)
+            switch (syntax.SyntaxType)
             {
-                ReportError("Expected string value", syntax);
+                case StepSyntaxType.Omitted:
+                    return string.Empty;
+                case StepSyntaxType.String:
+                    return ((StepStringSyntax)syntax).Value;
+                default:
+                    ReportError("Expected string value", syntax);
+                    return null; // this will never get here because `ReportError` throws
             }
-
-            return ((StepStringSyntax)syntax).Value;
         }
 
         public static DateTime GetDateTimeValue(this StepSyntax syntax)
