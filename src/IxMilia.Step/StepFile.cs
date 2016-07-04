@@ -121,7 +121,7 @@ namespace IxMilia.Step
                     FileNameText,
                     new StepSyntaxList(
                         new StepStringSyntax(Name),
-                        new StepStringSyntax(Timestamp.ToString(StepReader.DateTimeFormat)),
+                        new StepStringSyntax(Timestamp.ToString("O")),
                         new StepSyntaxList(StepWriter.SplitStringIntoParts(Author).Select(s => new StepStringSyntax(s))),
                         new StepSyntaxList(StepWriter.SplitStringIntoParts(Organization).Select(s => new StepStringSyntax(s))),
                         new StepStringSyntax(PreprocessorVersion),
