@@ -101,7 +101,6 @@ namespace IxMilia.Step
             {
                 foreach (var referenced in item.GetReferencedItems())
                 {
-                    visitedItems.Add(referenced);
                     referencedItems.Add(referenced);
                     MarkReferencedItems(referenced, visitedItems, referencedItems);
                 }
