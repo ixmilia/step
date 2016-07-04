@@ -63,6 +63,13 @@ END-ISO-10303-21;
         }
 
         [Fact]
+        public void ReadCartesianPointWithOmittedNameTest()
+        {
+            var point = (StepCartesianPoint)ReadTopLevelItem("#1=CARTESIAN_POINT($,(0.0,0.0,0.0));");
+            Assert.Equal(string.Empty, point.Name);
+        }
+
+        [Fact]
         public void ReadDirectionTest()
         {
             var direction = (StepDirection)ReadTopLevelItem("#1=DIRECTION('name',(1.0,2.0,3.0));");
@@ -337,10 +344,13 @@ END-ISO-10303-21;
 #8=VECTOR('',#2,5.2);
 #9=LINE('',#7,#8);
 #10=EDGE_CURVE('',*,*,#9,.F.);
-#11=ORIENTED_EDGE('',*,*,#10,.F.);
-#12=EDGE_LOOP('',(#6,#11));
+#11=EDGE_LOOP('',(#6,#12));
+/* ensure that forward references are resolved when binding */
+#12=ORIENTED_EDGE('',*,*,#10,.F.);
 ");
             Assert.Equal(2, edgeLoop.EdgeList.Count);
+            Assert.NotNull(edgeLoop.EdgeList[0]);
+            Assert.NotNull(edgeLoop.EdgeList[1]);
         }
 
         [Fact]

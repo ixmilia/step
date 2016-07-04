@@ -40,19 +40,16 @@ namespace IxMilia.Step.Items
 
         internal static StepEdgeLoop CreateFromSyntaxList(StepBinder binder, StepSyntaxList syntaxList)
         {
-            var edgeLoop = new StepEdgeLoop(string.Empty, new StepOrientedEdge[0]);
             syntaxList.AssertListCount(2);
-            edgeLoop.Name = syntaxList.Values[0].GetStringValue();
-
             var edgeSyntaxList = syntaxList.Values[1].GetValueList();
-            var edges = new StepOrientedEdge[edgeSyntaxList.Values.Count];
+            var edgeLoop = new StepEdgeLoop(string.Empty, new StepOrientedEdge[edgeSyntaxList.Values.Count]);
+            edgeLoop.Name = syntaxList.Values[0].GetStringValue();
             for (int i = 0; i < edgeSyntaxList.Values.Count; i++)
             {
                 var j = i; // capture to avoid rebinding
-                binder.BindValue(edgeSyntaxList.Values[j], v => edges[j] = v.AsType<StepOrientedEdge>());
+                binder.BindValue(edgeSyntaxList.Values[j], v => edgeLoop.EdgeList[j] = v.AsType<StepOrientedEdge>());
             }
 
-            edgeLoop.EdgeList = edges.ToList();
             return edgeLoop;
         }
     }

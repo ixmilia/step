@@ -71,6 +71,13 @@ FILE_SCHEMA(('EXPLICIT_DRAUGHTING'));
         }
 
         [Fact]
+        public void ReadDifferentTimeStampsTest()
+        {
+            var file = ReadFileFromHeader(@"FILE_NAME('', '2016-06-26T13:59:52+02:00', (), (), '', '', '');");
+            Assert.Equal(new DateTime(2016, 06, 26, 4, 59, 52), file.Timestamp);
+        }
+
+        [Fact]
         public void WriteHeaderTest()
         {
             var file = new StepFile();
@@ -88,7 +95,7 @@ FILE_SCHEMA(('EXPLICIT_DRAUGHTING'));
 ISO-10303-21;
 HEADER;
 FILE_DESCRIPTION(('some description'),'2;1');
-FILE_NAME('file-name','2010-01-01T',('author'),('organization'),'preprocessor','originator','authorization');
+FILE_NAME('file-name','2010-01-01T00:00:00.0000000',('author'),('organization'),'preprocessor','originator','authorization');
 FILE_SCHEMA(('EXPLICIT_DRAUGHTING'));
 ENDSEC;
 DATA;
@@ -108,7 +115,7 @@ END-ISO-10303-21;
 ISO-10303-21;
 HEADER;
 FILE_DESCRIPTION(('{new string('a', 256)}','a'),'');
-FILE_NAME('','2010-01-01T',(''),(''),'','','');
+FILE_NAME('','2010-01-01T00:00:00.0000000',(''),(''),'','','');
 FILE_SCHEMA(('EXPLICIT_DRAUGHTING'));
 ENDSEC;
 DATA;
