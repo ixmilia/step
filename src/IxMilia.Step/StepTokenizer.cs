@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using IxMilia.Step.Tokens;
@@ -350,8 +351,8 @@ namespace IxMilia.Step
 
             var str = sb.ToString();
             return seenDecimal || seenE
-                ? (StepToken)new StepRealToken(double.Parse(str), tokenLine, tokenColumn)
-                : new StepIntegerToken(int.Parse(str), tokenLine, tokenColumn);
+                ? (StepToken)new StepRealToken(double.Parse(str, CultureInfo.InvariantCulture), tokenLine, tokenColumn)
+                : new StepIntegerToken(int.Parse(str, CultureInfo.InvariantCulture), tokenLine, tokenColumn);
         }
 
         private StepStringToken ParseString()
@@ -422,7 +423,7 @@ namespace IxMilia.Step
             if (IsDigit(next.GetValueOrDefault()))
             {
                 // entity instance: #1234
-                return new StepEntityInstanceToken(int.Parse(TakeWhile(IsDigit)), tokenLine, tokenColumn);
+                return new StepEntityInstanceToken(int.Parse(TakeWhile(IsDigit), CultureInfo.InvariantCulture), tokenLine, tokenColumn);
             }
             else if (IsUpper(next.GetValueOrDefault()))
             {
@@ -454,7 +455,7 @@ namespace IxMilia.Step
             else if (IsUpper(next.GetValueOrDefault()))
             {
                 // instance value: @12
-                return new StepInstanceValueToken(int.Parse(TakeWhile(IsUpperOrDigit)), tokenLine, tokenColumn);
+                return new StepInstanceValueToken(int.Parse(TakeWhile(IsUpperOrDigit), CultureInfo.InvariantCulture), tokenLine, tokenColumn);
             }
             else
             {

@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -45,6 +46,16 @@ namespace IxMilia.Step.Test
         private TokenVerifier Enumeration(string enumName)
         {
             return token => WithKind(StepTokenKind.Enumeration)(token) && ((StepEnumerationToken)token).Value == enumName;
+        }
+
+        private TokenVerifier Real(double value)
+        {
+            return token => WithKind(StepTokenKind.Real)(token) && ((StepRealToken)token).Value == value;
+        }
+
+        private TokenVerifier Integer(int value)
+        {
+            return token => WithKind(StepTokenKind.Integer)(token) && ((StepIntegerToken)token).Value == value;
         }
 
         private void VerifyTokens(string text, params TokenVerifier[] expected)
@@ -136,6 +147,22 @@ ENDSEC;
         public void ParseEnumTokensTest()
         {
             VerifyTokens(".SOME_ENUM_VALUE.", Enumeration("SOME_ENUM_VALUE"));
+        }
+
+        [Fact]
+        public void ParseInvarianCultureTest()
+        {
+            var existingCulture = CultureInfo.CurrentCulture;
+            try
+            {
+                CultureInfo.CurrentCulture = new CultureInfo("de-DE");
+                VerifyTokens("1.8", Real(1.8));
+                VerifyTokens("54", Integer(54));
+            }
+            finally
+            {
+                CultureInfo.CurrentCulture = existingCulture;
+            }
         }
 
         [Fact]
