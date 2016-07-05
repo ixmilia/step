@@ -345,7 +345,7 @@ namespace IxMilia.Step
 
             var str = sb.ToString();
             return seenDecimal || seenE
-                ? (StepToken)new StepRealToken(double.Parse(str), tokenLine, tokenColumn)
+                ? (StepToken)new StepRealToken(double.Parse(str, System.Globalization.CultureInfo.InvariantCulture), tokenLine, tokenColumn)
                 : new StepIntegerToken(int.Parse(str), tokenLine, tokenColumn);
         }
 
