@@ -14,6 +14,9 @@
     <NuGetExe>$(NuGetDir)\NuGet.exe</NuGetExe>
   </PropertyGroup>
 
+  <UsingTask TaskName="Xunit.Runner.MSBuild.xunit"
+             AssemblyFile="src\packages\xunit.runner.msbuild.2.1.0\build\portable-net45+win8+wp8+wpa81\xunit.runner.msbuild.dll" />
+
   <UsingTask TaskName="DownloadFile" TaskFactory="CodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.v4.0.dll">
     <ParameterGroup>
       <Url ParameterType="System.String" Required="true" />
@@ -55,7 +58,7 @@
   </Target>
 
   <Target Name="Test">
-    <Exec Command="$(MSBuildThisFileDirectory)src\packages\xunit.runners.1.9.2\tools\xunit.console.clr4.exe $(TestAssembly)" />
+    <xunit Assemblies="$(TestAssembly)" />
   </Target>
 
   <Target Name="BuildAndTest"
