@@ -1,111 +1,17 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<!-- Copyright (c) IxMilia.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information. -->
-<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <ImportGroup>
-    <Import Project="..\Targets\IxMilia.targets" />
-  </ImportGroup>
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{7BEB4FB6-8A3E-4690-B06C-357130AB4226}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>IxMilia.Step</RootNamespace>
+    <Description>A portable .NET library for reading and writing STEP CAD files.</Description>
+    <Copyright>Copyright 2017</Copyright>
+    <AssemblyTitle>IxMilia.Step</AssemblyTitle>
+    <VersionPrefix>0.1.0</VersionPrefix>
+    <Authors>IxMilia</Authors>
+    <TargetFramework>netstandard1.0</TargetFramework>
     <AssemblyName>IxMilia.Step</AssemblyName>
-    <TargetFrameworkProfile>
-    </TargetFrameworkProfile>
-    <ProjectTypeGuids>{786C830F-07A1-408B-BD7F-6EE04809D6DB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
-    <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
-    <TargetFrameworkVersion>v5.0</TargetFrameworkVersion>
+    <PackageId>IxMilia.Step</PackageId>
+    <PackageTags>CAD;STEP;STP</PackageTags>
+    <PackageProjectUrl>https://github.com/IxMilia/Step</PackageProjectUrl> 
+    <PackageLicenseUrl>http://www.apache.org/licenses/LICENSE-2.0</PackageLicenseUrl> 
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' " />
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' " />
-  <ItemGroup>
-    <Compile Include="Items\StepAxis2Placement.cs" />
-    <Compile Include="Items\StepAxis2Placement3D.cs" />
-    <Compile Include="Items\StepAxis2Placement2D.cs" />
-    <Compile Include="Items\StepCartesianPoint.cs" />
-    <Compile Include="Items\StepCircle.cs" />
-    <Compile Include="Items\StepConic.cs" />
-    <Compile Include="Items\StepCurve.cs" />
-    <Compile Include="Items\StepCylindricalSurface.cs" />
-    <Compile Include="Items\StepDirection.cs" />
-    <Compile Include="Items\StepEdge.cs" />
-    <Compile Include="Items\StepEdgeCurve.cs" />
-    <Compile Include="Items\StepEdgeLoop.cs" />
-    <Compile Include="Items\StepElementarySurface.cs" />
-    <Compile Include="Items\StepEllipse.cs" />
-    <Compile Include="Items\StepFaceBound.cs" />
-    <Compile Include="Items\StepFaceOuterBound.cs" />
-    <Compile Include="Items\StepItemType.cs" />
-    <Compile Include="Items\StepLoop.cs" />
-    <Compile Include="Items\StepOrientedEdge.cs" />
-    <Compile Include="Items\StepPlacement.cs" />
-    <Compile Include="Items\StepPlane.cs" />
-    <Compile Include="Items\StepRepresentationItem_FromTypedParameter.cs" />
-    <Compile Include="Items\StepGeometricRepresentationItem.cs" />
-    <Compile Include="Items\StepLine.cs" />
-    <Compile Include="Items\StepPoint.cs" />
-    <Compile Include="Items\StepRepresentationItem.cs" />
-    <Compile Include="Items\StepSurface.cs" />
-    <Compile Include="Items\StepTopologicalRepresentationItem.cs" />
-    <Compile Include="Items\StepTriple.cs" />
-    <Compile Include="Items\StepVector.cs" />
-    <Compile Include="Items\StepVertex.cs" />
-    <Compile Include="Items\StepVertexPoint.cs" />
-    <Compile Include="StepBinder.cs" />
-    <Compile Include="StepBoundItem.cs" />
-    <Compile Include="StepFile.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="StepLexer.cs" />
-    <Compile Include="StepSchemaTypes.cs" />
-    <Compile Include="StepReader.cs" />
-    <Compile Include="StepReadException.cs" />
-    <Compile Include="StepTokenizer.cs" />
-    <Compile Include="StepWriter.cs" />
-    <Compile Include="Syntax\StepAutoSyntax.cs" />
-    <Compile Include="Syntax\StepComplexItemSyntax.cs" />
-    <Compile Include="Syntax\StepDataSectionSyntax.cs" />
-    <Compile Include="Syntax\StepEntityInstanceReferenceSyntax.cs" />
-    <Compile Include="Syntax\StepEntityInstanceSyntax.cs" />
-    <Compile Include="Syntax\StepItemSyntax.cs" />
-    <Compile Include="Syntax\StepEnumerationValueSyntax.cs" />
-    <Compile Include="Syntax\StepFileSyntax.cs" />
-    <Compile Include="Syntax\StepHeaderMacroSyntax.cs" />
-    <Compile Include="Syntax\StepHeaderSectionSyntax.cs" />
-    <Compile Include="Syntax\StepIntegerSyntax.cs" />
-    <Compile Include="Syntax\StepOmittedSyntax.cs" />
-    <Compile Include="Syntax\StepRealSyntax.cs" />
-    <Compile Include="Syntax\StepStringSyntax.cs" />
-    <Compile Include="Syntax\StepSyntax.cs" />
-    <Compile Include="Syntax\StepSyntaxExtensions.cs" />
-    <Compile Include="Syntax\StepSyntaxList.cs" />
-    <Compile Include="Syntax\StepSyntaxType.cs" />
-    <Compile Include="Syntax\StepSimpleItemSyntax.cs" />
-    <Compile Include="Tokens\StepAsteriskToken.cs" />
-    <Compile Include="Tokens\StepCommaToken.cs" />
-    <Compile Include="Tokens\StepConstantValueToken.cs" />
-    <Compile Include="Tokens\StepConstantInstanceToken.cs" />
-    <Compile Include="Tokens\StepEntityInstanceToken.cs" />
-    <Compile Include="Tokens\StepEnumerationToken.cs" />
-    <Compile Include="Tokens\StepEqualsToken.cs" />
-    <Compile Include="Tokens\StepInstanceValueToken.cs" />
-    <Compile Include="Tokens\StepIntegerToken.cs" />
-    <Compile Include="Tokens\StepKeywordToken.cs" />
-    <Compile Include="Tokens\StepLeftParenToken.cs" />
-    <Compile Include="Tokens\StepOmittedToken.cs" />
-    <Compile Include="Tokens\StepRealToken.cs" />
-    <Compile Include="Tokens\StepRightParenToken.cs" />
-    <Compile Include="Tokens\StepSemicolonToken.cs" />
-    <Compile Include="Tokens\StepStringToken.cs" />
-    <Compile Include="Tokens\StepToken.cs" />
-    <Compile Include="Tokens\StepTokenKind.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="project.json" />
-  </ItemGroup>
-  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
+
 </Project>
