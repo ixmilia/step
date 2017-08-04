@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FParsec" Version="1.0.3-beta-20170521" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="**/*.fs" />
+    <Compile Include="Ast.fs" />
+    <Compile Include="Parser.fs" />
+    <Compile Include="Program.fs" />
+  </ItemGroup>
+
+</Project>

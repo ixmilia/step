@@ -28,14 +28,31 @@ goto parseargs
 
 :argsdone
 
-:: build
 dotnet restore
-if errorlevel 1 exit /b 1
+
+:: build schema generator
+pushd %~dp0src\IxMilia.Step.SchemaParser
+dotnet build -c %configuration%
+if errorlevel 1 popd && exit /b 1
+
+:: test schema generator
+if /i "%runtests%" == "true" (
+    pushd %~dp0src\IxMilia.Step.SchemaParser.Test
+    dotnet test -c %configuration%
+    if errorlevel 1 popd && exit /b 1
+)
+
+:: run schema generator
+pushd %~dp0src\IxMilia.Step.SchemaParser
+dotnet run
+if errorlevel 1 popd && exit /b 1
+
+:: build library
 dotnet build -c %configuration%
 if errorlevel 1 exit /b 1
 
-:: test
+:: test library
 if /i "%runtests%" == "true" (
     dotnet test -c %configuration% --no-restore --no-build
-    if errorlevel 1 goto error
+    if errorlevel 1 exit /b 1
 )
