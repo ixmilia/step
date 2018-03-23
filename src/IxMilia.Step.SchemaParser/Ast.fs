@@ -2,6 +2,28 @@
 
 namespace IxMilia.Step.SchemaParser
 
-type Schema (id: string, version: string) =
+type Resource (name: string, alias: string option) =
+    member this.Name = name
+    member this.Alias = alias
+
+type ReferenceClause (schemaName: string, resources: Resource list option) =
+    member this.SchemaName = schemaName
+    member this.Resources = resources
+
+type ExplicitAttribute (name: string, typ: string) =
+    member this.Name = name
+    member this.Type = typ
+
+type Entity (name: string, attributes: ExplicitAttribute list) =
+    member this.Name = name
+    member this.Attributes = attributes
+
+type SchemaBody (interfaces: ReferenceClause list, entities: Entity list) =
+    member this.Interfaces = interfaces
+    member this.Entities = entities
+
+type Schema (id: string, version: string, body: SchemaBody) =
     member this.Id = id
     member this.Version = version
+    member this.Body = body
+    member this.Entities = body.Entities

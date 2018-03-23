@@ -1,11 +1,15 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.24720.0
+# Visual Studio 15
+VisualStudioVersion = 15.0.27517.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IxMilia.Step", "src\IxMilia.Step\IxMilia.Step.csproj", "{7BEB4FB6-8A3E-4690-B06C-357130AB4226}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IxMilia.Step", "src\IxMilia.Step\IxMilia.Step.csproj", "{7BEB4FB6-8A3E-4690-B06C-357130AB4226}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IxMilia.Step.Test", "src\IxMilia.Step.Test\IxMilia.Step.Test.csproj", "{078EDA8D-F0BB-4D60-A7BD-1782A9CF713C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IxMilia.Step.Test", "src\IxMilia.Step.Test\IxMilia.Step.Test.csproj", "{078EDA8D-F0BB-4D60-A7BD-1782A9CF713C}"
+EndProject
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "IxMilia.Step.SchemaParser", "src\IxMilia.Step.SchemaParser\IxMilia.Step.SchemaParser.fsproj", "{41E8C1AD-90F4-4691-BD3E-D40F04C6ABC9}"
+EndProject
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "IxMilia.Step.SchemaParser.Test", "src\IxMilia.Step.SchemaParser.Test\IxMilia.Step.SchemaParser.Test.fsproj", "{23576C6D-DA16-46D2-9576-6E2CE3CD8FD9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,8 +25,19 @@ Global
 		{078EDA8D-F0BB-4D60-A7BD-1782A9CF713C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{078EDA8D-F0BB-4D60-A7BD-1782A9CF713C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{078EDA8D-F0BB-4D60-A7BD-1782A9CF713C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{41E8C1AD-90F4-4691-BD3E-D40F04C6ABC9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{41E8C1AD-90F4-4691-BD3E-D40F04C6ABC9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{41E8C1AD-90F4-4691-BD3E-D40F04C6ABC9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{41E8C1AD-90F4-4691-BD3E-D40F04C6ABC9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{23576C6D-DA16-46D2-9576-6E2CE3CD8FD9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{23576C6D-DA16-46D2-9576-6E2CE3CD8FD9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{23576C6D-DA16-46D2-9576-6E2CE3CD8FD9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{23576C6D-DA16-46D2-9576-6E2CE3CD8FD9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {0ABDB3E6-54C5-4C26-B853-C2F57A45BAC7}
 	EndGlobalSection
 EndGlobal

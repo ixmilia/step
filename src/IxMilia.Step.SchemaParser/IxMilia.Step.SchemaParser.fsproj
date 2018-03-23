@@ -6,11 +6,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="FParsec" Version="1.0.3-beta-20170521" />
+    <PackageReference Include="FParsec" Version="1.0.3" />
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Remove="**/*.fs" />
     <Compile Include="Ast.fs" />
     <Compile Include="Parser.fs" />
     <Compile Include="Program.fs" />

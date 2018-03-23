@@ -136,6 +136,7 @@ module SchemaParser =
         let XOR = str_ws "xor"
 
         let SEMI = str_ws ";"
+        let COLON = str_ws ":"
         let COMMA = str_ws ","
         let DOUBLE_QUOTE = pchar '"'
         let LEFT_PAREN = str_ws "("
@@ -156,32 +157,58 @@ module SchemaParser =
         let string_literal = simple_string_literal <|> encoded_string_literal .>> ws
         let schema_version_id = string_literal
 
+        let attribute_id = simple_id .>> ws
         let schema_id = simple_id .>> ws
         let schema_ref = schema_id
-        let entity_id = simple_id
+        let entity_id = simple_id .>> ws
         let function_id = simple_id
         let procedure_id = simple_id
         let type_id = simple_id
         let rename_id = entity_id <|> function_id <|> procedure_id <|> type_id
         let constant_id = simple_id
         let constant_ref = constant_id
-        let resource_ref = constant_ref <|> entity_ref <|> function_ref <|> procecure_ref <|> type_ref
-        let resource_or_rename = resource_ref .>>. opt (AS >>. rename_id)
-        let reference_clause = REFERENCE >>. FROM >>. schema_ref .>>. opt ( LEFT_PAREN >>. sepBy1 resource_or_rename COMMA .>> RIGHT_PAREN) .>> SEMI
+        let entity_ref = entity_id
+        let function_ref = function_id
+        let procedure_ref = procedure_id
+        let type_ref = type_id
+        let resource_ref = constant_ref <|> entity_ref <|> function_ref <|> procedure_ref <|> type_ref
+        let resource_or_rename = resource_ref .>>. opt (AS >>. rename_id) |>> Resource
+        let reference_clause = REFERENCE >>. FROM >>. schema_ref .>>. opt ( LEFT_PAREN >>. sepBy1 resource_or_rename COMMA .>> RIGHT_PAREN) .>> SEMI |>> ReferenceClause
         let interface_specification = reference_clause //<|> use_clause
+
+        let real_type = REAL // precision_spec
+        let simple_types = real_type // <|> binary ...
+        let base_type = simple_types // <|> generalized_types ...
+        let attribute_decl = attribute_id // <|> qualified_attribute
+        let explicit_attr = attribute_decl .>> COLON (* OPTIONAL keyword*) .>>. base_type .>> SEMI |>> ExplicitAttribute
+        let entity_body =
+            many (attempt explicit_attr) // derive_clause inverse_clause unique_clause where_clause
+        let entity_head =
+            ENTITY >>. entity_id .>> SEMI
+        let entity_decl =
+            pipe3
+                (entity_head)
+                (entity_body .>> ws)
+                (END_ENTITY .>> SEMI)
+                (fun name attributes _ -> Entity(name, attributes))
+
+        let declaration = entity_decl // <|> function_decl <|> procedure_decl <|> type_decl
 
         let string_opt_to_nullable = function
             | Some(value) -> value
             | None -> null
         let schema_body =
             // { interface_specification } [ constant_decl ] { declaration | rule_decl } .
-            many interface_specification
+            pipe2
+                (many interface_specification)
+                (many declaration)
+                (fun interfaces entities -> SchemaBody(interfaces, entities))
         let schema_decl =
-        // schema_decl = SCHEMA schema_id [ schema_version_id ] ';' schema_body END_SCHEMA ';' .
-            SCHEMA >>.
-            schema_id .>>. (opt schema_version_id |>> string_opt_to_nullable) .>>
-            SEMI (*schema_body*) .>>
-            END_SCHEMA .>> SEMI
-            |>> Schema
+            // schema_decl = SCHEMA schema_id [ schema_version_id ] ';' schema_body END_SCHEMA ';' .
+            pipe3
+                (SCHEMA >>. schema_id)
+                (opt schema_version_id |>> string_opt_to_nullable)
+                (SEMI >>. schema_body .>> END_SCHEMA .>> SEMI)
+                (fun a b c -> Schema(a, b, c))
 
         ws >>. schema_decl .>> eof

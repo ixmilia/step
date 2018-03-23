@@ -29,7 +29,7 @@ let ``schema with version``() =
     let schema = parse " SCHEMA name \"version with \"\" double quote\" ; END_SCHEMA ; "
     Assert.Equal("version with \" double quote", schema.Version)
 
-(*
+
 [<Fact>]
 let ``empty entity``() =
     let schema = parse " SCHEMA test_schema ; ENTITY empty_entity ; END_ENTITY ; END_SCHEMA ; "
@@ -39,12 +39,13 @@ let ``empty entity``() =
 let ``simple entity``() =
     let schema = parse " SCHEMA s ; ENTITY point ; x : REAL ; y : REAL ; END_ENTITY ; END_SCHEMA ; "
     let entity = schema.Entities.Single()
-    Assert.Equal(2, entity.Properties.Length)
-    Assert.Equal("x", entity.Properties.[0].Name)
-    Assert.Equal("REAL", entity.Properties.[0].Type.TypeName)
-    Assert.Equal("y", entity.Properties.[1].Name)
-    Assert.Equal("REAL", entity.Properties.[1].Type.TypeName)
+    Assert.Equal(2, entity.Attributes.Length)
+    Assert.Equal("x", entity.Attributes.[0].Name)
+    Assert.Equal("REAL", entity.Attributes.[0].Type)
+    Assert.Equal("y", entity.Attributes.[1].Name)
+    Assert.Equal("REAL", entity.Attributes.[1].Type)
 
+(*
 [<Fact>]
 let ``entity with optional parameter``() =
     let schema = parse " SCHEMA s ; ENTITY point ; x : REAL ; y : OPTIONAL REAL ; END_ENTITY ; END_SCHEMA ; "
