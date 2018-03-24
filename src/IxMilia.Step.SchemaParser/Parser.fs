@@ -163,7 +163,7 @@ module SchemaParser =
         let entity_id = simple_id .>> ws
         let function_id = simple_id
         let procedure_id = simple_id
-        let type_id = simple_id
+        let type_id = simple_id .>> ws
         let rename_id = entity_id <|> function_id <|> procedure_id <|> type_id
         let constant_id = simple_id
         let constant_ref = constant_id
@@ -178,7 +178,8 @@ module SchemaParser =
 
         let real_type = REAL // precision_spec
         let simple_types = real_type // <|> binary ...
-        let base_type = simple_types // <|> generalized_types ...
+        let named_types = entity_ref <|> type_ref
+        let base_type = (* aggregation_types <|>*) simple_types <|> named_types
         let attribute_decl = attribute_id // <|> qualified_attribute
         let explicit_attr =
             pipe4
