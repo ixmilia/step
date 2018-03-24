@@ -180,7 +180,17 @@ module SchemaParser =
         let simple_types = real_type // <|> binary ...
         let base_type = simple_types // <|> generalized_types ...
         let attribute_decl = attribute_id // <|> qualified_attribute
-        let explicit_attr = attribute_decl .>> COLON (* OPTIONAL keyword*) .>>. base_type .>> SEMI |>> ExplicitAttribute
+        let explicit_attr =
+            pipe4
+                (attribute_decl)
+                (COLON)
+                (pipe2
+                    (opt OPTIONAL |>> Option.isSome)
+                    (base_type)
+                    (fun isOptional typeName -> AttributeType(typeName, isOptional)))
+                (SEMI)
+                (fun name _ typ _ ->
+                    ExplicitAttribute(name, typ))
         let entity_body =
             many (attempt explicit_attr) // derive_clause inverse_clause unique_clause where_clause
         let entity_head =

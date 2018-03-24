@@ -10,7 +10,11 @@ type ReferenceClause (schemaName: string, resources: Resource list option) =
     member this.SchemaName = schemaName
     member this.Resources = resources
 
-type ExplicitAttribute (name: string, typ: string) =
+type AttributeType (name: string, isOptional: bool) =
+    member this.TypeName = name
+    member this.IsOptional = isOptional
+
+type ExplicitAttribute (name: string, typ: AttributeType) =
     member this.Name = name
     member this.Type = typ
 
