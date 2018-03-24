@@ -68,6 +68,7 @@ let ``entity with derived``() =
     let schema = parse " SCHEMA s ; ENTITY square ; size : REAL ; DERIVE area : REAL := size * size ; END_ENTITY ; END_SCHEMA ; "
     Assert.Equal("area", schema.Entities.Single().DerivedProperties.Single().Property.Name)
     Assert.Equal(Mul(Identifier("size"), Identifier("size")), schema.Entities.Single().DerivedProperties.Single().Expression)
+*)
 
 [<Fact>]
 let ``multiple entities``() =
@@ -75,7 +76,6 @@ let ``multiple entities``() =
     Assert.Equal(2, schema.Entities.Length)
     Assert.Equal("a", schema.Entities.First().Name)
     Assert.Equal("b", schema.Entities.Last().Name)
-//*)
 
 [<Fact>]
 let ``comments``() =
