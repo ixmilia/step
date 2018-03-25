@@ -152,7 +152,7 @@ module SchemaParser =
         let octet = hex_digit .>>. hex_digit |>> (fun (a, b) -> ((int a) <<< 4) + int b) |>> byte
         let encoded_character = tuple4 octet octet octet octet |>> (fun (a, b, c, d) -> (int a <<< 24) + (int b <<< 16) + (int c <<< 8) + int d) |>> char
 
-        let simple_id = many1Satisfy2 isLetter (fun c -> isLetter c || isDigit c || c = '_')
+        let simple_id = many1Satisfy2 isLetter (fun c -> isLetter c || isDigit c || c = '_') .>> ws
         let not_paren_star_quote_special = anyOf ['!'; '#'; '$'; '%'; '&'; '+'; ','; '-'; '.'; '/'; ':'; ';'; '<'; '='; '>'; '?'; '@'; '\\'; '^'; '_'; '\''; '{'; '|'; '}'; '~'; '['; ']'; ' ']
         let not_quote : Parser<char, unit> = not_paren_star_quote_special <|> letter <|> digit <|> anyOf ['('; ')'; '*']
         let char_list_to_string (chars: char list) = String.Join(String.Empty, chars)
@@ -163,13 +163,13 @@ module SchemaParser =
         let string_literal = simple_string_literal <|> encoded_string_literal .>> ws |>> StringLiteral
         let schema_version_id = string_literal |>> function StringLiteral s -> s | _ -> failwith "unreachable"
 
-        let attribute_id = simple_id .>> ws
-        let schema_id = simple_id .>> ws
+        let attribute_id = simple_id
+        let schema_id = simple_id
         let schema_ref = schema_id
-        let entity_id = simple_id .>> ws
+        let entity_id = simple_id
         let function_id = simple_id
         let procedure_id = simple_id
-        let type_id = simple_id .>> ws
+        let type_id = simple_id
         let rename_id = entity_id <|> function_id <|> procedure_id <|> type_id
         let constant_id = simple_id
         let constant_ref = constant_id
@@ -207,7 +207,7 @@ module SchemaParser =
         let literal = binary_literal <|> integer_literal <|> logical_literal <|> real_literal <|> string_literal
         let opp = new OperatorPrecedenceParser<Expression, unit, unit>()
         let expr = opp.ExpressionParser
-        opp.TermParser <- (literal |>> LiteralValue) <|> (simple_id .>> ws |>> AttributeName) <|> between LEFT_PAREN RIGHT_PAREN expr
+        opp.TermParser <- (literal |>> LiteralValue) <|> (simple_id |>> AttributeName) <|> between LEFT_PAREN RIGHT_PAREN expr
         opp.AddOperator(InfixOperator("+", ws, 1, Associativity.Left, (fun a b -> Add(a, b))))
         opp.AddOperator(InfixOperator("-", ws, 1, Associativity.Left, (fun a b -> Subtract(a, b))))
         opp.AddOperator(InfixOperator("or", ws, 1, Associativity.Left, (fun a b -> Or(a, b))))
