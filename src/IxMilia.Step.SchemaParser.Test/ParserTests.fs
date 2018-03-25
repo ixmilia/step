@@ -62,13 +62,12 @@ let ``entity attribute with non-built-in-type``() =
     let schema = parse " SCHEMA s ; ENTITY circle ; center : point ; END_ENTITY ; END_SCHEMA ; "
     Assert.Equal("point", schema.Entities.Single().Attributes.Single().Type.TypeName)
 
-(*
 [<Fact>]
 let ``entity with derived``() =
     let schema = parse " SCHEMA s ; ENTITY square ; size : REAL ; DERIVE area : REAL := size * size ; END_ENTITY ; END_SCHEMA ; "
-    Assert.Equal("area", schema.Entities.Single().DerivedProperties.Single().Property.Name)
-    Assert.Equal(Mul(Identifier("size"), Identifier("size")), schema.Entities.Single().DerivedProperties.Single().Expression)
-*)
+    let derived = schema.Entities.Single().DerivedAttributes.Single()
+    Assert.Equal("area", derived.Name)
+    Assert.Equal(Multiply(AttributeName "size", AttributeName "size"), derived.Expression)
 
 [<Fact>]
 let ``multiple entities``() =

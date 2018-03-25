@@ -6,6 +6,8 @@ open System
 open FParsec
 
 module SchemaParser =
+    open System.Globalization
+
     let parser : Parser<Schema, unit> =
         let str = pstringCI
         let pcomment = str "--" >>. many1Satisfy ((<>) '\n')
@@ -135,8 +137,12 @@ module SchemaParser =
         let WHILE = str_ws "while"
         let XOR = str_ws "xor"
 
+        let PERCENT = str_ws "%"
+        let PLUS = str_ws "+"
+        let MINUS = str_ws "-"
         let SEMI = str_ws ";"
         let COLON = str_ws ":"
+        let COLON_EQUALS = str_ws ":="
         let COMMA = str_ws ","
         let DOUBLE_QUOTE = pchar '"'
         let LEFT_PAREN = str_ws "("
@@ -154,8 +160,8 @@ module SchemaParser =
         let simple_string_literal = // \q { ( \q \q ); not_quote; \s; \o } \q .
             DOUBLE_QUOTE >>. many (stringReturn "\"\"" '"' <|> not_quote) .>> DOUBLE_QUOTE
             |>> char_list_to_string
-        let string_literal = simple_string_literal <|> encoded_string_literal .>> ws
-        let schema_version_id = string_literal
+        let string_literal = simple_string_literal <|> encoded_string_literal .>> ws |>> StringLiteral
+        let schema_version_id = string_literal |>> function StringLiteral s -> s | _ -> failwith "unreachable"
 
         let attribute_id = simple_id .>> ws
         let schema_id = simple_id .>> ws
@@ -176,11 +182,64 @@ module SchemaParser =
         let reference_clause = REFERENCE >>. FROM >>. schema_ref .>>. opt ( LEFT_PAREN >>. sepBy1 resource_or_rename COMMA .>> RIGHT_PAREN) .>> SEMI |>> ReferenceClause
         let interface_specification = reference_clause //<|> use_clause
 
+        // expressions
+        let bit = str_ws "0" <|> str_ws "1"
+        let binary_literal =
+            PERCENT >>. many bit
+            |>> List.fold (fun acc bit -> (acc * 2L) + (if bit = "1" then 1L else 0L)) 0L
+            |>> IntegerLiteral
+        let sign = PLUS <|> MINUS
+        let integer_literal =
+            opt sign .>>. pint64 .>> ws
+            |>> (function
+                 | Some "+", value -> value
+                 | Some "-", value -> -value
+                 | _, value -> value)
+            |>> IntegerLiteral
+        let logical_literal = (FALSE |>> (fun _ -> LogicalLiteral(Some false))) <|> (TRUE |>> (fun _ -> LogicalLiteral(Some true))) <|> (UNKNOWN |>> (fun _ -> LogicalLiteral(None)))
+        let real_literal =
+            opt sign .>>. pfloat .>> ws
+            |>> (function
+                 | Some "+", value -> value
+                 | Some "-", value -> -value
+                 | _, value -> value)
+            |>> RealLiteral
+        let literal = binary_literal <|> integer_literal <|> logical_literal <|> real_literal <|> string_literal
+        let opp = new OperatorPrecedenceParser<Expression, unit, unit>()
+        let expr = opp.ExpressionParser
+        opp.TermParser <- (literal |>> LiteralValue) <|> (simple_id .>> ws |>> AttributeName) <|> between LEFT_PAREN RIGHT_PAREN expr
+        opp.AddOperator(InfixOperator("+", ws, 1, Associativity.Left, (fun a b -> Add(a, b))))
+        opp.AddOperator(InfixOperator("-", ws, 1, Associativity.Left, (fun a b -> Subtract(a, b))))
+        opp.AddOperator(InfixOperator("or", ws, 1, Associativity.Left, (fun a b -> Or(a, b))))
+        opp.AddOperator(InfixOperator("xor", ws, 1, Associativity.Left, (fun a b -> Xor(a, b))))
+        opp.AddOperator(InfixOperator("*", ws, 2, Associativity.Left, (fun a b -> Multiply(a, b))))
+        opp.AddOperator(InfixOperator("/", ws, 2, Associativity.Left, (fun a b -> Divide(a, b))))
+        opp.AddOperator(InfixOperator("%", ws, 2, Associativity.Left, (fun a b -> Modulus(a, b))))
+        opp.AddOperator(InfixOperator("and", ws, 2, Associativity.Left, (fun a b -> And(a, b))))
+        opp.AddOperator(InfixOperator("**", ws, 3, Associativity.Right, (fun a b -> Exponent(a, b))))
+        opp.AddOperator(PrefixOperator("-", ws, 4, true, Negate))
+        //let add_like_op = PLUS <|> MINUS <|> OR <|> XOR
+        //let multiplication_like_op = ASTERISK <|> SLASH <|> DIV <|> MOD <|> AND <|> DOUBLE_PIPE
+        //let primary = literal // <|> qualifialble_factor { qualifier }
+        //let simple_factor = primary // aggregate_initializer <|> entity_constructor <|> enumeration_reference <|> interval <|> query_expression <|>( [ NOT ] '(' expression ')' ) | ( [ unary_op ] primary ) .
+        //let factor = simple_factor // [ '**' simple_factor ]
+        //let term = factor // { multiplication_like_op factor }
+        //let simple_expression = term // { add_like_op term }
+        //let expression = simple_expression // [ rel_op_extended simple_expression ]
+        let expression = expr
+
         let real_type = REAL // precision_spec
         let simple_types = real_type // <|> binary ...
         let named_types = entity_ref <|> type_ref
         let base_type = (* aggregation_types <|>*) simple_types <|> named_types
         let attribute_decl = attribute_id // <|> qualified_attribute
+        let derive_attr =
+            pipe3
+                (attribute_decl .>> COLON)
+                (base_type .>> COLON_EQUALS |>> (fun typeName -> AttributeType(typeName, false)))
+                (expression .>> SEMI)
+                (fun name typ expression -> DerivedAttribute(name, typ, expression))
+        let derive_clause = DERIVE >>. many1 (attempt derive_attr)
         let explicit_attr =
             pipe4
                 (attribute_decl)
@@ -193,15 +252,18 @@ module SchemaParser =
                 (fun name _ typ _ ->
                     ExplicitAttribute(name, typ))
         let entity_body =
-            many (attempt explicit_attr) // derive_clause inverse_clause unique_clause where_clause
+            many (attempt explicit_attr) .>>. opt derive_clause // derive_clause inverse_clause unique_clause where_clause
         let entity_head =
             ENTITY >>. entity_id .>> SEMI
         let entity_decl =
             pipe3
                 (entity_head)
-                (entity_body .>> ws)
+                (entity_body)
                 (END_ENTITY .>> SEMI)
-                (fun name attributes _ -> Entity(name, attributes))
+                (fun name body _ ->
+                    let attributes, derivedAttributes = body
+                    let derivedAttributes = Option.defaultValue [] derivedAttributes
+                    Entity(name, attributes, derivedAttributes))
 
         let declaration = entity_decl // <|> function_decl <|> procedure_decl <|> type_decl
 
