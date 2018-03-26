@@ -227,7 +227,7 @@ module SchemaParser =
         //let expression = simple_expression // [ rel_op_extended simple_expression ]
         let expression = expr
 
-        let real_type = REAL |>> (fun _ -> RealType(None)) // precision_spec
+        let real_type = REAL >>. opt (between LEFT_PAREN RIGHT_PAREN expression) |>> RealType
         let simple_types = real_type |>> SimpleType // <|> binary ...
         let named_types = entity_ref <|> type_ref |>> NamedType
         let base_type = (* aggregation_types <|>*) simple_types <|> named_types

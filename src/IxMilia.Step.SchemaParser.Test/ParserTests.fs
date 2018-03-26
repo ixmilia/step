@@ -37,13 +37,13 @@ let ``empty entity``() =
 
 [<Fact>]
 let ``simple entity``() =
-    let schema = parse " SCHEMA s ; ENTITY point ; x : REAL ; y : REAL ; END_ENTITY ; END_SCHEMA ; "
+    let schema = parse " SCHEMA s ; ENTITY point ; x : REAL ; y : REAL ( 3 ) ; END_ENTITY ; END_SCHEMA ; "
     let entity = schema.Entities.Single()
     Assert.Equal(2, entity.Attributes.Length)
     Assert.Equal("x", entity.Attributes.[0].Name)
     Assert.Equal(SimpleType(RealType None), entity.Attributes.[0].Type.Type)
     Assert.Equal("y", entity.Attributes.[1].Name)
-    Assert.Equal(SimpleType(RealType None), entity.Attributes.[1].Type.Type)
+    Assert.Equal(SimpleType(RealType(Some(LiteralValue(IntegerLiteral 3L)))), entity.Attributes.[1].Type.Type)
 
 [<Fact>]
 let ``entity with optional parameter``() =
