@@ -6,8 +6,6 @@ open System
 open FParsec
 
 module SchemaParser =
-    open System.Globalization
-
     let parser : Parser<Schema, unit> =
         let str = pstringCI
         let pcomment = str "--" >>. many1Satisfy ((<>) '\n')
@@ -229,15 +227,15 @@ module SchemaParser =
         //let expression = simple_expression // [ rel_op_extended simple_expression ]
         let expression = expr
 
-        let real_type = REAL // precision_spec
-        let simple_types = real_type // <|> binary ...
-        let named_types = entity_ref <|> type_ref
+        let real_type = REAL |>> (fun _ -> RealType(None)) // precision_spec
+        let simple_types = real_type |>> SimpleType // <|> binary ...
+        let named_types = entity_ref <|> type_ref |>> NamedType
         let base_type = (* aggregation_types <|>*) simple_types <|> named_types
         let attribute_decl = attribute_id // <|> qualified_attribute
         let derive_attr =
             pipe3
                 (attribute_decl .>> COLON)
-                (base_type .>> COLON_EQUALS |>> (fun typeName -> AttributeType(typeName, false)))
+                (base_type .>> COLON_EQUALS |>> (fun baseType -> AttributeType(baseType, false)))
                 (expression .>> SEMI)
                 (fun name typ expression -> DerivedAttribute(name, typ, expression))
         let derive_clause = DERIVE >>. many1 (attempt derive_attr)
@@ -248,7 +246,7 @@ module SchemaParser =
                 (pipe2
                     (opt OPTIONAL |>> Option.isSome)
                     (base_type)
-                    (fun isOptional typeName -> AttributeType(typeName, isOptional)))
+                    (fun isOptional baseType -> AttributeType(baseType, isOptional)))
                 (SEMI)
                 (fun name _ typ _ ->
                     ExplicitAttribute(name, typ))
@@ -267,7 +265,7 @@ module SchemaParser =
                     Entity(name, attributes, derivedAttributes))
             |>> EntityDeclaration
 
-        let underlying_type = (*constructed_types <|> aggregation_types <|>*) simple_types <|> type_ref
+        let underlying_type = (*constructed_types <|> aggregation_types <|>*) simple_types <|> (type_ref |>> NamedType)
         let label = simple_id
         let domain_rule =
             pipe2
@@ -280,7 +278,7 @@ module SchemaParser =
                 (TYPE >>. type_id .>> EQUALS)
                 (underlying_type .>> SEMI)
                 (opt (attempt where_clause) .>> END_TYPE .>> SEMI)
-                (fun typeName underlyingType whereClause -> SchemaType(typeName, underlyingType, Option.defaultValue [] whereClause))
+                (fun typeName baseType whereClause -> SchemaType(typeName, baseType, Option.defaultValue [] whereClause))
             |>> TypeDeclaration
 
         let declaration = entity_decl (* <|> function_decl <|> procedure_decl *) <|> type_decl

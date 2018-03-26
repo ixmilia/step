@@ -33,8 +33,19 @@ type Expression =
     | Xor of Expression * Expression
     | And of Expression * Expression
 
-type AttributeType(name:string, isOptional:bool) =
-    member this.TypeName = name
+type SimpleType =
+    | RealType of Expression option // precision
+
+type BaseType =
+    | SimpleType of SimpleType
+    | NamedType of string
+    member this.DisplayName =
+        match this with
+        | SimpleType _ -> ""
+        | NamedType n -> n
+
+type AttributeType(typ:BaseType, isOptional:bool) =
+    member this.Type = typ
     member this.IsOptional = isOptional
 
 type DerivedAttribute(name:string, typ:AttributeType, expression:Expression) =
@@ -55,7 +66,7 @@ type DomainRule(label:string, expression:Expression) =
     member this.Label = label
     member this.Expression = expression
 
-type SchemaType(name:string, typ:string, domainRules:DomainRule list) =
+type SchemaType(name:string, typ:BaseType, domainRules:DomainRule list) =
     member this.Name = name
     member this.Type = typ
     member this.DomainRules = domainRules

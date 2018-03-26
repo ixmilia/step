@@ -41,9 +41,9 @@ let ``simple entity``() =
     let entity = schema.Entities.Single()
     Assert.Equal(2, entity.Attributes.Length)
     Assert.Equal("x", entity.Attributes.[0].Name)
-    Assert.Equal("REAL", entity.Attributes.[0].Type.TypeName)
+    Assert.Equal(SimpleType(RealType None), entity.Attributes.[0].Type.Type)
     Assert.Equal("y", entity.Attributes.[1].Name)
-    Assert.Equal("REAL", entity.Attributes.[1].Type.TypeName)
+    Assert.Equal(SimpleType(RealType None), entity.Attributes.[1].Type.Type)
 
 [<Fact>]
 let ``entity with optional parameter``() =
@@ -51,16 +51,16 @@ let ``entity with optional parameter``() =
     let entity = schema.Entities.Single()
     Assert.Equal(2, entity.Attributes.Length)
     Assert.Equal("x", entity.Attributes.[0].Name)
-    Assert.Equal("REAL", entity.Attributes.[0].Type.TypeName)
+    Assert.Equal(SimpleType(RealType None), entity.Attributes.[0].Type.Type)
     Assert.False(entity.Attributes.[0].Type.IsOptional)
     Assert.Equal("y", entity.Attributes.[1].Name)
-    Assert.Equal("REAL", entity.Attributes.[1].Type.TypeName)
+    Assert.Equal(SimpleType(RealType None), entity.Attributes.[1].Type.Type)
     Assert.True(entity.Attributes.[1].Type.IsOptional)
 
 [<Fact>]
 let ``entity attribute with non-built-in-type``() =
     let schema = parse " SCHEMA s ; ENTITY circle ; center : point ; END_ENTITY ; END_SCHEMA ; "
-    Assert.Equal("point", schema.Entities.Single().Attributes.Single().Type.TypeName)
+    Assert.Equal(NamedType "point", schema.Entities.Single().Attributes.Single().Type.Type)
 
 [<Fact>]
 let ``entity with derived``() =
@@ -97,9 +97,9 @@ let ``simple types``() =
     let schema = parse " SCHEMA s ; TYPE length = REAL ; END_TYPE ; TYPE width = REAL ; END_TYPE ; END_SCHEMA ; "
     Assert.Equal(2, schema.Types.Length)
     Assert.Equal("length", schema.Types.First().Name)
-    Assert.Equal("REAL", schema.Types.First().Type)
+    Assert.Equal(SimpleType(RealType None), schema.Types.First().Type)
     Assert.Equal("width", schema.Types.Last().Name)
-    Assert.Equal("REAL", schema.Types.Last().Type)
+    Assert.Equal(SimpleType(RealType None), schema.Types.Last().Type)
 
 [<Fact>]
 let ``type and entity``() =
