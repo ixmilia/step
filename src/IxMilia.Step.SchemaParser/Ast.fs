@@ -38,6 +38,7 @@ type SimpleType =
     | BooleanType
     | IntegerType
     | LogicalType
+    | NumberType
     | RealType of Expression option // precision
 
 type BaseType =
