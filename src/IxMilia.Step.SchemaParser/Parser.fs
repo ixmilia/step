@@ -200,7 +200,7 @@ module SchemaParser =
                  | Some "-", value -> -value
                  | _, value -> value)
             |>> IntegerLiteral
-        let logical_literal = (FALSE |>> (fun _ -> LogicalLiteral(Some false))) <|> (TRUE |>> (fun _ -> LogicalLiteral(Some true))) <|> (UNKNOWN |>> (fun _ -> LogicalLiteral(None)))
+        let logical_literal = (FALSE >>% LogicalLiteral(Some false)) <|> (TRUE >>% LogicalLiteral(Some true)) <|> (UNKNOWN >>% LogicalLiteral(None))
         let real_literal =
             opt sign .>>. pfloat .>> ws
             |>> (function
@@ -233,16 +233,16 @@ module SchemaParser =
         let expression = expr
 
         let binary_type = BINARY >>. opt (between LEFT_PAREN RIGHT_PAREN expression) .>>. (opt FIXED |>> Option.isSome) |>> BinaryType
-        let boolean_type = BOOLEAN |>> fun _ -> BooleanType
-        let integer_type = INTEGER |>> fun _ -> IntegerType
-        let logical_type = LOGICAL |>> fun _ -> LogicalType
-        let number_type = NUMBER |>> fun _ -> NumberType
+        let boolean_type = BOOLEAN >>% BooleanType
+        let integer_type = INTEGER >>% IntegerType
+        let logical_type = LOGICAL >>% LogicalType
+        let number_type = NUMBER >>% NumberType
         let real_type = REAL >>. opt (between LEFT_PAREN RIGHT_PAREN expression) |>> RealType
         let string_type = STRING >>. opt (between LEFT_PAREN RIGHT_PAREN expression) .>>. (opt FIXED |>> Option.isSome) |>> StringType
         let simple_types = binary_type <|> boolean_type <|> integer_type <|> logical_type <|> number_type <|> real_type <|> string_type |>> SimpleType
         let named_types = entity_ref <|> type_ref |>> NamedType
         let bound_1 = expression
-        let bound_2 = (QUESTION |>> fun _ -> None) <|> (expression |>> Some)
+        let bound_2 = (QUESTION >>% None) <|> (expression |>> Some)
         let bound_spec = (LEFT_BRACKET >>. bound_1) .>>. (COLON >>. bound_2 .>> RIGHT_BRACKET)
         let rec array_type =
             pipe4
