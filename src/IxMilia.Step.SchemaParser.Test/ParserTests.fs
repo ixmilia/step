@@ -57,6 +57,11 @@ let ``entity with boolean type``() =
     let entity = schema.Entities.Single()
     Assert.Equal(SimpleType(BooleanType), entity.Attributes.[0].Type.Type)
 
+[<Fact>]
+let ``entity with integer type``() =
+    let schema = parse " SCHEMA s ; ENTITY e ; i : INTEGER ; END_ENTITY ; END_SCHEMA ; "
+    let entity = schema.Entities.Single()
+    Assert.Equal(SimpleType(IntegerType), entity.Attributes.[0].Type.Type)
 
 [<Fact>]
 let ``entity with optional parameter``() =
