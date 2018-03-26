@@ -227,8 +227,11 @@ module SchemaParser =
         //let expression = simple_expression // [ rel_op_extended simple_expression ]
         let expression = expr
 
+        let binary_type =
+            BINARY >>. opt (between LEFT_PAREN RIGHT_PAREN expression) .>>. (opt FIXED |>> Option.isSome)
+            |>> BinaryType
         let real_type = REAL >>. opt (between LEFT_PAREN RIGHT_PAREN expression) |>> RealType
-        let simple_types = real_type |>> SimpleType // <|> binary ...
+        let simple_types = binary_type <|> real_type |>> SimpleType // <|> binary ...
         let named_types = entity_ref <|> type_ref |>> NamedType
         let base_type = (* aggregation_types <|>*) simple_types <|> named_types
         let attribute_decl = attribute_id // <|> qualified_attribute

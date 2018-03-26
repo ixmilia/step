@@ -46,6 +46,12 @@ let ``simple entity``() =
     Assert.Equal(SimpleType(RealType(Some(LiteralValue(IntegerLiteral 3L)))), entity.Attributes.[1].Type.Type)
 
 [<Fact>]
+let ``entity with binary type``() =
+    let schema = parse " SCHEMA s ; ENTITY bitfields ; b : BINARY ( 3 ) FIXED ; END_ENTITY ; END_SCHEMA ; "
+    let entity = schema.Entities.Single()
+    Assert.Equal(SimpleType(BinaryType(Some(LiteralValue(IntegerLiteral 3L)), true)), entity.Attributes.[0].Type.Type)
+
+[<Fact>]
 let ``entity with optional parameter``() =
     let schema = parse " SCHEMA s ; ENTITY point ; x : REAL ; y : OPTIONAL REAL ; END_ENTITY ; END_SCHEMA ; "
     let entity = schema.Entities.Single()
