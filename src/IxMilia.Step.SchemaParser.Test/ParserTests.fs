@@ -76,6 +76,12 @@ let ``entity with number type``() =
     Assert.Equal(SimpleType(NumberType), entity.Attributes.[0].Type.Type)
 
 [<Fact>]
+let ``entity with string type``() =
+    let schema = parse " SCHEMA s ; ENTITY e ; s : STRING ( 3 ) ; END_ENTITY ; END_SCHEMA ; "
+    let entity = schema.Entities.Single()
+    Assert.Equal(SimpleType(StringType(Some(LiteralValue(IntegerLiteral 3L)), false)), entity.Attributes.[0].Type.Type)
+
+[<Fact>]
 let ``entity with optional parameter``() =
     let schema = parse " SCHEMA s ; ENTITY point ; x : REAL ; y : OPTIONAL REAL ; END_ENTITY ; END_SCHEMA ; "
     let entity = schema.Entities.Single()

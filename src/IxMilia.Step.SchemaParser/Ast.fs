@@ -40,6 +40,7 @@ type SimpleType =
     | LogicalType
     | NumberType
     | RealType of Expression option // precision
+    | StringType of Expression option * bool // width * isFixed
 
 type BaseType =
     | SimpleType of SimpleType
