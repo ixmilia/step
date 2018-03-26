@@ -35,6 +35,7 @@ type Expression =
 
 type SimpleType =
     | BinaryType of Expression option * bool // width * isFixed
+    | BooleanType
     | RealType of Expression option // precision
 
 type BaseType =
