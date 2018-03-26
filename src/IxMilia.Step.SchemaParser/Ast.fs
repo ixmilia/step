@@ -42,13 +42,13 @@ type SimpleType =
     | RealType of Expression option // precision
     | StringType of Expression option * bool // width * isFixed
 
-type BaseType =
+type AggregationType =
+    | ArrayType of BaseType * Expression * Expression option * bool * bool // type * lowerBound * upperBound * isOptional * isUnique
+
+and BaseType =
+    | AggregationType of AggregationType
     | SimpleType of SimpleType
     | NamedType of string
-    member this.DisplayName =
-        match this with
-        | SimpleType _ -> ""
-        | NamedType n -> n
 
 type AttributeType(typ:BaseType, isOptional:bool) =
     member this.Type = typ

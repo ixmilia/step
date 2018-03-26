@@ -82,6 +82,12 @@ let ``entity with string type``() =
     Assert.Equal(SimpleType(StringType(Some(LiteralValue(IntegerLiteral 3L)), false)), entity.Attributes.[0].Type.Type)
 
 [<Fact>]
+let ``entity with array type``() =
+    let schema = parse " SCHEMA s ; ENTITY e ; a : ARRAY [ 2 : ? ] OF OPTIONAL UNIQUE BOOLEAN ; END_ENTITY ; END_SCHEMA ; "
+    let entity = schema.Entities.Single()
+    Assert.Equal(AggregationType(ArrayType(SimpleType(BooleanType), LiteralValue(IntegerLiteral 2L), None, true, true)), entity.Attributes.Single().Type.Type)
+
+[<Fact>]
 let ``entity with optional parameter``() =
     let schema = parse " SCHEMA s ; ENTITY point ; x : REAL ; y : OPTIONAL REAL ; END_ENTITY ; END_SCHEMA ; "
     let entity = schema.Entities.Single()

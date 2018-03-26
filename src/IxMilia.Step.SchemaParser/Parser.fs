@@ -1,5 +1,7 @@
 // Copyright (c) IxMilia.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
+#nowarn "40"
+
 namespace IxMilia.Step.SchemaParser
 
 open System
@@ -146,6 +148,9 @@ module SchemaParser =
         let EQUALS = str_ws "="
         let LEFT_PAREN = str_ws "("
         let RIGHT_PAREN = str_ws ")"
+        let LEFT_BRACKET = str_ws "["
+        let RIGHT_BRACKET = str_ws "]"
+        let QUESTION = str_ws "?"
 
         let hex_digit = hex
         let octet = hex_digit .>>. hex_digit |>> (fun (a, b) -> ((int a) <<< 4) + int b) |>> byte
@@ -236,7 +241,19 @@ module SchemaParser =
         let string_type = STRING >>. opt (between LEFT_PAREN RIGHT_PAREN expression) .>>. (opt FIXED |>> Option.isSome) |>> StringType
         let simple_types = binary_type <|> boolean_type <|> integer_type <|> logical_type <|> number_type <|> real_type <|> string_type |>> SimpleType
         let named_types = entity_ref <|> type_ref |>> NamedType
-        let base_type = (* aggregation_types <|>*) simple_types <|> named_types
+        let bound_1 = expression
+        let bound_2 = (QUESTION |>> fun _ -> None) <|> (expression |>> Some)
+        let bound_spec = (LEFT_BRACKET >>. bound_1) .>>. (COLON >>. bound_2 .>> RIGHT_BRACKET)
+        let rec array_type =
+            pipe4
+                (ARRAY >>. bound_spec .>> OF)
+                (opt OPTIONAL |>> Option.isSome)
+                (opt UNIQUE |>> Option.isSome)
+                (base_type)
+                (fun (lowerBound, upperBound) isOptional isUnique baseType -> ArrayType(baseType, lowerBound, upperBound, isOptional, isUnique))
+            |>> AggregationType
+        and aggregation_types = array_type //<|> bag_type <|> list_type <|> set_type
+        and base_type = parse { return! aggregation_types <|> simple_types <|> named_types }
         let attribute_decl = attribute_id // <|> qualified_attribute
         let derive_attr =
             pipe3
