@@ -145,6 +145,7 @@ module SchemaParser =
         let COLON_EQUALS = str_ws ":="
         let COMMA = str_ws ","
         let DOUBLE_QUOTE = pchar '"'
+        let EQUALS = str_ws "="
         let LEFT_PAREN = str_ws "("
         let RIGHT_PAREN = str_ws ")"
 
@@ -264,8 +265,25 @@ module SchemaParser =
                     let attributes, derivedAttributes = body
                     let derivedAttributes = Option.defaultValue [] derivedAttributes
                     Entity(name, attributes, derivedAttributes))
+            |>> EntityDeclaration
 
-        let declaration = entity_decl // <|> function_decl <|> procedure_decl <|> type_decl
+        let underlying_type = (*constructed_types <|> aggregation_types <|>*) simple_types <|> type_ref
+        let label = simple_id
+        let domain_rule =
+            pipe2
+                (opt label .>> COLON)
+                (expression)
+                (fun label expression -> DomainRule(Option.defaultValue null label, expression))
+        let where_clause = WHERE >>. many1 (domain_rule .>> SEMI)
+        let type_decl =
+            pipe3
+                (TYPE >>. type_id .>> EQUALS)
+                (underlying_type .>> SEMI)
+                (opt (attempt where_clause) .>> END_TYPE .>> SEMI)
+                (fun typeName underlyingType whereClause -> SchemaType(typeName, underlyingType, Option.defaultValue [] whereClause))
+            |>> TypeDeclaration
+
+        let declaration = entity_decl (* <|> function_decl <|> procedure_decl *) <|> type_decl
 
         let string_opt_to_nullable = function
             | Some(value) -> value
@@ -275,7 +293,14 @@ module SchemaParser =
             pipe2
                 (many interface_specification)
                 (many declaration)
-                (fun interfaces entities -> SchemaBody(interfaces, entities))
+                (fun interfaces declarations ->
+                    let entities =
+                        declarations
+                        |> List.choose (fun d -> match d with | EntityDeclaration e -> Some e | _ -> None)
+                    let types =
+                        declarations
+                        |> List.choose (fun d -> match d with | TypeDeclaration t -> Some t | _ -> None)
+                    SchemaBody(interfaces, entities, types))
         let schema_decl =
             // schema_decl = SCHEMA schema_id [ schema_version_id ] ';' schema_body END_SCHEMA ';' .
             pipe3

@@ -33,7 +33,7 @@ type Expression =
     | Xor of Expression * Expression
     | And of Expression * Expression
 
-type AttributeType(name: string, isOptional:bool) =
+type AttributeType(name:string, isOptional:bool) =
     member this.TypeName = name
     member this.IsOptional = isOptional
 
@@ -51,12 +51,27 @@ type Entity(name:string, attributes:ExplicitAttribute list, derivedAttributes:De
     member this.Attributes = attributes
     member this.DerivedAttributes = derivedAttributes
 
-type SchemaBody(interfaces:ReferenceClause list, entities:Entity list) =
+type DomainRule(label:string, expression:Expression) =
+    member this.Label = label
+    member this.Expression = expression
+
+type SchemaType(name:string, typ:string, domainRules:DomainRule list) =
+    member this.Name = name
+    member this.Type = typ
+    member this.DomainRules = domainRules
+
+type Declaration =
+    | EntityDeclaration of Entity
+    | TypeDeclaration of SchemaType
+
+type SchemaBody(interfaces:ReferenceClause list, entities:Entity list, types:SchemaType list) =
     member this.Interfaces = interfaces
     member this.Entities = entities
+    member this.Types = types
 
 type Schema(id:string, version:string, body:SchemaBody) =
     member this.Id = id
     member this.Version = version
     member this.Body = body
     member this.Entities = body.Entities
+    member this.Types = body.Types

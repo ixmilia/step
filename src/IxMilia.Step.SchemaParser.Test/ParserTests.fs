@@ -92,22 +92,21 @@ END_SCHEMA ;
 "
     Assert.Equal("s", schema.Id)
 
-(*
 [<Fact>]
 let ``simple types``() =
     let schema = parse " SCHEMA s ; TYPE length = REAL ; END_TYPE ; TYPE width = REAL ; END_TYPE ; END_SCHEMA ; "
     Assert.Equal(2, schema.Types.Length)
     Assert.Equal("length", schema.Types.First().Name)
-    Assert.Equal("REAL", schema.Types.First().Types.Single())
+    Assert.Equal("REAL", schema.Types.First().Type)
     Assert.Equal("width", schema.Types.Last().Name)
-    Assert.Equal("REAL", schema.Types.Last().Types.Single())
+    Assert.Equal("REAL", schema.Types.Last().Type)
 
 [<Fact>]
 let ``type and entity``() =
     let schema = parse " SCHEMA s ; TYPE double = REAL ; END_TYPE ; ENTITY point ; END_ENTITY ; END_SCHEMA ; "
     Assert.Equal("double", schema.Types.Single().Name)
     Assert.Equal("point", schema.Entities.Single().Name)
-
+(*
 [<Fact>]
 let ``type with empty select values``() =
     let schema = parse " SCHEMA s ; TYPE foo = SELECT ( ) ; END_TYPE ; END_SCHEMA ; "
