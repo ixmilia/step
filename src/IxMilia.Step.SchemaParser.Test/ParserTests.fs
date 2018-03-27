@@ -172,6 +172,13 @@ let ``type and entity``() =
     let schema = parse " SCHEMA s ; TYPE double = REAL ; END_TYPE ; ENTITY point ; END_ENTITY ; END_SCHEMA ; "
     Assert.Equal("double", schema.Types.Single().Name)
     Assert.Equal("point", schema.Entities.Single().Name)
+
+    
+[<Fact>]
+let ``enumeration type``() =
+    let schema = parse " SCHEMA s ; TYPE numbers = ENUMERATION OF ( uno , dos , tres ) ; END_TYPE ; END_SCHEMA ; "
+    Assert.Equal(ConstructedType(EnumerationType(["uno"; "dos"; "tres"])), schema.Types.Single().Type)
+
 (*
 [<Fact>]
 let ``type with empty select values``() =
@@ -189,11 +196,6 @@ let ``type with two select values``() =
     Assert.Equal(2, schema.Types.Single().Types.Length)
     Assert.Equal("bar", schema.Types.Single().Types.First())
     Assert.Equal("baz", schema.Types.Single().Types.Last())
-
-[<Fact>]
-let ``enumeration type``() =
-    let schema = parse " SCHEMA s ; TYPE numbers = ENUMERATION OF ( uno , dos , tres ) ; END_TYPE ; END_SCHEMA ; "
-    arrayEqual([|"uno"; "dos"; "tres"|], schema.Types.Single().Values)
 
 [<Fact>]
 let ``type with restriction``() =

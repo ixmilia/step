@@ -307,7 +307,17 @@ module SchemaParser =
                     Entity(name, attributes, derivedAttributes))
             |>> EntityDeclaration
 
-        let underlying_type = (*constructed_types <|>*) aggregation_types <|> simple_types <|> (type_ref |>> NamedType)
+        let enumeration_id = simple_id
+        let enumeration_type =
+            pipe3
+                (ENUMERATION >>. OF >>. LEFT_PAREN)
+                (sepBy1 enumeration_id COMMA)
+                (RIGHT_PAREN)
+                (fun _ values _ -> EnumerationType values)
+            |>> ConstructedType
+        let constructed_types = enumeration_type //<|> select_type
+
+        let underlying_type = constructed_types <|> aggregation_types <|> simple_types <|> (type_ref |>> NamedType)
         let label = simple_id
         let domain_rule =
             pipe2

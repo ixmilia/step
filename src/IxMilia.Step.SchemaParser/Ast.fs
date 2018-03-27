@@ -42,6 +42,9 @@ type SimpleType =
     | RealType of Expression option // precision
     | StringType of Expression option * bool // width * isFixed
 
+type ConstructedType =
+    | EnumerationType of string list
+
 type AggregationType =
     | ArrayType of BaseType * Expression * Expression option * bool * bool // type * lowerBound * upperBound * isOptional * isUnique
     | BagType of BaseType * Expression * Expression option // type * lowerBound * upperBound
@@ -49,6 +52,7 @@ type AggregationType =
     | SetType of BaseType * Expression * Expression option // type * lowerBound * upperBound
 
 and BaseType =
+    | ConstructedType of ConstructedType
     | AggregationType of AggregationType
     | SimpleType of SimpleType
     | NamedType of string
