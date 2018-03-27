@@ -106,6 +106,12 @@ let ``entity with set type``() =
     Assert.Equal(AggregationType(SetType(SimpleType(BooleanType), LiteralValue(IntegerLiteral 2L), None)), entity.Attributes.Single().Type.Type)
 
 [<Fact>]
+let ``entity with nested aggretation types``() =
+    let schema = parse " SCHEMA s ; ENTITY e ; b : BAG [ 2 : ? ] OF BAG [ 3 : ? ] OF BAG [ 4 : ? ] OF BOOLEAN ; END_ENTITY ; END_SCHEMA ; "
+    let entity = schema.Entities.Single()
+    Assert.Equal(AggregationType(BagType(AggregationType(BagType(AggregationType(BagType(SimpleType(BooleanType), LiteralValue(IntegerLiteral 4L), None)), LiteralValue(IntegerLiteral 3L), None)), LiteralValue(IntegerLiteral 2L), None)), entity.Attributes.Single().Type.Type)
+
+[<Fact>]
 let ``entity with optional parameter``() =
     let schema = parse " SCHEMA s ; ENTITY point ; x : REAL ; y : OPTIONAL REAL ; END_ENTITY ; END_SCHEMA ; "
     let entity = schema.Entities.Single()
