@@ -315,7 +315,14 @@ module SchemaParser =
                 (RIGHT_PAREN)
                 (fun _ values _ -> EnumerationType values)
             |>> ConstructedType
-        let constructed_types = enumeration_type //<|> select_type
+        let select_type =
+            pipe3
+                (SELECT >>. LEFT_PAREN)
+                (sepBy1 named_types COMMA)
+                (RIGHT_PAREN)
+                (fun _ types _ -> SelectType(types))
+            |>> ConstructedType
+        let constructed_types = enumeration_type <|> select_type
 
         let underlying_type = constructed_types <|> aggregation_types <|> simple_types <|> (type_ref |>> NamedType)
         let label = simple_id

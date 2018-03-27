@@ -44,8 +44,9 @@ type SimpleType =
 
 type ConstructedType =
     | EnumerationType of string list
+    | SelectType of BaseType list
 
-type AggregationType =
+and AggregationType =
     | ArrayType of BaseType * Expression * Expression option * bool * bool // type * lowerBound * upperBound * isOptional * isUnique
     | BagType of BaseType * Expression * Expression option // type * lowerBound * upperBound
     | ListType of BaseType * Expression * Expression option * bool // type * lowerBound * upperBound * isUnique

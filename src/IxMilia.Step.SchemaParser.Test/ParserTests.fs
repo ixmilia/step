@@ -179,24 +179,17 @@ let ``enumeration type``() =
     let schema = parse " SCHEMA s ; TYPE numbers = ENUMERATION OF ( uno , dos , tres ) ; END_TYPE ; END_SCHEMA ; "
     Assert.Equal(ConstructedType(EnumerationType(["uno"; "dos"; "tres"])), schema.Types.Single().Type)
 
-(*
-[<Fact>]
-let ``type with empty select values``() =
-    let schema = parse " SCHEMA s ; TYPE foo = SELECT ( ) ; END_TYPE ; END_SCHEMA ; "
-    Assert.Equal(0, schema.Types.Single().Types.Length)
-
 [<Fact>]
 let ``type with one select value``() =
-    let schema = parse " SCHEMA s ; TYPE foo = SELECT ( bar ) ; END_TYPE ; END_SCHEMA ; "
-    Assert.Equal("bar", schema.Types.Single().Types.Single())
+    let schema = parse " SCHEMA s ; TYPE t = SELECT ( bar ) ; END_TYPE ; END_SCHEMA ; "
+    Assert.Equal(ConstructedType(SelectType([NamedType "bar"])), schema.Types.Single().Type)
 
 [<Fact>]
 let ``type with two select values``() =
-    let schema = parse " SCHEMA s ; TYPE foo = SELECT ( bar , baz ) ; END_TYPE ; END_SCHEMA ; "
-    Assert.Equal(2, schema.Types.Single().Types.Length)
-    Assert.Equal("bar", schema.Types.Single().Types.First())
-    Assert.Equal("baz", schema.Types.Single().Types.Last())
+    let schema = parse " SCHEMA s ; TYPE t = SELECT ( bar , baz ) ; END_TYPE ; END_SCHEMA ; "
+    Assert.Equal(ConstructedType(SelectType([NamedType "bar"; NamedType "baz"])), schema.Types.Single().Type)
 
+(*
 [<Fact>]
 let ``type with restriction``() =
     let schema = parse " SCHEMA s ; TYPE measure = REAL ; WHERE wr1 : SELF >= 0 ; END_TYPE ; END_SCHEMA ; "
