@@ -5,6 +5,7 @@
 namespace IxMilia.Step.SchemaParser
 
 open System
+open System.Globalization
 open FParsec
 
 module SchemaParser =
@@ -193,22 +194,36 @@ module SchemaParser =
             |>> List.fold (fun acc bit -> (acc * 2L) + (if bit = "1" then 1L else 0L)) 0L
             |>> IntegerLiteral
         let sign = PLUS <|> MINUS
-        let integer_literal =
-            opt sign .>>. pint64 .>> ws
-            |>> (function
-                 | Some "+", value -> value
-                 | Some "-", value -> -value
-                 | _, value -> value)
-            |>> IntegerLiteral
+        let digits_string = many1 digit |>> fun c -> String.Join(String.Empty, c)
+        let integer_or_real_literal =
+            let fractional_part =
+                let exponent =
+                    pipe3
+                        (str "e")
+                        (opt sign |>> Option.defaultValue "+")
+                        (digits_string)
+                        (fun a b c -> String.Concat(a, b, c))
+                pipe3
+                    (str ".")
+                    (digits_string)
+                    (opt exponent |>> Option.defaultValue "e0")
+                    (fun decimal fractional exponent -> String.Concat(decimal, fractional, exponent))
+            pipe4
+                (opt sign |>> Option.defaultValue "+" |>> (=) "+")
+                (digits_string)
+                (opt fractional_part)
+                (ws)
+                (fun isPositive wholeNumber fractional _whitespace ->
+                    match fractional with
+                    | Some fractional ->
+                        let valueString = String.Concat(wholeNumber, fractional)
+                        let factor = if isPositive then 1.0 else -1.0
+                        Double.Parse(valueString, NumberStyles.AllowExponent ||| NumberStyles.AllowDecimalPoint) * factor |> RealLiteral
+                    | None ->
+                        let factor = if isPositive then 1L else -1L
+                        Int64.Parse(wholeNumber, NumberStyles.Integer) * factor |> IntegerLiteral)
         let logical_literal = (FALSE >>% LogicalLiteral(Some false)) <|> (TRUE >>% LogicalLiteral(Some true)) <|> (UNKNOWN >>% LogicalLiteral(None))
-        let real_literal =
-            opt sign .>>. pfloat .>> ws
-            |>> (function
-                 | Some "+", value -> value
-                 | Some "-", value -> -value
-                 | _, value -> value)
-            |>> RealLiteral
-        let literal = binary_literal <|> integer_literal <|> logical_literal <|> real_literal <|> string_literal
+        let literal = binary_literal <|> integer_or_real_literal <|> logical_literal <|> string_literal
         let opp = new OperatorPrecedenceParser<Expression, unit, unit>()
         let expr = opp.ExpressionParser
         opp.TermParser <- (literal |>> LiteralValue) <|> (simple_id |>> AttributeName) <|> between LEFT_PAREN RIGHT_PAREN expr
@@ -342,27 +357,32 @@ module SchemaParser =
 
         let declaration = entity_decl (* <|> function_decl <|> procedure_decl *) <|> type_decl
 
-        let string_opt_to_nullable = function
-            | Some(value) -> value
-            | None -> null
+        let constant_body =
+            pipe3
+                (constant_id .>> COLON)
+                (base_type .>> COLON_EQUALS)
+                (expression .>> SEMI)
+                (fun id baseType expression -> Constant(id, baseType, expression))
+        let constant_decl = CONSTANT >>. many1 (attempt constant_body) .>> END_CONSTANT .>> SEMI
         let schema_body =
             // { interface_specification } [ constant_decl ] { declaration | rule_decl } .
-            pipe2
+            pipe3
                 (many interface_specification)
+                (opt constant_decl |>> Option.defaultValue [])
                 (many declaration)
-                (fun interfaces declarations ->
+                (fun interfaces constants declarations ->
                     let entities =
                         declarations
                         |> List.choose (fun d -> match d with | EntityDeclaration e -> Some e | _ -> None)
                     let types =
                         declarations
                         |> List.choose (fun d -> match d with | TypeDeclaration t -> Some t | _ -> None)
-                    SchemaBody(interfaces, entities, types))
+                    SchemaBody(interfaces, constants, entities, types))
         let schema_decl =
             // schema_decl = SCHEMA schema_id [ schema_version_id ] ';' schema_body END_SCHEMA ';' .
             pipe3
                 (SCHEMA >>. schema_id)
-                (opt schema_version_id |>> string_opt_to_nullable)
+                (opt schema_version_id |>> Option.defaultValue null)
                 (SEMI >>. schema_body .>> END_SCHEMA .>> SEMI)
                 (fun a b c -> Schema(a, b, c))
 

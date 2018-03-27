@@ -89,8 +89,14 @@ type Declaration =
     | EntityDeclaration of Entity
     | TypeDeclaration of SchemaType
 
-type SchemaBody(interfaces:ReferenceClause list, entities:Entity list, types:SchemaType list) =
+type Constant(id:string, typ:BaseType, expression:Expression) =
+    member this.Id = id
+    member this.Type = typ
+    member this.Expression = expression
+
+type SchemaBody(interfaces:ReferenceClause list, constants:Constant list, entities:Entity list, types:SchemaType list) =
     member this.Interfaces = interfaces
+    member this.Constants = constants
     member this.Entities = entities
     member this.Types = types
 
@@ -98,5 +104,7 @@ type Schema(id:string, version:string, body:SchemaBody) =
     member this.Id = id
     member this.Version = version
     member this.Body = body
+    member this.Interfaces = body.Interfaces
+    member this.Constants = body.Constants
     member this.Entities = body.Entities
     member this.Types = body.Types

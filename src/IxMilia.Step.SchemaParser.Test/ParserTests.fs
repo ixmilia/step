@@ -189,6 +189,17 @@ let ``type with two select values``() =
     let schema = parse " SCHEMA s ; TYPE t = SELECT ( bar , baz ) ; END_TYPE ; END_SCHEMA ; "
     Assert.Equal(ConstructedType(SelectType([NamedType "bar"; NamedType "baz"])), schema.Types.Single().Type)
 
+[<Fact>]
+let ``schema with constants``() =
+    let schema = parse " SCHEMA s ; CONSTANT pi : REAL := 3.14 ; two : INTEGER := 2 ; END_CONSTANT ; END_SCHEMA ; "
+    Assert.Equal(2, schema.Constants.Length)
+    Assert.Equal("pi", schema.Constants.First().Id)
+    Assert.Equal(SimpleType(RealType None), schema.Constants.First().Type)
+    Assert.Equal(LiteralValue(RealLiteral 3.14), schema.Constants.First().Expression)
+    Assert.Equal("two", schema.Constants.Last().Id)
+    Assert.Equal(SimpleType IntegerType, schema.Constants.Last().Type)
+    Assert.Equal(LiteralValue(IntegerLiteral 2L), schema.Constants.Last().Expression)
+
 (*
 [<Fact>]
 let ``type with restriction``() =
