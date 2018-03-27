@@ -252,7 +252,13 @@ module SchemaParser =
                 (base_type)
                 (fun (lowerBound, upperBound) isOptional isUnique baseType -> ArrayType(baseType, lowerBound, upperBound, isOptional, isUnique))
             |>> AggregationType
-        and aggregation_types = array_type //<|> bag_type <|> list_type <|> set_type
+        and bag_type =
+            pipe2
+                (BAG >>. bound_spec .>> OF)
+                (base_type)
+                (fun (lowerBound, upperBound) baseType -> BagType(baseType, lowerBound, upperBound))
+            |>> AggregationType
+        and aggregation_types = array_type <|> bag_type //<|> list_type <|> set_type
         and base_type = parse { return! aggregation_types <|> simple_types <|> named_types }
         let attribute_decl = attribute_id // <|> qualified_attribute
         let derive_attr =
