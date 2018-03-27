@@ -46,6 +46,7 @@ type AggregationType =
     | ArrayType of BaseType * Expression * Expression option * bool * bool // type * lowerBound * upperBound * isOptional * isUnique
     | BagType of BaseType * Expression * Expression option // type * lowerBound * upperBound
     | ListType of BaseType * Expression * Expression option * bool // type * lowerBound * upperBound * isUnique
+    | SetType of BaseType * Expression * Expression option // type * lowerBound * upperBound
 
 and BaseType =
     | AggregationType of AggregationType
