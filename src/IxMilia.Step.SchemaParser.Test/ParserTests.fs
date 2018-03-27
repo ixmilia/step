@@ -94,6 +94,12 @@ let ``entity with bag type``() =
     Assert.Equal(AggregationType(BagType(SimpleType(BooleanType), LiteralValue(IntegerLiteral 2L), None)), entity.Attributes.Single().Type.Type)
 
 [<Fact>]
+let ``entity with list type``() =
+    let schema = parse " SCHEMA s ; ENTITY e ; l : LIST [ 2 : ? ] OF UNIQUE BOOLEAN ; END_ENTITY ; END_SCHEMA ; "
+    let entity = schema.Entities.Single()
+    Assert.Equal(AggregationType(ListType(SimpleType(BooleanType), LiteralValue(IntegerLiteral 2L), None, true)), entity.Attributes.Single().Type.Type)
+
+[<Fact>]
 let ``entity with optional parameter``() =
     let schema = parse " SCHEMA s ; ENTITY point ; x : REAL ; y : OPTIONAL REAL ; END_ENTITY ; END_SCHEMA ; "
     let entity = schema.Entities.Single()
