@@ -200,6 +200,17 @@ let ``schema with constants``() =
     Assert.Equal(SimpleType IntegerType, schema.Constants.Last().Type)
     Assert.Equal(LiteralValue(IntegerLiteral 2L), schema.Constants.Last().Expression)
 
+[<Fact>]
+let ``schema with inverse attributes``() =
+    let schema = parse " SCHEMA s ; ENTITY e ; value : INTEGER ; INVERSE i : BAG OF e FOR value ; END_ENTITY ; END_SCHEMA ; "
+    let inverse = schema.Entities.Single().InverseAttributes.Single()
+    Assert.Equal("i", inverse.Name)
+    Assert.Equal(Some Bag, inverse.CollectionType)
+    Assert.Equal(None, inverse.LowerBound)
+    Assert.Equal(None, inverse.UpperBound)
+    Assert.Equal("e", inverse.EntityName)
+    Assert.Equal("value", inverse.AttributeName)
+
 (*
 [<Fact>]
 let ``type with restriction``() =

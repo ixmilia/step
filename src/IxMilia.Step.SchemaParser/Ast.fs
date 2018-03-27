@@ -62,6 +62,18 @@ type AttributeType(typ:BaseType, isOptional:bool) =
     member this.Type = typ
     member this.IsOptional = isOptional
 
+type InverseCollectionType =
+    | Set
+    | Bag
+
+type InverseAttribute(name:string, collectionType:InverseCollectionType option, lowerBound:Expression option, upperBound:Expression option, entityName:string, attributeName:string) =
+    member this.Name = name
+    member this.CollectionType = collectionType
+    member this.LowerBound = lowerBound
+    member this.UpperBound = upperBound
+    member this.EntityName = entityName
+    member this.AttributeName = attributeName
+
 type DerivedAttribute(name:string, typ:AttributeType, expression:Expression) =
     member this.Name = name
     member this.Type = typ
@@ -71,10 +83,11 @@ type ExplicitAttribute(name:string, typ:AttributeType) =
     member this.Name = name
     member this.Type = typ
 
-type Entity(name:string, attributes:ExplicitAttribute list, derivedAttributes:DerivedAttribute list) =
+type Entity(name:string, attributes:ExplicitAttribute list, derivedAttributes:DerivedAttribute list, inverseAttributes:InverseAttribute list) =
     member this.Name = name
     member this.Attributes = attributes
     member this.DerivedAttributes = derivedAttributes
+    member this.InverseAttributes = inverseAttributes
 
 type DomainRule(label:string, expression:Expression) =
     member this.Label = label

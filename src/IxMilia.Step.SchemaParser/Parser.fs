@@ -307,8 +307,29 @@ module SchemaParser =
                 (SEMI)
                 (fun name _ typ _ ->
                     ExplicitAttribute(name, typ))
+        let attribute_ref = attribute_id
+        let inverse_attr =
+            pipe4
+                (attribute_id .>> COLON)
+                (opt (((SET >>% Set) <|> (BAG >>% Bag)) .>>. opt bound_spec .>> OF))
+                (entity_ref .>> FOR)
+                (attribute_ref .>> SEMI)
+                (fun attributeId boundsClause entityRef attributeRef ->
+                    let collectionType, lowerBound, upperBound =
+                        match boundsClause with
+                        | Some(collectionType, Some(lowerBound, upperBound)) -> Some(collectionType), Some(lowerBound), upperBound
+                        | Some(collectionType, None)                         -> Some(collectionType), None,             None
+                        | None                                               -> None,                 None,             None
+                    InverseAttribute(attributeId, collectionType, lowerBound, upperBound, entityRef, attributeRef))
+        let inverse_clause = INVERSE >>. many1 (attempt inverse_attr)
         let entity_body =
-            many (attempt explicit_attr) .>>. opt derive_clause // derive_clause inverse_clause unique_clause where_clause
+            pipe3
+                (many (attempt explicit_attr))
+                (opt derive_clause |>> Option.defaultValue [])
+                (opt inverse_clause |>> Option.defaultValue [])
+                // unique_clause
+                // where_clause
+                (fun a b c -> a, b, c)
         let entity_head =
             ENTITY >>. entity_id .>> SEMI
         let entity_decl =
@@ -317,9 +338,8 @@ module SchemaParser =
                 (entity_body)
                 (END_ENTITY .>> SEMI)
                 (fun name body _ ->
-                    let attributes, derivedAttributes = body
-                    let derivedAttributes = Option.defaultValue [] derivedAttributes
-                    Entity(name, attributes, derivedAttributes))
+                    let attributes, derivedAttributes, inverseAttributes = body
+                    Entity(name, attributes, derivedAttributes, inverseAttributes))
             |>> EntityDeclaration
 
         let enumeration_id = simple_id
