@@ -62,6 +62,14 @@ type AttributeType(typ:BaseType, isOptional:bool) =
     member this.Type = typ
     member this.IsOptional = isOptional
 
+type AttributeReference =
+    | LocalAttribute of string
+    | QualifiedAttribute of string * string
+
+type UniqueRule(name:string, attributes:AttributeReference list) =
+    member this.Name = name
+    member this.Attributes = attributes
+
 type InverseCollectionType =
     | Set
     | Bag
@@ -83,11 +91,12 @@ type ExplicitAttribute(name:string, typ:AttributeType) =
     member this.Name = name
     member this.Type = typ
 
-type Entity(name:string, attributes:ExplicitAttribute list, derivedAttributes:DerivedAttribute list, inverseAttributes:InverseAttribute list) =
+type Entity(name:string, attributes:ExplicitAttribute list, derivedAttributes:DerivedAttribute list, inverseAttributes:InverseAttribute list, uniqueRestrictions:UniqueRule list) =
     member this.Name = name
     member this.Attributes = attributes
     member this.DerivedAttributes = derivedAttributes
     member this.InverseAttributes = inverseAttributes
+    member this.UniqueRestrictions = uniqueRestrictions
 
 type DomainRule(label:string, expression:Expression) =
     member this.Label = label

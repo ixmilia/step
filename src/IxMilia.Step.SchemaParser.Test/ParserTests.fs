@@ -211,6 +211,13 @@ let ``schema with inverse attributes``() =
     Assert.Equal("e", inverse.EntityName)
     Assert.Equal("value", inverse.AttributeName)
 
+[<Fact>]
+let ``entity with unique rules``() =
+    let schema = parse " SCHEMA s ; ENTITY e ; UNIQUE label : SELF\\entity.attribute ; END_ENTITY ; END_SCHEMA ; "
+    let restr = schema.Entities.Single().UniqueRestrictions.Single()
+    Assert.Equal("label", restr.Name)
+    Assert.Equal(QualifiedAttribute("entity", "attribute"), restr.Attributes.Single())
+
 (*
 [<Fact>]
 let ``type with restriction``() =

@@ -141,6 +141,8 @@ module SchemaParser =
         let PERCENT = str_ws "%"
         let PLUS = str_ws "+"
         let MINUS = str_ws "-"
+        let BACKSLASH = str_ws "\\"
+        let PERIOD = str_ws "."
         let SEMI = str_ws ";"
         let COLON = str_ws ":"
         let COLON_EQUALS = str_ws ":="
@@ -322,14 +324,25 @@ module SchemaParser =
                         | None                                               -> None,                 None,             None
                     InverseAttribute(attributeId, collectionType, lowerBound, upperBound, entityRef, attributeRef))
         let inverse_clause = INVERSE >>. many1 (attempt inverse_attr)
-        let entity_body =
+        let label = simple_id
+        let group_qualifier = BACKSLASH >>. entity_ref
+        let attribute_qualifier = PERIOD >>. attribute_ref
+        let qualified_attribute = pipe2 (SELF >>. group_qualifier .>> ws) (attribute_qualifier .>> ws) (fun a b -> QualifiedAttribute(a, b))
+        let referenced_attribute = qualified_attribute <|> (attribute_ref |>> LocalAttribute)
+        let unique_rule =
             pipe3
+                (opt label .>> COLON |>> Option.defaultValue null)
+                (sepBy1 referenced_attribute COMMA)
+                (SEMI)
+                (fun label referencedAttributes _ -> UniqueRule(label, referencedAttributes))
+        let unique_clause = UNIQUE >>. many1 (attempt unique_rule)
+        let entity_body =
+            tuple4
                 (many (attempt explicit_attr))
                 (opt derive_clause |>> Option.defaultValue [])
                 (opt inverse_clause |>> Option.defaultValue [])
-                // unique_clause
+                (opt unique_clause |>> Option.defaultValue [])
                 // where_clause
-                (fun a b c -> a, b, c)
         let entity_head =
             ENTITY >>. entity_id .>> SEMI
         let entity_decl =
@@ -338,8 +351,8 @@ module SchemaParser =
                 (entity_body)
                 (END_ENTITY .>> SEMI)
                 (fun name body _ ->
-                    let attributes, derivedAttributes, inverseAttributes = body
-                    Entity(name, attributes, derivedAttributes, inverseAttributes))
+                    let attributes, derivedAttributes, inverseAttributes, uniqueClauses = body
+                    Entity(name, attributes, derivedAttributes, inverseAttributes, uniqueClauses))
             |>> EntityDeclaration
 
         let enumeration_id = simple_id
