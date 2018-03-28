@@ -28,6 +28,13 @@ type Expression =
     | Divide of Expression * Expression
     | Modulus of Expression * Expression
     | Exponent of Expression * Expression
+    // logical
+    | Greater of Expression * Expression
+    | GreaterEquals of Expression * Expression
+    | Less of Expression * Expression
+    | LessEquals of Expression * Expression
+    | Equals of Expression * Expression
+    | NotEquals of Expression * Expression
     // other
     | Or of Expression * Expression
     | Xor of Expression * Expression
@@ -66,8 +73,8 @@ type AttributeReference =
     | LocalAttribute of string
     | QualifiedAttribute of string * string
 
-type UniqueRule(name:string, attributes:AttributeReference list) =
-    member this.Name = name
+type UniqueRule(label:string, attributes:AttributeReference list) =
+    member this.Label = label
     member this.Attributes = attributes
 
 type InverseCollectionType =
@@ -91,16 +98,17 @@ type ExplicitAttribute(name:string, typ:AttributeType) =
     member this.Name = name
     member this.Type = typ
 
-type Entity(name:string, attributes:ExplicitAttribute list, derivedAttributes:DerivedAttribute list, inverseAttributes:InverseAttribute list, uniqueRestrictions:UniqueRule list) =
+type DomainRule(label:string, expression:Expression) =
+    member this.Label = label
+    member this.Expression = expression
+
+type Entity(name:string, attributes:ExplicitAttribute list, derivedAttributes:DerivedAttribute list, inverseAttributes:InverseAttribute list, uniqueRestrictions:UniqueRule list, domainRules:DomainRule list) =
     member this.Name = name
     member this.Attributes = attributes
     member this.DerivedAttributes = derivedAttributes
     member this.InverseAttributes = inverseAttributes
     member this.UniqueRestrictions = uniqueRestrictions
-
-type DomainRule(label:string, expression:Expression) =
-    member this.Label = label
-    member this.Expression = expression
+    member this.DomainRules = domainRules
 
 type SchemaType(name:string, typ:BaseType, domainRules:DomainRule list) =
     member this.Name = name

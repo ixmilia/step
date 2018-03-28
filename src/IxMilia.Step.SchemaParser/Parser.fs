@@ -229,16 +229,23 @@ module SchemaParser =
         let opp = new OperatorPrecedenceParser<Expression, unit, unit>()
         let expr = opp.ExpressionParser
         opp.TermParser <- (literal |>> LiteralValue) <|> (simple_id |>> AttributeName) <|> between LEFT_PAREN RIGHT_PAREN expr
-        opp.AddOperator(InfixOperator("+", ws, 1, Associativity.Left, (fun a b -> Add(a, b))))
-        opp.AddOperator(InfixOperator("-", ws, 1, Associativity.Left, (fun a b -> Subtract(a, b))))
-        opp.AddOperator(InfixOperator("or", ws, 1, Associativity.Left, (fun a b -> Or(a, b))))
-        opp.AddOperator(InfixOperator("xor", ws, 1, Associativity.Left, (fun a b -> Xor(a, b))))
-        opp.AddOperator(InfixOperator("*", ws, 2, Associativity.Left, (fun a b -> Multiply(a, b))))
-        opp.AddOperator(InfixOperator("/", ws, 2, Associativity.Left, (fun a b -> Divide(a, b))))
-        opp.AddOperator(InfixOperator("%", ws, 2, Associativity.Left, (fun a b -> Modulus(a, b))))
-        opp.AddOperator(InfixOperator("and", ws, 2, Associativity.Left, (fun a b -> And(a, b))))
-        opp.AddOperator(InfixOperator("**", ws, 3, Associativity.Right, (fun a b -> Exponent(a, b))))
-        opp.AddOperator(PrefixOperator("-", ws, 4, true, Negate))
+        opp.AddOperator(InfixOperator(">", ws, 1, Associativity.Left, (fun a b -> Greater(a, b))))
+        opp.AddOperator(InfixOperator(">=", ws, 1, Associativity.Left, (fun a b -> GreaterEquals(a, b))))
+        opp.AddOperator(InfixOperator("<", ws, 1, Associativity.Left, (fun a b -> Less(a, b))))
+        opp.AddOperator(InfixOperator("<=", ws, 1, Associativity.Left, (fun a b -> LessEquals(a, b))))
+        opp.AddOperator(InfixOperator("=", ws, 1, Associativity.Left, (fun a b -> Equals(a, b))))
+        opp.AddOperator(InfixOperator("<>", ws, 1, Associativity.Left, (fun a b -> NotEquals(a, b))))
+        opp.AddOperator(InfixOperator("+", ws, 2, Associativity.Left, (fun a b -> Add(a, b))))
+        opp.AddOperator(InfixOperator("-", ws, 2, Associativity.Left, (fun a b -> Subtract(a, b))))
+        opp.AddOperator(InfixOperator("or", ws, 2, Associativity.Left, (fun a b -> Or(a, b))))
+        opp.AddOperator(InfixOperator("xor", ws, 2, Associativity.Left, (fun a b -> Xor(a, b))))
+        opp.AddOperator(InfixOperator("*", ws, 3, Associativity.Left, (fun a b -> Multiply(a, b))))
+        opp.AddOperator(InfixOperator("/", ws, 3, Associativity.Left, (fun a b -> Divide(a, b))))
+        opp.AddOperator(InfixOperator("%", ws, 3, Associativity.Left, (fun a b -> Modulus(a, b))))
+        opp.AddOperator(InfixOperator("and", ws, 3, Associativity.Left, (fun a b -> And(a, b))))
+        opp.AddOperator(InfixOperator("AND", ws, 3, Associativity.Left, (fun a b -> And(a, b))))
+        opp.AddOperator(InfixOperator("**", ws, 4, Associativity.Right, (fun a b -> Exponent(a, b))))
+        opp.AddOperator(PrefixOperator("-", ws, 5, true, Negate))
         //let add_like_op = PLUS <|> MINUS <|> OR <|> XOR
         //let multiplication_like_op = ASTERISK <|> SLASH <|> DIV <|> MOD <|> AND <|> DOUBLE_PIPE
         //let primary = literal // <|> qualifialble_factor { qualifier }
@@ -336,13 +343,19 @@ module SchemaParser =
                 (SEMI)
                 (fun label referencedAttributes _ -> UniqueRule(label, referencedAttributes))
         let unique_clause = UNIQUE >>. many1 (attempt unique_rule)
+        let domain_rule =
+            pipe2
+                (opt label .>> COLON |>> Option.defaultValue null)
+                (expression .>> SEMI)
+                (fun label expression -> DomainRule(label, expression))
+        let where_clause = WHERE >>. many1 (attempt domain_rule)
         let entity_body =
-            tuple4
+            tuple5
                 (many (attempt explicit_attr))
                 (opt derive_clause |>> Option.defaultValue [])
                 (opt inverse_clause |>> Option.defaultValue [])
                 (opt unique_clause |>> Option.defaultValue [])
-                // where_clause
+                (opt where_clause |>> Option.defaultValue [])
         let entity_head =
             ENTITY >>. entity_id .>> SEMI
         let entity_decl =
@@ -351,8 +364,8 @@ module SchemaParser =
                 (entity_body)
                 (END_ENTITY .>> SEMI)
                 (fun name body _ ->
-                    let attributes, derivedAttributes, inverseAttributes, uniqueClauses = body
-                    Entity(name, attributes, derivedAttributes, inverseAttributes, uniqueClauses))
+                    let attributes, derivedAttributes, inverseAttributes, uniqueClauses, whereClauses = body
+                    Entity(name, attributes, derivedAttributes, inverseAttributes, uniqueClauses, whereClauses))
             |>> EntityDeclaration
 
         let enumeration_id = simple_id

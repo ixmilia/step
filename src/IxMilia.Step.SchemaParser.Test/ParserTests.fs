@@ -215,22 +215,25 @@ let ``schema with inverse attributes``() =
 let ``entity with unique rules``() =
     let schema = parse " SCHEMA s ; ENTITY e ; UNIQUE label : SELF\\entity.attribute ; END_ENTITY ; END_SCHEMA ; "
     let restr = schema.Entities.Single().UniqueRestrictions.Single()
-    Assert.Equal("label", restr.Name)
+    Assert.Equal("label", restr.Label)
     Assert.Equal(QualifiedAttribute("entity", "attribute"), restr.Attributes.Single())
 
+[<Fact>]
+let ``entity with restriction``() =
+    let schema = parse " SCHEMA s ; ENTITY e ; WHERE wr1 : SELF >= 0 ; END_ENTITY ; END_SCHEMA ; "
+    let domainRule = schema.Entities.Single().DomainRules.Single()
+    Assert.Equal("wr1", domainRule.Label)
+    Assert.Equal(GreaterEquals(AttributeName "SELF", LiteralValue(IntegerLiteral 0L)), domainRule.Expression)
+
+[<Fact>]
+let ``entity with multiple restrictions``() =
+    let schema = parse " SCHEMA s ; ENTITY  e ; WHERE wr1 : SELF >= 0 ; wr2 : (SELF > 0) AND (SELF < 10) ; END_ENTITY ; END_SCHEMA ; "
+    let domainRules = schema.Entities.Single().DomainRules
+    Assert.Equal(2, domainRules.Length)
+    Assert.Equal(GreaterEquals(AttributeName "SELF", LiteralValue(IntegerLiteral 0L)), domainRules.First().Expression)
+    Assert.Equal(And(Greater(AttributeName "SELF", LiteralValue(IntegerLiteral 0L)), Less(AttributeName "SELF", LiteralValue(IntegerLiteral 10L))), domainRules.Last().Expression)
+
 (*
-[<Fact>]
-let ``type with restriction``() =
-    let schema = parse " SCHEMA s ; TYPE measure = REAL ; WHERE wr1 : SELF >= 0 ; END_TYPE ; END_SCHEMA ; "
-    Assert.Equal(TypeRestriction("wr1", GreaterEqual(Identifier("SELF"), Number(0.0))), schema.Types.Single().Restrictions.Single())
-
-[<Fact>]
-let ``type with multiple restrictions``() =
-    let schema = parse " SCHEMA s ; TYPE measure = REAL ; WHERE wr1 : SELF >= 0 ; wr2 : (SELF > 0) AND (SELF < 10) ; END_TYPE ; END_SCHEMA ; "
-    Assert.Equal(2, schema.Types.Single().Restrictions.Length)
-    Assert.Equal(TypeRestriction("wr1", GreaterEqual(Identifier("SELF"), Number(0.0))), schema.Types.Single().Restrictions.First())
-    Assert.Equal(TypeRestriction("wr2", And(Greater(Identifier("SELF"), Number(0.0)), Less(Identifier("SELF"), Number(10.0)))), schema.Types.Single().Restrictions.Last())
-
 [<Fact>]
 let ``type with function restriction``() =
     let schema = parse " SCHEMA s ; TYPE measure = REAL ; WHERE wr1 : EXISTS ( SELF ) OR FOO ( 1.2, 3.4 ) ; END_TYPE ; END_SCHEMA ; "
@@ -252,12 +255,6 @@ let ``entity with complex restriction``() =
     Assert.Equal(In(String("asdf.jkl"), Function("TYPEOF", [| Identifier("SELF\\foo.bar") |])), schema.Entities.Single().Restrictions.Single().Expression)
 
 [<Fact>]
-let ``entity with no subtype or supertype``() =
-    let schema = parse " SCHEMA s ; ENTITY person ; name : STRING ; END_ENTITY ; END_SCHEMA ; "
-    Assert.Equal("", schema.Entities.Single().SubType)
-    Assert.Empty(schema.Entities.Single().SuperTypes)
-
-[<Fact>]
 let ``entity with subtype``() =
     let schema = parse " SCHEMA s ; ENTITY person SUBTYPE OF ( mammal ) ; name : STRING ; END_ENTITY ; END_SCHEMA ; "
     Assert.Equal("mammal", schema.Entities.Single().SubType)
@@ -273,20 +270,7 @@ let ``entity with many supertypes``() =
     arrayEqual([| "animal"; "not_animal" |], schema.Entities.Single().SuperTypes)
 
 [<Fact>]
-let ``entity property with upper/lower bounds``() =
-    let schema = parse " SCHEMA s ; ENTITY e ; p : SET [ 2 : ? ] OF REAL ; END_ENTITY ; END_SCHEMA ; "
-    let propertyType = schema.Entities.Single().Properties.Single().Type
-    Assert.False(propertyType.IsOptional)
-    Assert.Equal("REAL", propertyType.TypeName)
-    Assert.Equal(Some(Some(2), None), propertyType.Bounds)
-
-[<Fact>]
 let ``expression with multi-line qualified identifier``() =
     let schema = parse " SCHEMA s ; ENTITY e ; WHERE wr1 : foo\\\nbar.\nbaz > 0 ; END_ENTITY ; END_SCHEMA ; "
     Assert.Equal(Greater(Identifier("foo\\bar.baz"), Number(0.0)), schema.Entities.Single().Restrictions.Single().Expression)
-
-[<Fact>]
-let ``expression with an array``() =
-    let schema = parse " SCHEMA s ; ENTITY e ; WHERE wr1 : [ 'a' , 'b' ] ; END_ENTITY ; END_SCHEMA ; "
-    Assert.Equal(Array([|String("a"); String("b")|]), schema.Entities.Single().Restrictions.Single().Expression)
 // *)
