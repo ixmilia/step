@@ -386,13 +386,6 @@ module SchemaParser =
         let constructed_types = enumeration_type <|> select_type
 
         let underlying_type = constructed_types <|> aggregation_types <|> simple_types <|> (type_ref |>> NamedType)
-        let label = simple_id
-        let domain_rule =
-            pipe2
-                (opt label .>> COLON)
-                (expression)
-                (fun label expression -> DomainRule(Option.defaultValue null label, expression))
-        let where_clause = WHERE >>. many1 (domain_rule .>> SEMI)
         let type_decl =
             pipe3
                 (TYPE >>. type_id .>> EQUALS)
