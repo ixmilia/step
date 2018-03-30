@@ -356,16 +356,43 @@ module SchemaParser =
                 (opt inverse_clause |>> Option.defaultValue [])
                 (opt unique_clause |>> Option.defaultValue [])
                 (opt where_clause |>> Option.defaultValue [])
+        let rec supertype_factor =
+            choice [ one_of |>> SuperTypeOneOfEntityReference
+                     entity_ref |>> SuperTypeEntityReference
+                     LEFT_PAREN >>. supertype_expression .>> RIGHT_PAREN |>> SuperTypeFactorExpression ]
+        and one_of = ONEOF >>. LEFT_PAREN >>. sepBy1 entity_ref COMMA .>> RIGHT_PAREN
+        and supertype_expression_item_type = (AND >>% SuperTypeAnd) <|> (ANDOR >>% SuperTypeAndOr)
+        and supertype_expression = parse {
+            let head = (supertype_factor |>> (fun f -> SuperTypeExpressionItem(SuperTypeAnd, f)))
+            let tail = many (pipe2 supertype_expression_item_type supertype_factor (fun a b -> SuperTypeExpressionItem(a, b)))
+            let list = pipe2 head tail (fun a b -> a :: b)
+            return! list |>> SuperTypeExpression }
+        let supertype_declaration =
+            choice [ (ABSTRACT >>. SUPERTYPE >>. opt (OF >>. LEFT_PAREN >>. supertype_expression .>> RIGHT_PAREN)) |>> AbstractSuperType
+                     (SUPERTYPE >>. OF >>. LEFT_PAREN >>. supertype_expression .>> RIGHT_PAREN) |>> SuperType ]
+        let subtype_declaration = SUBTYPE >>. OF >>. LEFT_PAREN >>. sepBy1 entity_ref COMMA .>> RIGHT_PAREN
+        let subsuper =
+            tuple2
+                (opt supertype_declaration)
+                (opt subtype_declaration)
         let entity_head =
-            ENTITY >>. entity_id .>> SEMI
+            pipe3
+                (ENTITY >>. entity_id)
+                (opt subsuper)
+                (SEMI)
+                (fun id subsuper _ ->
+                    let super, sub = match subsuper with
+                                     | Some(super, sub) -> super, (Option.defaultValue [] sub)
+                                     | None -> None, []
+                    EntityHead(id, super, sub))
         let entity_decl =
             pipe3
                 (entity_head)
                 (entity_body)
                 (END_ENTITY .>> SEMI)
-                (fun name body _ ->
+                (fun head body _ ->
                     let attributes, derivedAttributes, inverseAttributes, uniqueClauses, whereClauses = body
-                    Entity(name, attributes, derivedAttributes, inverseAttributes, uniqueClauses, whereClauses))
+                    Entity(head, attributes, derivedAttributes, inverseAttributes, uniqueClauses, whereClauses))
             |>> EntityDeclaration
 
         let enumeration_id = simple_id

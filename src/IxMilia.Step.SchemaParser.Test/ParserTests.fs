@@ -12,11 +12,11 @@ let parse str =
     | Success(result, _, _) -> result
     | Failure(errorMessage, _, _) -> failwith errorMessage
 
-let arrayEqual (a : 'a array, b : 'a array) =
-    Assert.Equal(a.Length, b.Length)
-    Array.zip a b
-    |> Array.map (fun (l, r) -> l = r)
-    |> Array.fold (&&) true
+let seqEqual (a : 'a seq, b : 'a seq) =
+    Assert.Equal(a.Count(), b.Count())
+    Seq.zip a b
+    |> Seq.map (fun (l, r) -> l = r)
+    |> Seq.fold (&&) true
     |> Assert.True
 
 [<Fact>]
@@ -233,6 +233,21 @@ let ``entity with multiple restrictions``() =
     Assert.Equal(GreaterEquals(AttributeName "SELF", LiteralValue(IntegerLiteral 0L)), domainRules.First().Expression)
     Assert.Equal(And(Greater(AttributeName "SELF", LiteralValue(IntegerLiteral 0L)), Less(AttributeName "SELF", LiteralValue(IntegerLiteral 10L))), domainRules.Last().Expression)
 
+[<Fact>]
+let ``entity with subtype``() =
+    let schema = parse " SCHEMA s ; ENTITY person SUBTYPE OF ( mammal ) ; name : STRING ; END_ENTITY ; END_SCHEMA ; "
+    seqEqual(["mammal"], schema.Entities.Single().SubTypes)
+
+[<Fact>]
+let ``entity with single supertype``() =
+    let schema = parse " SCHEMA s ; ENTITY mammal SUPERTYPE OF ( animal ) ; END_ENTITY ; END_SCHEMA ; "
+    Assert.Equal(Some(SuperType(SuperTypeExpression([SuperTypeExpressionItem(SuperTypeAnd, SuperTypeEntityReference "animal")]))), schema.Entities.Single().SuperType)
+
+[<Fact>]
+let ``entity with many supertypes``() =
+    let schema = parse " SCHEMA s ; ENTITY mammal SUPERTYPE OF ( ONEOF ( animal , not_animal ) ) ; END_ENTITY ; END_SCHEMA ; "
+    Assert.Equal(Some(SuperType(SuperTypeExpression([SuperTypeExpressionItem(SuperTypeAnd, SuperTypeOneOfEntityReference ["animal"; "not_animal"])]))), schema.Entities.Single().SuperType)
+
 (*
 [<Fact>]
 let ``type with function restriction``() =
@@ -253,21 +268,6 @@ let ``entity with restriction``() =
 let ``entity with complex restriction``() =
     let schema = parse "SCHEMA s ; ENTITY e ; WHERE wr1 : 'asdf.jkl' IN TYPEOF ( SELF\\foo.bar ) ; END_ENTITY ; END_SCHEMA ; "
     Assert.Equal(In(String("asdf.jkl"), Function("TYPEOF", [| Identifier("SELF\\foo.bar") |])), schema.Entities.Single().Restrictions.Single().Expression)
-
-[<Fact>]
-let ``entity with subtype``() =
-    let schema = parse " SCHEMA s ; ENTITY person SUBTYPE OF ( mammal ) ; name : STRING ; END_ENTITY ; END_SCHEMA ; "
-    Assert.Equal("mammal", schema.Entities.Single().SubType)
-
-[<Fact>]
-let ``entity with single supertype``() =
-    let schema = parse " SCHEMA s ; ENTITY mammal SUPERTYPE OF ( animal ) ; END_ENTITY ; END_SCHEMA ; "
-    Assert.Equal("animal", schema.Entities.Single().SuperTypes.Single())
-
-[<Fact>]
-let ``entity with many supertypes``() =
-    let schema = parse " SCHEMA s ; ENTITY mammal SUPERTYPE OF ( ONEOF ( animal , not_animal ) ) ; END_ENTITY ; END_SCHEMA ; "
-    arrayEqual([| "animal"; "not_animal" |], schema.Entities.Single().SuperTypes)
 
 [<Fact>]
 let ``expression with multi-line qualified identifier``() =

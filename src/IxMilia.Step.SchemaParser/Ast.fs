@@ -102,8 +102,35 @@ type DomainRule(label:string, expression:Expression) =
     member this.Label = label
     member this.Expression = expression
 
-type Entity(name:string, attributes:ExplicitAttribute list, derivedAttributes:DerivedAttribute list, inverseAttributes:InverseAttribute list, uniqueRestrictions:UniqueRule list, domainRules:DomainRule list) =
+type SuperTypeExpressionItemType =
+    | SuperTypeAnd
+    | SuperTypeAndOr
+
+type SuperTypeExpressionItem =
+    | SuperTypeExpressionItem of SuperTypeExpressionItemType * SuperTypeFactor
+
+and SuperTypeExpression =
+    | SuperTypeExpression of SuperTypeExpressionItem list
+
+and SuperTypeFactor =
+    | SuperTypeEntityReference of string
+    | SuperTypeOneOfEntityReference of string list
+    | SuperTypeFactorExpression of SuperTypeExpression
+
+type SuperTypeDeclaration =
+    | AbstractSuperType of SuperTypeExpression option
+    | SuperType of SuperTypeExpression
+
+type EntityHead(name:string, SuperType:SuperTypeDeclaration option, SubTypes:string list) =
     member this.Name = name
+    member this.SuperType = SuperType
+    member this.SubTypes = SubTypes
+
+type Entity(head:EntityHead, attributes:ExplicitAttribute list, derivedAttributes:DerivedAttribute list, inverseAttributes:InverseAttribute list, uniqueRestrictions:UniqueRule list, domainRules:DomainRule list) =
+    member this.Head = head
+    member this.Name = head.Name
+    member this.SuperType = head.SuperType
+    member this.SubTypes = head.SubTypes
     member this.Attributes = attributes
     member this.DerivedAttributes = derivedAttributes
     member this.InverseAttributes = inverseAttributes
