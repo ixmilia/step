@@ -6,13 +6,19 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="FParsec" Version="1.0.3" />
+    <None Include="Schemas\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
   <ItemGroup>
     <Compile Include="Ast.fs" />
     <Compile Include="Parser.fs" />
     <Compile Include="Program.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FParsec" Version="1.0.3" />
   </ItemGroup>
 
 </Project>

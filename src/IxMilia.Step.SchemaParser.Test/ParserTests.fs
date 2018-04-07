@@ -12,6 +12,11 @@ let parse str =
     | Success(result, _, _) -> result
     | Failure(errorMessage, _, _) -> failwith errorMessage
 
+let parseExpr str =
+    let schemaText = sprintf " SCHEMA s ; ENTITY e ; DERIVE d : STRING := %s ; END_ENTITY ; END_SCHEMA ; " str
+    let schema = parse schemaText
+    schema.Entities.Single().DerivedAttributes.Single().Expression
+
 let seqEqual (a : 'a seq, b : 'a seq) =
     Assert.Equal(a.Count(), b.Count())
     Seq.zip a b
@@ -247,6 +252,21 @@ let ``entity with single supertype``() =
 let ``entity with many supertypes``() =
     let schema = parse " SCHEMA s ; ENTITY mammal SUPERTYPE OF ( ONEOF ( animal , not_animal ) ) ; END_ENTITY ; END_SCHEMA ; "
     Assert.Equal(Some(SuperType(SuperTypeExpression([SuperTypeExpressionItem(SuperTypeAnd, SuperTypeOneOfEntityReference ["animal"; "not_animal"])]))), schema.Entities.Single().SuperType)
+
+[<Fact>]
+let ``single-quoted strings in expressions``() =
+    let expr = parseExpr "' ; END_ENTITY'"
+    Assert.Equal(LiteralValue(StringLiteral " ; END_ENTITY"), expr)
+
+[<Fact>]
+let ``expression with relative operators``() =
+    let expr = parseExpr "1.0 IN 4.0" // this is nonsensical, but it's valid according to the spec
+    Assert.Equal(In(LiteralValue(RealLiteral 1.0), LiteralValue(RealLiteral 4.0)), expr)
+
+[<Fact>]
+let ``expression with function``() =
+    Assert.Equal(FunctionCallExpression(FunctionCall("COS", [LiteralValue(RealLiteral 2.0)])), parseExpr "COS(2.0)")
+    Assert.Equal(FunctionCallExpression(FunctionCall("COS", [LiteralValue(RealLiteral 2.0)])), parseExpr " COS ( 2.0 ) ")
 
 (*
 [<Fact>]

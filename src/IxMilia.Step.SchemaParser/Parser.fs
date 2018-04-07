@@ -148,6 +148,7 @@ module SchemaParser =
         let COLON_EQUALS = str_ws ":="
         let COMMA = str_ws ","
         let DOUBLE_QUOTE = pchar '"'
+        let SINGLE_QUOTE = pchar '\''
         let EQUALS = str_ws "="
         let LEFT_PAREN = str_ws "("
         let RIGHT_PAREN = str_ws ")"
@@ -160,13 +161,13 @@ module SchemaParser =
         let encoded_character = tuple4 octet octet octet octet |>> (fun (a, b, c, d) -> (int a <<< 24) + (int b <<< 16) + (int c <<< 8) + int d) |>> char
 
         let simple_id = many1Satisfy2 isLetter (fun c -> isLetter c || isDigit c || c = '_') .>> ws
-        let not_paren_star_quote_special = anyOf ['!'; '#'; '$'; '%'; '&'; '+'; ','; '-'; '.'; '/'; ':'; ';'; '<'; '='; '>'; '?'; '@'; '\\'; '^'; '_'; '\''; '{'; '|'; '}'; '~'; '['; ']'; ' ']
+        let not_paren_star_quote_special = anyOf ['!'; '#'; '$'; '%'; '&'; '+'; ','; '-'; '.'; '/'; ':'; ';'; '<'; '='; '>'; '?'; '@'; '\\'; '^'; '_'; '{'; '|'; '}'; '~'; '['; ']'; ' ']
         let not_quote : Parser<char, unit> = not_paren_star_quote_special <|> letter <|> digit <|> anyOf ['('; ')'; '*']
         let char_list_to_string (chars: char list) = String.Join(String.Empty, chars)
         let encoded_string_literal = DOUBLE_QUOTE >>. many encoded_character .>> DOUBLE_QUOTE .>> ws |>> char_list_to_string
-        let simple_string_literal = // \q { ( \q \q ); not_quote; \s; \o } \q .
-            DOUBLE_QUOTE >>. many (stringReturn "\"\"" '"' <|> not_quote) .>> DOUBLE_QUOTE
-            |>> char_list_to_string
+        let single_quoted_simple_string_literal = SINGLE_QUOTE >>. many (stringReturn "\"\"" '\'' <|> not_quote) .>> SINGLE_QUOTE |>> char_list_to_string
+        let double_quoted_simple_string_literal = DOUBLE_QUOTE >>. many (stringReturn "\"\"" '"' <|> not_quote) .>> DOUBLE_QUOTE |>> char_list_to_string
+        let simple_string_literal = single_quoted_simple_string_literal <|> double_quoted_simple_string_literal
         let string_literal = simple_string_literal <|> encoded_string_literal .>> ws |>> StringLiteral
         let schema_version_id = string_literal |>> function StringLiteral s -> s | _ -> failwith "unreachable"
 
@@ -228,7 +229,20 @@ module SchemaParser =
         let literal = binary_literal <|> integer_or_real_literal <|> logical_literal <|> string_literal
         let opp = new OperatorPrecedenceParser<Expression, unit, unit>()
         let expr = opp.ExpressionParser
-        opp.TermParser <- (literal |>> LiteralValue) <|> (simple_id |>> AttributeName) <|> between LEFT_PAREN RIGHT_PAREN expr
+        let function_id = simple_id
+        let function_call =
+            pipe2
+                function_id
+                (between LEFT_PAREN RIGHT_PAREN (sepBy expr COMMA))
+                (fun name args -> FunctionCall(name, args))
+            |>> FunctionCallExpression
+        opp.TermParser <-
+            choice [
+                attempt function_call
+                between LEFT_PAREN RIGHT_PAREN expr
+                literal |>> LiteralValue
+                simple_id |>> AttributeName
+            ]
         opp.AddOperator(InfixOperator(">", ws, 1, Associativity.Left, (fun a b -> Greater(a, b))))
         opp.AddOperator(InfixOperator(">=", ws, 1, Associativity.Left, (fun a b -> GreaterEquals(a, b))))
         opp.AddOperator(InfixOperator("<", ws, 1, Associativity.Left, (fun a b -> Less(a, b))))
@@ -237,8 +251,12 @@ module SchemaParser =
         opp.AddOperator(InfixOperator("<>", ws, 1, Associativity.Left, (fun a b -> NotEquals(a, b))))
         opp.AddOperator(InfixOperator("+", ws, 2, Associativity.Left, (fun a b -> Add(a, b))))
         opp.AddOperator(InfixOperator("-", ws, 2, Associativity.Left, (fun a b -> Subtract(a, b))))
+        opp.AddOperator(InfixOperator("in", ws, 2, Associativity.Left, (fun a b -> In(a, b))))
+        opp.AddOperator(InfixOperator("IN", ws, 2, Associativity.Left, (fun a b -> In(a, b))))
         opp.AddOperator(InfixOperator("or", ws, 2, Associativity.Left, (fun a b -> Or(a, b))))
+        opp.AddOperator(InfixOperator("OR", ws, 2, Associativity.Left, (fun a b -> Or(a, b))))
         opp.AddOperator(InfixOperator("xor", ws, 2, Associativity.Left, (fun a b -> Xor(a, b))))
+        opp.AddOperator(InfixOperator("XOR", ws, 2, Associativity.Left, (fun a b -> Xor(a, b))))
         opp.AddOperator(InfixOperator("*", ws, 3, Associativity.Left, (fun a b -> Multiply(a, b))))
         opp.AddOperator(InfixOperator("/", ws, 3, Associativity.Left, (fun a b -> Divide(a, b))))
         opp.AddOperator(InfixOperator("%", ws, 3, Associativity.Left, (fun a b -> Modulus(a, b))))

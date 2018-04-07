@@ -35,10 +35,22 @@ type Expression =
     | LessEquals of Expression * Expression
     | Equals of Expression * Expression
     | NotEquals of Expression * Expression
+    // functions
+    | FunctionCallExpression of FunctionCall
     // other
+    | In of Expression * Expression
     | Or of Expression * Expression
     | Xor of Expression * Expression
     | And of Expression * Expression
+
+and FunctionCall(name:string, arguments:Expression list) =
+    member this.Name = name
+    member this.Arguments = arguments
+    override this.GetHashCode() = hash (this.Name, this.Arguments)
+    override this.Equals(other) =
+        match other with
+        | :? FunctionCall as f -> (this.Name, this.Arguments) = (f.Name, f.Arguments)
+        | _ -> false
 
 type SimpleType =
     | BinaryType of Expression option * bool // width * isFixed
