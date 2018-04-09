@@ -227,6 +227,11 @@ module SchemaParser =
                         Int64.Parse(wholeNumber, NumberStyles.Integer) * factor |> IntegerLiteral)
         let logical_literal = (FALSE >>% LogicalLiteral(Some false)) <|> (TRUE >>% LogicalLiteral(Some true)) <|> (UNKNOWN >>% LogicalLiteral(None))
         let literal = binary_literal <|> integer_or_real_literal <|> logical_literal <|> string_literal
+        let attribute_ref = attribute_id
+        let group_qualifier = BACKSLASH >>. entity_ref
+        let attribute_qualifier = PERIOD >>. attribute_ref
+        let qualified_attribute = pipe2 (SELF >>. group_qualifier .>> ws) (attribute_qualifier .>> ws) (fun a b -> QualifiedAttribute(a, b))
+        let referenced_attribute = attempt qualified_attribute <|> (attribute_ref |>> LocalAttribute)
         let opp = new OperatorPrecedenceParser<Expression, unit, unit>()
         let expr = opp.ExpressionParser
         let function_id = simple_id
@@ -239,9 +244,9 @@ module SchemaParser =
         opp.TermParser <-
             choice [
                 attempt function_call
+                referenced_attribute |>> AttributeExpression
                 between LEFT_PAREN RIGHT_PAREN expr
                 literal |>> LiteralValue
-                simple_id |>> AttributeName
             ]
         opp.AddOperator(InfixOperator(">", ws, 1, Associativity.Left, (fun a b -> Greater(a, b))))
         opp.AddOperator(InfixOperator(">=", ws, 1, Associativity.Left, (fun a b -> GreaterEquals(a, b))))
@@ -334,7 +339,6 @@ module SchemaParser =
                 (SEMI)
                 (fun name _ typ _ ->
                     ExplicitAttribute(name, typ))
-        let attribute_ref = attribute_id
         let inverse_attr =
             pipe4
                 (attribute_id .>> COLON)
@@ -350,10 +354,6 @@ module SchemaParser =
                     InverseAttribute(attributeId, collectionType, lowerBound, upperBound, entityRef, attributeRef))
         let inverse_clause = INVERSE >>. many1 (attempt inverse_attr)
         let label = simple_id
-        let group_qualifier = BACKSLASH >>. entity_ref
-        let attribute_qualifier = PERIOD >>. attribute_ref
-        let qualified_attribute = pipe2 (SELF >>. group_qualifier .>> ws) (attribute_qualifier .>> ws) (fun a b -> QualifiedAttribute(a, b))
-        let referenced_attribute = qualified_attribute <|> (attribute_ref |>> LocalAttribute)
         let unique_rule =
             pipe3
                 (opt label .>> COLON |>> Option.defaultValue null)

@@ -138,7 +138,7 @@ let ``entity with derived``() =
     let schema = parse " SCHEMA s ; ENTITY square ; size : REAL ; DERIVE area : REAL := size * size ; END_ENTITY ; END_SCHEMA ; "
     let derived = schema.Entities.Single().DerivedAttributes.Single()
     Assert.Equal("area", derived.Name)
-    Assert.Equal(Multiply(AttributeName "size", AttributeName "size"), derived.Expression)
+    Assert.Equal(Multiply(AttributeExpression(LocalAttribute "size"), AttributeExpression(LocalAttribute "size")), derived.Expression)
 
 [<Fact>]
 let ``multiple entities``() =
@@ -228,15 +228,15 @@ let ``entity with restriction``() =
     let schema = parse " SCHEMA s ; ENTITY e ; WHERE wr1 : SELF >= 0 ; END_ENTITY ; END_SCHEMA ; "
     let domainRule = schema.Entities.Single().DomainRules.Single()
     Assert.Equal("wr1", domainRule.Label)
-    Assert.Equal(GreaterEquals(AttributeName "SELF", LiteralValue(IntegerLiteral 0L)), domainRule.Expression)
+    Assert.Equal(GreaterEquals(AttributeExpression(LocalAttribute "SELF"), LiteralValue(IntegerLiteral 0L)), domainRule.Expression)
 
 [<Fact>]
 let ``entity with multiple restrictions``() =
     let schema = parse " SCHEMA s ; ENTITY  e ; WHERE wr1 : SELF >= 0 ; wr2 : (SELF > 0) AND (SELF < 10) ; END_ENTITY ; END_SCHEMA ; "
     let domainRules = schema.Entities.Single().DomainRules
     Assert.Equal(2, domainRules.Length)
-    Assert.Equal(GreaterEquals(AttributeName "SELF", LiteralValue(IntegerLiteral 0L)), domainRules.First().Expression)
-    Assert.Equal(And(Greater(AttributeName "SELF", LiteralValue(IntegerLiteral 0L)), Less(AttributeName "SELF", LiteralValue(IntegerLiteral 10L))), domainRules.Last().Expression)
+    Assert.Equal(GreaterEquals(AttributeExpression(LocalAttribute "SELF"), LiteralValue(IntegerLiteral 0L)), domainRules.First().Expression)
+    Assert.Equal(And(Greater(AttributeExpression(LocalAttribute "SELF"), LiteralValue(IntegerLiteral 0L)), Less(AttributeExpression(LocalAttribute "SELF"), LiteralValue(IntegerLiteral 10L))), domainRules.Last().Expression)
 
 [<Fact>]
 let ``entity with subtype``() =
@@ -260,13 +260,20 @@ let ``single-quoted strings in expressions``() =
 
 [<Fact>]
 let ``expression with relative operators``() =
-    let expr = parseExpr "1.0 IN 4.0" // this is nonsensical, but it's valid according to the spec
-    Assert.Equal(In(LiteralValue(RealLiteral 1.0), LiteralValue(RealLiteral 4.0)), expr)
+    // these are nonsensical, but valid according to the spec
+    Assert.Equal(In(LiteralValue(RealLiteral 1.0), LiteralValue(RealLiteral 4.0)), parseExpr "1.0 IN 4.0")
+    Assert.Equal(In(LiteralValue(StringLiteral "string"), FunctionCallExpression(FunctionCall("COS", [LiteralValue(RealLiteral 1.0)]))), parseExpr @"'string' IN COS(1.0)")
 
 [<Fact>]
 let ``expression with function``() =
     Assert.Equal(FunctionCallExpression(FunctionCall("COS", [LiteralValue(RealLiteral 2.0)])), parseExpr "COS(2.0)")
     Assert.Equal(FunctionCallExpression(FunctionCall("COS", [LiteralValue(RealLiteral 2.0)])), parseExpr " COS ( 2.0 ) ")
+
+[<Fact>]
+let ``expression with qualified attribute``() =
+    Assert.Equal(AttributeExpression(QualifiedAttribute("a", "b")), parseExpr @"SELF\a.b")
+    Assert.Equal(AttributeExpression(LocalAttribute "a"), parseExpr @"a")
+    Assert.Equal(AttributeExpression(LocalAttribute "SELF"), parseExpr @"SELF")
 
 (*
 [<Fact>]

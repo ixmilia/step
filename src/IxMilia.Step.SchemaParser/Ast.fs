@@ -16,10 +16,14 @@ type LiteralValue =
     | RealLiteral of float
     | StringLiteral of string
 
+type AttributeReference =
+    | LocalAttribute of string
+    | QualifiedAttribute of string * string
+
 type Expression =
     // static values
     | LiteralValue of LiteralValue
-    | AttributeName of string
+    | AttributeExpression of AttributeReference
     // artithmetic
     | Negate of Expression
     | Add of Expression * Expression
@@ -80,10 +84,6 @@ and BaseType =
 type AttributeType(typ:BaseType, isOptional:bool) =
     member this.Type = typ
     member this.IsOptional = isOptional
-
-type AttributeReference =
-    | LocalAttribute of string
-    | QualifiedAttribute of string * string
 
 type UniqueRule(label:string, attributes:AttributeReference list) =
     member this.Label = label
