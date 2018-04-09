@@ -281,6 +281,11 @@ let ``entity with complex restriction``() =
     let expr = schema.Entities.Single().DomainRules.Single().Expression
     Assert.Equal(In(LiteralValue(StringLiteral "asdf.jkl"), FunctionCallExpression(FunctionCall("TYPEOF", [AttributeExpression(QualifiedAttribute("foo", "bar"))]))), expr)
 
+[<Fact>]
+let ``parse query expression``() =
+    let expr = parseExpr @"QUERY ( x <* SELF\a.b | x > 4 )"
+    Assert.Equal(QueryExpression(Query("x", AttributeExpression(SelfQualifiedAttribute("a", "b")), Greater(AttributeExpression(LocalAttribute "x"), LiteralValue(IntegerLiteral 4L)))), expr)
+
 (*
 [<Fact>]
 let ``type with function restriction``() =

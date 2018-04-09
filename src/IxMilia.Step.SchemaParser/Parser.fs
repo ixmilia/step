@@ -155,6 +155,8 @@ module SchemaParser =
         let LEFT_BRACKET = str_ws "["
         let RIGHT_BRACKET = str_ws "]"
         let QUESTION = str_ws "?"
+        let PIPE = str_ws "|"
+        let LESS_STAR = str_ws "<*"
 
         let hex_digit = hex
         let octet = hex_digit .>>. hex_digit |>> (fun (a, b) -> ((int a) <<< 4) + int b) |>> byte
@@ -240,6 +242,14 @@ module SchemaParser =
             ]
         let opp = new OperatorPrecedenceParser<Expression, unit, unit>()
         let expr = opp.ExpressionParser
+        let variable_id = simple_id
+        let query_expression =
+            pipe3
+                (QUERY >>. LEFT_PAREN >>. variable_id)
+                (LESS_STAR >>. expr)
+                (PIPE >>. expr .>> RIGHT_PAREN)
+                (fun variable aggregate logical -> Query(variable, aggregate, logical))
+            |>> QueryExpression
         let function_id = simple_id
         let function_call =
             pipe2
@@ -249,6 +259,7 @@ module SchemaParser =
             |>> FunctionCallExpression
         opp.TermParser <-
             choice [
+                attempt query_expression
                 attempt function_call
                 referenced_attribute |>> AttributeExpression
                 between LEFT_PAREN RIGHT_PAREN expr

@@ -42,6 +42,7 @@ type Expression =
     | NotEquals of Expression * Expression
     // functions
     | FunctionCallExpression of FunctionCall
+    | QueryExpression of Query
     // other
     | In of Expression * Expression
     | Or of Expression * Expression
@@ -55,6 +56,16 @@ and FunctionCall(name:string, arguments:Expression list) =
     override this.Equals(other) =
         match other with
         | :? FunctionCall as f -> (this.Name, this.Arguments) = (f.Name, f.Arguments)
+        | _ -> false
+
+and Query(variableId:string, aggregateSource:Expression, logicalExpression:Expression) =
+    member this.VariableId = variableId
+    member this.AggregateSource = aggregateSource
+    member this.LogicalExpression = logicalExpression
+    override this.GetHashCode() = hash (this.VariableId, this.AggregateSource, this.LogicalExpression)
+    override this.Equals(other) =
+        match other with
+        | :? Query as q -> (this.VariableId, this.AggregateSource, this.LogicalExpression) = (q.VariableId, q.AggregateSource, q.LogicalExpression)
         | _ -> false
 
 type SimpleType =
