@@ -259,9 +259,11 @@ module SchemaParser =
                 (fun name args -> FunctionCall(name, args))
             |>> FunctionCallExpression
         let index = expr
+        let array_expression = between LEFT_BRACKET RIGHT_BRACKET (sepBy expr COMMA) |>> ArrayExpression
         opp.TermParser <-
             pipe2
                 (choice [
+                    array_expression
                     attempt query_expression
                     attempt function_call
                     referenced_attribute |>> AttributeExpression

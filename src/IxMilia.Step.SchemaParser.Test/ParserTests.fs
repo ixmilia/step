@@ -291,6 +291,11 @@ let ``parse expression index``() =
     let expr = parseExpr "x[4]"
     Assert.Equal(SubcomponentQualifiedExpression(AttributeExpression(AttributeName "x"), LiteralValue(IntegerLiteral 4L), None), expr)
 
+[<Fact>]
+let ``parse array expression``() =
+    let expr = parseExpr "['a', 'b']"
+    Assert.Equal(ArrayExpression([LiteralValue(StringLiteral "a"); LiteralValue(StringLiteral "b")]), expr)
+
 (*
 [<Fact>]
 let ``type with function restriction``() =
