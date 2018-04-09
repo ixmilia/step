@@ -17,9 +17,9 @@ type LiteralValue =
     | StringLiteral of string
 
 type AttributeReference =
-    | LocalAttribute of string
-    | QualifiedAttribute of string * string
-    | SelfQualifiedAttribute of string * string
+    | AttributeName of string
+    | GroupQualifiedAttribute of string * AttributeReference // name \ subname
+    | DotQualifiedAttribute of string * AttributeReference // name . subname
 
 type Expression =
     // static values

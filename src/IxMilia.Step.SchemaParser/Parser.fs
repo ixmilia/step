@@ -230,16 +230,17 @@ module SchemaParser =
         let logical_literal = (FALSE >>% LogicalLiteral(Some false)) <|> (TRUE >>% LogicalLiteral(Some true)) <|> (UNKNOWN >>% LogicalLiteral(None))
         let literal = binary_literal <|> integer_or_real_literal <|> logical_literal <|> string_literal
         let attribute_ref = attribute_id
-        let group_qualifier = BACKSLASH >>. entity_ref
-        let attribute_qualifier = PERIOD >>. attribute_ref
-        let qualified_attribute = pipe2 (attribute_ref .>> PERIOD) (attribute_ref) (fun a b -> QualifiedAttribute(a, b))
-        let self_qualified_attribute = pipe2 (SELF >>. group_qualifier .>> ws) (attribute_qualifier .>> ws) (fun a b -> SelfQualifiedAttribute(a, b))
-        let referenced_attribute =
-            choice [
-                attempt self_qualified_attribute
-                attempt qualified_attribute
-                attribute_ref |>> LocalAttribute
-            ]
+        let rec attribute =
+            parse {
+                return! choice [
+                    attempt (pipe2 attribute_id group_qualifier (fun a b -> GroupQualifiedAttribute(a, b)))
+                    attempt (pipe2 attribute_id dot_qualifier (fun a b -> DotQualifiedAttribute(a, b)))
+                    attribute_id |>> AttributeName
+                ]
+            }
+        and group_qualifier = BACKSLASH >>. attribute
+        and dot_qualifier = PERIOD >>. attribute
+        let referenced_attribute = attribute
         let opp = new OperatorPrecedenceParser<Expression, unit, unit>()
         let expr = opp.ExpressionParser
         let variable_id = simple_id
