@@ -19,6 +19,7 @@ type LiteralValue =
 type AttributeReference =
     | LocalAttribute of string
     | QualifiedAttribute of string * string
+    | SelfQualifiedAttribute of string * string
 
 type Expression =
     // static values

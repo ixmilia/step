@@ -230,8 +230,14 @@ module SchemaParser =
         let attribute_ref = attribute_id
         let group_qualifier = BACKSLASH >>. entity_ref
         let attribute_qualifier = PERIOD >>. attribute_ref
-        let qualified_attribute = pipe2 (SELF >>. group_qualifier .>> ws) (attribute_qualifier .>> ws) (fun a b -> QualifiedAttribute(a, b))
-        let referenced_attribute = attempt qualified_attribute <|> (attribute_ref |>> LocalAttribute)
+        let qualified_attribute = pipe2 (attribute_ref .>> PERIOD) (attribute_ref) (fun a b -> QualifiedAttribute(a, b))
+        let self_qualified_attribute = pipe2 (SELF >>. group_qualifier .>> ws) (attribute_qualifier .>> ws) (fun a b -> SelfQualifiedAttribute(a, b))
+        let referenced_attribute =
+            choice [
+                attempt self_qualified_attribute
+                attempt qualified_attribute
+                attribute_ref |>> LocalAttribute
+            ]
         let opp = new OperatorPrecedenceParser<Expression, unit, unit>()
         let expr = opp.ExpressionParser
         let function_id = simple_id

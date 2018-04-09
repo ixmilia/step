@@ -221,7 +221,7 @@ let ``entity with unique rules``() =
     let schema = parse " SCHEMA s ; ENTITY e ; UNIQUE label : SELF\\entity.attribute ; END_ENTITY ; END_SCHEMA ; "
     let restr = schema.Entities.Single().UniqueRestrictions.Single()
     Assert.Equal("label", restr.Label)
-    Assert.Equal(QualifiedAttribute("entity", "attribute"), restr.Attributes.Single())
+    Assert.Equal(SelfQualifiedAttribute("entity", "attribute"), restr.Attributes.Single())
 
 [<Fact>]
 let ``entity with restriction``() =
@@ -271,9 +271,15 @@ let ``expression with function``() =
 
 [<Fact>]
 let ``expression with qualified attribute``() =
-    Assert.Equal(AttributeExpression(QualifiedAttribute("a", "b")), parseExpr @"SELF\a.b")
+    Assert.Equal(AttributeExpression(SelfQualifiedAttribute("a", "b")), parseExpr @"SELF\a.b")
     Assert.Equal(AttributeExpression(LocalAttribute "a"), parseExpr @"a")
     Assert.Equal(AttributeExpression(LocalAttribute "SELF"), parseExpr @"SELF")
+
+[<Fact>]
+let ``entity with complex restriction``() =
+    let schema = parse "SCHEMA s ; ENTITY e ; WHERE wr1 : 'asdf.jkl' IN TYPEOF ( foo.bar ) ; END_ENTITY ; END_SCHEMA ; "
+    let expr = schema.Entities.Single().DomainRules.Single().Expression
+    Assert.Equal(In(LiteralValue(StringLiteral "asdf.jkl"), FunctionCallExpression(FunctionCall("TYPEOF", [AttributeExpression(QualifiedAttribute("foo", "bar"))]))), expr)
 
 (*
 [<Fact>]
@@ -291,13 +297,4 @@ let ``entity with restriction``() =
     let schema = parse " SCHEMA s ; ENTITY person ; name : STRING ; alias : STRING ; WHERE wr1 : EXISTS ( name ) OR EXISTS ( alias ) ; END_ENTITY ; END_SCHEMA ; "
     Assert.Equal(TypeRestriction("wr1", Or(Function("EXISTS", [| Identifier("name") |]), Function("EXISTS", [| Identifier("alias") |]))), schema.Entities.Single().Restrictions.Single())
 
-[<Fact>]
-let ``entity with complex restriction``() =
-    let schema = parse "SCHEMA s ; ENTITY e ; WHERE wr1 : 'asdf.jkl' IN TYPEOF ( SELF\\foo.bar ) ; END_ENTITY ; END_SCHEMA ; "
-    Assert.Equal(In(String("asdf.jkl"), Function("TYPEOF", [| Identifier("SELF\\foo.bar") |])), schema.Entities.Single().Restrictions.Single().Expression)
-
-[<Fact>]
-let ``expression with multi-line qualified identifier``() =
-    let schema = parse " SCHEMA s ; ENTITY e ; WHERE wr1 : foo\\\nbar.\nbaz > 0 ; END_ENTITY ; END_SCHEMA ; "
-    Assert.Equal(Greater(Identifier("foo\\bar.baz"), Number(0.0)), schema.Entities.Single().Restrictions.Single().Expression)
 // *)
