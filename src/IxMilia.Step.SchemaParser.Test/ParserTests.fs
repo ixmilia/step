@@ -286,6 +286,11 @@ let ``parse query expression``() =
     let expr = parseExpr @"QUERY ( x <* SELF\a.b | x > 4 )"
     Assert.Equal(QueryExpression(Query("x", AttributeExpression(SelfQualifiedAttribute("a", "b")), Greater(AttributeExpression(LocalAttribute "x"), LiteralValue(IntegerLiteral 4L)))), expr)
 
+[<Fact>]
+let ``parse expression index``() =
+    let expr = parseExpr "x[4]"
+    Assert.Equal(SubcomponentQualifiedExpression(AttributeExpression(LocalAttribute "x"), LiteralValue(IntegerLiteral 4L), None), expr)
+
 (*
 [<Fact>]
 let ``type with function restriction``() =

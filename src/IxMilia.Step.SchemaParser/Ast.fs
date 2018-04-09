@@ -44,6 +44,7 @@ type Expression =
     | FunctionCallExpression of FunctionCall
     | QueryExpression of Query
     // other
+    | SubcomponentQualifiedExpression of Expression * Expression * Expression option // expression * index1 * index2
     | In of Expression * Expression
     | Or of Expression * Expression
     | Xor of Expression * Expression

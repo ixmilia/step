@@ -257,14 +257,21 @@ module SchemaParser =
                 (between LEFT_PAREN RIGHT_PAREN (sepBy expr COMMA))
                 (fun name args -> FunctionCall(name, args))
             |>> FunctionCallExpression
+        let index = expr
         opp.TermParser <-
-            choice [
-                attempt query_expression
-                attempt function_call
-                referenced_attribute |>> AttributeExpression
-                between LEFT_PAREN RIGHT_PAREN expr
-                literal |>> LiteralValue
-            ]
+            pipe2
+                (choice [
+                    attempt query_expression
+                    attempt function_call
+                    referenced_attribute |>> AttributeExpression
+                    between LEFT_PAREN RIGHT_PAREN expr
+                    literal |>> LiteralValue
+                ])
+                (opt (LEFT_BRACKET >>. index .>>. opt (COLON >>. index) .>> RIGHT_BRACKET))
+                (fun expression qualifiedIndex ->
+                    match qualifiedIndex with
+                    | Some (index1, index2) -> SubcomponentQualifiedExpression(expression, index1, index2)
+                    | None -> expression)
         opp.AddOperator(InfixOperator(">", ws, 1, Associativity.Left, (fun a b -> Greater(a, b))))
         opp.AddOperator(InfixOperator(">=", ws, 1, Associativity.Left, (fun a b -> GreaterEquals(a, b))))
         opp.AddOperator(InfixOperator("<", ws, 1, Associativity.Left, (fun a b -> Less(a, b))))
