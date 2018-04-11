@@ -128,19 +128,14 @@ type DomainRule(label:string, expression:Expression) =
     member this.Label = label
     member this.Expression = expression
 
-type SuperTypeExpressionItemType =
-    | SuperTypeAnd
-    | SuperTypeAndOr
-
-type SuperTypeExpressionItem =
-    | SuperTypeExpressionItem of SuperTypeExpressionItemType * SuperTypeFactor
-
-and SuperTypeExpression =
-    | SuperTypeExpression of SuperTypeExpressionItem list
+type SuperTypeExpression =
+    | SuperTypeFactor of SuperTypeFactor
+    | SuperTypeAnd of SuperTypeExpression * SuperTypeExpression
+    | SuperTypeAndOr of SuperTypeExpression * SuperTypeExpression
 
 and SuperTypeFactor =
     | SuperTypeEntityReference of string
-    | SuperTypeOneOfEntityReference of string list
+    | SuperTypeOneOf of string list
     | SuperTypeFactorExpression of SuperTypeExpression
 
 type SuperTypeDeclaration =

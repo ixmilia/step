@@ -401,17 +401,22 @@ module SchemaParser =
                 (opt inverse_clause |>> Option.defaultValue [])
                 (opt unique_clause |>> Option.defaultValue [])
                 (opt where_clause |>> Option.defaultValue [])
+        let one_of = ONEOF >>. LEFT_PAREN >>. sepBy1 entity_ref COMMA .>> RIGHT_PAREN
         let rec supertype_factor =
-            choice [ one_of |>> SuperTypeOneOfEntityReference
+            choice [ one_of |>> SuperTypeOneOf
                      entity_ref |>> SuperTypeEntityReference
                      LEFT_PAREN >>. supertype_expression .>> RIGHT_PAREN |>> SuperTypeFactorExpression ]
-        and one_of = ONEOF >>. LEFT_PAREN >>. sepBy1 entity_ref COMMA .>> RIGHT_PAREN
-        and supertype_expression_item_type = (AND >>% SuperTypeAnd) <|> (ANDOR >>% SuperTypeAndOr)
         and supertype_expression = parse {
-            let head = (supertype_factor |>> (fun f -> SuperTypeExpressionItem(SuperTypeAnd, f)))
-            let tail = many (pipe2 supertype_expression_item_type supertype_factor (fun a b -> SuperTypeExpressionItem(a, b)))
-            let list = pipe2 head tail (fun a b -> a :: b)
-            return! list |>> SuperTypeExpression }
+            let andor_supertype_factor = (ANDOR >>% true) .>>. (supertype_factor |>> SuperTypeFactor)
+            let and_supertype_factor = (AND >>% false) .>>. (supertype_factor |>> SuperTypeFactor)
+            return! pipe2
+                        (supertype_factor |>> SuperTypeFactor)
+                        (opt (andor_supertype_factor <|> and_supertype_factor))
+                        (fun factor andor ->
+                            match andor with
+                            | Some(true, otherFactor) -> SuperTypeAndOr(factor, otherFactor)
+                            | Some(false, otherFactor) -> SuperTypeAnd(factor, otherFactor)
+                            | None -> factor) }
         let supertype_declaration =
             choice [ (ABSTRACT >>. SUPERTYPE >>. opt (OF >>. LEFT_PAREN >>. supertype_expression .>> RIGHT_PAREN)) |>> AbstractSuperType
                      (SUPERTYPE >>. OF >>. LEFT_PAREN >>. supertype_expression .>> RIGHT_PAREN) |>> SuperType ]

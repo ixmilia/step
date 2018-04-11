@@ -246,12 +246,17 @@ let ``entity with subtype``() =
 [<Fact>]
 let ``entity with single supertype``() =
     let schema = parse " SCHEMA s ; ENTITY mammal SUPERTYPE OF ( animal ) ; END_ENTITY ; END_SCHEMA ; "
-    Assert.Equal(Some(SuperType(SuperTypeExpression([SuperTypeExpressionItem(SuperTypeAnd, SuperTypeEntityReference "animal")]))), schema.Entities.Single().SuperType)
+    Assert.Equal(SuperType(SuperTypeFactor(SuperTypeEntityReference "animal")), schema.Entities.Single().SuperType.Value)
 
 [<Fact>]
 let ``entity with many supertypes``() =
     let schema = parse " SCHEMA s ; ENTITY mammal SUPERTYPE OF ( ONEOF ( animal , not_animal ) ) ; END_ENTITY ; END_SCHEMA ; "
-    Assert.Equal(Some(SuperType(SuperTypeExpression([SuperTypeExpressionItem(SuperTypeAnd, SuperTypeOneOfEntityReference ["animal"; "not_animal"])]))), schema.Entities.Single().SuperType)
+    Assert.Equal(SuperType(SuperTypeFactor(SuperTypeOneOf(["animal"; "not_animal"]))), schema.Entities.Single().SuperType.Value)
+
+[<Fact>]
+let ``complex supertype``() =
+    let schema = parse "SCHEMA s; ENTITY e SUPERTYPE OF (ONEOF (a, b, c, d) ANDOR f); END_ENTITY; END_SCHEMA;"
+    Assert.Equal(SuperType(SuperTypeAndOr(SuperTypeFactor(SuperTypeOneOf(["a"; "b"; "c"; "d"])), SuperTypeFactor(SuperTypeEntityReference "f"))), schema.Entities.Single().SuperType.Value)
 
 [<Fact>]
 let ``single-quoted strings in expressions``() =
