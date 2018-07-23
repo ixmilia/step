@@ -74,7 +74,8 @@ FILE_SCHEMA(('EXPLICIT_DRAUGHTING'));
         public void ReadDifferentTimeStampsTest()
         {
             var file = ReadFileFromHeader(@"FILE_NAME('', '2016-06-26T13:59:52+02:00', (), (), '', '', '');");
-            Assert.Equal(new DateTime(2016, 06, 26, 4, 59, 52), file.Timestamp);
+            var expected = new DateTime(2016, 06, 26, 11, 59, 52, DateTimeKind.Local) + DateTimeOffset.Now.Offset;
+            Assert.Equal(expected, file.Timestamp);
         }
 
         [Fact]

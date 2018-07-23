@@ -50,7 +50,7 @@ namespace IxMilia.Step.Syntax
             }
             else
             {
-                return DateTime.Parse(str, CultureInfo.InvariantCulture);
+                return DateTime.Parse(str, CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal);
             }
         }
 
