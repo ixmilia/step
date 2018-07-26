@@ -127,7 +127,7 @@ namespace IxMilia.Step
 
         private void WriteNewLine(StringBuilder builder)
         {
-            builder.AppendLine();
+            builder.Append("\r\n");
             _currentLineLength = 0;
         }
 

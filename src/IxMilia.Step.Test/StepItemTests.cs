@@ -6,7 +6,7 @@ using Xunit;
 
 namespace IxMilia.Step.Test
 {
-    public class StepItemTests
+    public class StepItemTests : StepTestBase
     {
         private StepFile ReadFile(string data)
         {
@@ -27,12 +27,6 @@ END-ISO-10303-21;
         {
             var file = ReadFile(data);
             return file.GetTopLevelItems().Single();
-        }
-
-        private void AssertFileContains(StepFile file, string expected, bool inlineReferences = false)
-        {
-            var actual = file.GetContentsAsString(inlineReferences);
-            Assert.Contains(expected, actual.Trim());
         }
 
         private void AssertFileContains(StepRepresentationItem item, string expected)

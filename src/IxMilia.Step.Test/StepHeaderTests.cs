@@ -6,7 +6,7 @@ using Xunit;
 
 namespace IxMilia.Step.Test
 {
-    public class StepHeaderTests
+    public class StepHeaderTests : StepTestBase
     {
         private StepFile ReadFileFromHeader(string header)
         {
@@ -20,18 +20,6 @@ namespace IxMilia.Step.Test
 {StepFile.MagicFooter};
 ";
             return StepFile.Parse(file.Trim());
-        }
-
-        private void AssertFileIs(StepFile file, string expected)
-        {
-            var actual = file.GetContentsAsString();
-            Assert.Equal(expected, actual);
-        }
-
-        private void AssertFileContains(StepFile file, string expected)
-        {
-            var actual = file.GetContentsAsString();
-            Assert.Contains(expected, actual);
         }
 
         [Fact]

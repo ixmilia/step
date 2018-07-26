@@ -10,7 +10,7 @@ using Xunit;
 
 namespace IxMilia.Step.Test
 {
-    public class StepTokenTests
+    public class StepTokenTests : StepTestBase
     {
         private StepToken[] GetTokens(string text)
         {
@@ -145,10 +145,11 @@ ENDSEC;
             var writer = new StepWriter(null, false);
             var sb = new StringBuilder();
             writer.WriteTokens(tokens, sb);
-            Assert.Equal(@"
+            var expected = NormalizeLineEndings(@"
 0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,
 0.0,0.0
-".Trim(), sb.ToString());
+".Trim());
+            Assert.Equal(expected, sb.ToString());
         }
     }
 }
