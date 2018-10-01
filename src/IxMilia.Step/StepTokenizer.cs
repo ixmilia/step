@@ -278,6 +278,11 @@ namespace IxMilia.Step
             return IsUpper(c) || IsDigit(c);
         }
 
+        private bool IsEnumCharacter(char c)
+        {
+            return IsUpperOrDigit(c) || IsUnderscore(c);
+        }
+
         private bool IsLeftParen(char c)
         {
             return c == '(';
@@ -463,7 +468,7 @@ namespace IxMilia.Step
             var tokenColumn = _currentColumn;
             var sb = new StringBuilder();
             Advance(); // swallow leading '.'
-            var value = TakeWhile(IsUpperOrDigit);
+            var value = TakeWhile(IsEnumCharacter);
             if (string.IsNullOrEmpty(value))
             {
                 throw new StepReadException("Expected enumeration value", tokenLine, tokenColumn);

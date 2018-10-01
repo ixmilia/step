@@ -42,6 +42,11 @@ namespace IxMilia.Step.Test
             return token => WithKind(StepTokenKind.Keyword)(token) && ((StepKeywordToken)token).Value == keyword;
         }
 
+        private TokenVerifier Enumeration(string enumName)
+        {
+            return token => WithKind(StepTokenKind.Enumeration)(token) && ((StepEnumerationToken)token).Value == enumName;
+        }
+
         private void VerifyTokens(string text, params TokenVerifier[] expected)
         {
             var actual = GetTokens(text);
@@ -125,6 +130,12 @@ ENDSEC;
 ",
                 Keyword("HEADER"), Semicolon(),
                 Keyword("ENDSEC"), Semicolon());
+        }
+
+        [Fact]
+        public void ParseEnumTokensTest()
+        {
+            VerifyTokens(".SOME_ENUM_VALUE.", Enumeration("SOME_ENUM_VALUE"));
         }
 
         [Fact]
