@@ -4,7 +4,6 @@
     <Description>A portable .NET library for reading and writing STEP CAD files.</Description>
     <Copyright>Copyright 2017</Copyright>
     <AssemblyTitle>IxMilia.Step</AssemblyTitle>
-    <VersionPrefix>0.1.0</VersionPrefix>
     <Authors>IxMilia</Authors>
     <TargetFramework>netstandard1.0</TargetFramework>
     <AssemblyName>IxMilia.Step</AssemblyName>

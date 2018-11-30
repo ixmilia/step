@@ -4,7 +4,4 @@
 .vs/
 
 # ignore artifacts
-[Bb]in/
-[Dd]ebug/
-[Oo]bj/
-[Rr]elease/
+artifacts/
