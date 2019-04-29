@@ -210,6 +210,33 @@ END-ISO-10303-21;
         }
 
         [Fact]
+        public void ReadBSplineWithKnotsItemsTest()
+        {
+            var spline = (StepBSplineCurveWithKnots)ReadTopLevelItem( @"
+#1=CARTESIAN_POINT('Ctrl Pts',(-2.09228759117738,32.4775276519752,7.66388871568773));
+#2=CARTESIAN_POINT('Ctrl Pts',(-2.09228759389655,30.5382976972817,7.66388872564781));
+#3=CARTESIAN_POINT('Ctrl Pts',(-2.09228913953809,28.5997370344523,7.66389438721404));
+#4=CARTESIAN_POINT('Ctrl Pts',(-2.09228986816456,26.5173645163537,7.66389705611683));
+#5=CARTESIAN_POINT('Ctrl Pts',(-2.09228981902238,26.4462306775892,7.6638968761128));
+#6=CARTESIAN_POINT('Ctrl Pts',(-2.0922902432834,25.9015378442672,7.66389843014835));
+#7=CARTESIAN_POINT('Ctrl Pts',(-2.11494520023805,24.945781133428,7.74688179710576));
+#8=CARTESIAN_POINT('Ctrl Pts',(-2.21905874762543,23.5389919187115,8.1282417231202));
+#9=CARTESIAN_POINT('Ctrl Pts',(-2.39215391928761,22.2144888644552,8.76227603964325));
+#10=CARTESIAN_POINT('Ctrl Pts',(-2.62666223390231,21.041382550633,9.62126198100665));
+#11=CARTESIAN_POINT('Ctrl Pts',(-2.81820100260438,20.3836711077483,10.3228537766386));
+#12=CARTESIAN_POINT('Ctrl Pts',(-2.91923318155533,20.0960030522361,10.6929268867829));
+#13=B_SPLINE_CURVE_WITH_KNOTS('',3,(#1,#2,#3,#4,#5,#6,#7,#8,#9,#10,#11,#12)
+,.UNSPECIFIED.,.F.,.F.,(4,2,2,1,1,1,1,4),(0.00162506910839039,0.4223270995939,
+0.437186866643407,0.53596295034332,0.634739034043234,0.733515117743147,
+0.832291201443061,0.927367642384199),.UNSPECIFIED.);
+" );
+            Assert.Equal( 12, spline.ControlPointsList.Count );
+            Assert.Equal( 8, spline.Knots.Count );
+            Assert.Equal( 8, spline.KnotMultiplicities.Count );
+            Assert.Equal( 3, spline.Degree );
+        }
+
+        [Fact]
         public void WriteEllipseTest()
         {
             var ellipse = new StepEllipse("", new StepAxis2Placement2D("", new StepCartesianPoint("", 1.0, 2.0, 3.0), new StepDirection("", 0.0, 0.0, 1.0)), 3.0, 4.0);
@@ -345,6 +372,50 @@ END-ISO-10303-21;
             Assert.Equal(2, edgeLoop.EdgeList.Count);
             Assert.NotNull(edgeLoop.EdgeList[0]);
             Assert.NotNull(edgeLoop.EdgeList[1]);
+        }
+
+        [Fact]
+        public void ReadAdvancedFaceTest()
+        {
+            var file = ReadFile( @"
+#1=FACE_OUTER_BOUND('',#2,.T.);
+#2=EDGE_LOOP('',(#12,#13,#14,#15));
+#3=LINE('',#31,#4);
+#4=VECTOR('',#24,2.5);
+#5=CIRCLE('',#18,2.5);
+#6=CIRCLE('',#19,2.5);
+#7=VERTEX_POINT('',#28);
+#8=VERTEX_POINT('',#30);
+#9=EDGE_CURVE('',#7,#7,#5,.T.);
+#10=EDGE_CURVE('',#7,#8,#3,.T.);
+#11=EDGE_CURVE('',#8,#8,#6,.T.);
+#12=ORIENTED_EDGE('',*,*,#9,.F.);
+#13=ORIENTED_EDGE('',*,*,#10,.T.);
+#14=ORIENTED_EDGE('',*,*,#11,.F.);
+#15=ORIENTED_EDGE('',*,*,#10,.F.);
+#16=CYLINDRICAL_SURFACE('',#17,2.5);
+#17=AXIS2_PLACEMENT_3D('',#27,#20,#21);
+#18=AXIS2_PLACEMENT_3D('',#29,#22,#23);
+#19=AXIS2_PLACEMENT_3D('',#32,#25,#26);
+#20=DIRECTION('center_axis',(0.,0.,-1.));
+#21=DIRECTION('ref_axis',(-1.,0.,0.));
+#22=DIRECTION('center_axis',(0.,0.,-1.));
+#23=DIRECTION('ref_axis',(-1.,0.,0.));
+#24=DIRECTION('',(0.,0.,-1.));
+#25=DIRECTION('center_axis',(0.,0.,1.));
+#26=DIRECTION('ref_axis',(-1.,0.,0.));
+#27=CARTESIAN_POINT('Origin',(0.,0.,5.));
+#28=CARTESIAN_POINT('',(2.5,3.06161699786838E-16,5.));
+#29=CARTESIAN_POINT('Origin',(0.,0.,5.));
+#30=CARTESIAN_POINT('',(2.5,3.06161699786838E-16,0.));
+#31=CARTESIAN_POINT('',(2.5,-3.06161699786838E-16,5.));
+#32=CARTESIAN_POINT('Origin',(0.,0.,0.));
+#33=ADVANCED_FACE('',(#1),#16,.F.);
+" );
+            var face = file.GetTopLevelItems().OfType<StepAdvancedFace>().FirstOrDefault();
+            Assert.NotNull( face );
+            Assert.NotNull( face.FaceGeometry );
+            Assert.Equal( 1, face.Bounds.Count );            
         }
 
         [Fact]
@@ -495,6 +566,26 @@ END-ISO-10303-21;
 #4=AXIS2_PLACEMENT_3D('',#1,#2,#3);
 #5=CYLINDRICAL_SURFACE('',#4,12.0);
 ");
+        }
+
+        [Fact]
+        public void WriteBSplineWithKnotsTest()
+        {
+            var spline = new StepBSplineCurveWithKnots(
+                "",
+                new StepCartesianPoint( "", 0.0, 0.0, 0.0 ),
+                new StepCartesianPoint( "", 1.0, 0.0, 0.0 ),
+                new StepCartesianPoint( "", 1.0, 2.0, 0.0 ) );
+            spline.KnotMultiplicities.Add( 1 );
+            spline.Knots.Add( 2.0 );
+
+            AssertFileContains( spline, @"
+#1=CARTESIAN_POINT('',(0.0,0.0,0.0));
+#2=CARTESIAN_POINT('',(1.0,0.0,0.0));
+#3=CARTESIAN_POINT('',(1.0,2.0,0.0));
+#4=B_SPLINE_CURVE_WITH_KNOTS('',0,(#1,#2,#3),.UNSPECIFIED.,.F.,.F.,(1),(2.0),
+.UNSPECIFIED.);
+" );
         }
     }
 }

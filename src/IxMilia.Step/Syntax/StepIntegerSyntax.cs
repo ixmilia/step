@@ -11,6 +11,11 @@ namespace IxMilia.Step.Syntax
 
         public int Value { get; }
 
+        public StepIntegerSyntax( int value ) : base(-1, -1)
+        {
+            Value = value;
+        }
+
         public StepIntegerSyntax(StepIntegerToken value)
             : base(value.Line, value.Column)
         {

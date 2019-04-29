@@ -6,8 +6,10 @@ namespace IxMilia.Step.Items
 {
     public enum StepItemType
     {
+        AdvancedFace,
         AxisPlacement2D,
         AxisPlacement3D,
+        BSplineCurveWithKnots,
         CartesianPoint,
         Circle,
         CylindricalSurface,
@@ -26,8 +28,10 @@ namespace IxMilia.Step.Items
 
     internal static class StepItemTypeExtensions
     {
+        public const string AdvancedFaceText = "ADVANCED_FACE";
         public const string Axis2Placement2DText = "AXIS2_PLACEMENT_2D";
         public const string Axis2Placement3DText = "AXIS2_PLACEMENT_3D";
+        public const string BSplineCurveWithKnotsText = "B_SPLINE_CURVE_WITH_KNOTS";
         public const string CartesianPointText = "CARTESIAN_POINT";
         public const string CircleText = "CIRCLE";
         public const string CylindricalSurfaceText = "CYLINDRICAL_SURFACE";
@@ -47,10 +51,14 @@ namespace IxMilia.Step.Items
         {
             switch (type)
             {
+                case StepItemType.AdvancedFace:
+                    return AdvancedFaceText;
                 case StepItemType.AxisPlacement2D:
                     return Axis2Placement2DText;
                 case StepItemType.AxisPlacement3D:
                     return Axis2Placement3DText;
+                case StepItemType.BSplineCurveWithKnots:
+                    return BSplineCurveWithKnotsText;
                 case StepItemType.CartesianPoint:
                     return CartesianPointText;
                 case StepItemType.Circle:
