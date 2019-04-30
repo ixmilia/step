@@ -8,7 +8,7 @@ namespace IxMilia.Step.Items
 {
     public abstract partial class StepRepresentationItem
     {
-        internal static HashSet<string> UnsupportedItemTypes { get; }  = new HashSet<string>();
+        internal static HashSet<string> UnsupportedItemTypes { get; } = new HashSet<string>();
 
         internal static StepRepresentationItem FromTypedParameter(StepBinder binder, StepItemSyntax itemSyntax)
         {
@@ -18,11 +18,17 @@ namespace IxMilia.Step.Items
                 var simpleItem = (StepSimpleItemSyntax)itemSyntax;
                 switch (simpleItem.Keyword)
                 {
+                    case StepItemTypeExtensions.AdvancedFaceText:
+                        item = StepAdvancedFace.CreateFromSyntaxList(binder, simpleItem.Parameters);
+                        break;
                     case StepItemTypeExtensions.Axis2Placement2DText:
                         item = StepAxis2Placement2D.CreateFromSyntaxList(binder, simpleItem.Parameters);
                         break;
                     case StepItemTypeExtensions.Axis2Placement3DText:
                         item = StepAxis2Placement3D.CreateFromSyntaxList(binder, simpleItem.Parameters);
+                        break;
+                    case StepItemTypeExtensions.BSplineCurveWithKnotsText:
+                        item = StepBSplineCurveWithKnots.CreateFromSyntaxList(binder, simpleItem.Parameters);
                         break;
                     case StepItemTypeExtensions.CartesianPointText:
                         item = StepCartesianPoint.CreateFromSyntaxList(simpleItem.Parameters);

@@ -10,9 +10,9 @@ namespace IxMilia.Step.Items
     {
         public override StepItemType ItemType => StepItemType.Ellipse;
 
-        private StepAxis2Placement2D _position;
+        private StepAxis2Placement _position;
 
-        public StepAxis2Placement2D Position
+        public StepAxis2Placement Position
         {
             get { return _position; }
             set
@@ -34,7 +34,7 @@ namespace IxMilia.Step.Items
         {
         }
 
-        public StepEllipse(string name, StepAxis2Placement2D position, double semiAxis1, double semiAxis2)
+        public StepEllipse(string name, StepAxis2Placement position, double semiAxis1, double semiAxis2)
             : base(name)
         {
             Position = position;
@@ -64,7 +64,7 @@ namespace IxMilia.Step.Items
             var ellipse = new StepEllipse();
             syntaxList.AssertListCount(4);
             ellipse.Name = syntaxList.Values[0].GetStringValue();
-            binder.BindValue(syntaxList.Values[1], v => ellipse.Position = v.AsType<StepAxis2Placement2D>());
+            binder.BindValue(syntaxList.Values[1], v => ellipse.Position = v.AsType<StepAxis2Placement>());
             ellipse.SemiAxis1 = syntaxList.Values[2].GetRealVavlue();
             ellipse.SemiAxis2 = syntaxList.Values[3].GetRealVavlue();
             return ellipse;

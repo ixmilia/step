@@ -64,6 +64,16 @@ namespace IxMilia.Step.Syntax
             return ((StepRealSyntax)syntax).Value;
         }
 
+        public static int GetIntegerValue(this StepSyntax syntax)
+        {
+            if (syntax.SyntaxType != StepSyntaxType.Integer)
+            {
+                ReportError("Expected integer value", syntax);
+            }
+
+            return ((StepIntegerSyntax)syntax).Value;
+        }
+
         public static string GetEnumerationValue(this StepSyntax syntax)
         {
             if (syntax.SyntaxType != StepSyntaxType.Enumeration)
