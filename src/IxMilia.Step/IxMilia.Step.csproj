@@ -5,7 +5,7 @@
     <Copyright>Copyright 2017</Copyright>
     <AssemblyTitle>IxMilia.Step</AssemblyTitle>
     <Authors>IxMilia</Authors>
-    <TargetFramework>netstandard1.0</TargetFramework>
+    <TargetFrameworks>netstandard1.0;netstandard1.3</TargetFrameworks>
     <AssemblyName>IxMilia.Step</AssemblyName>
     <PackageId>IxMilia.Step</PackageId>
     <PackageTags>CAD;STEP;STP</PackageTags>
@@ -16,6 +16,10 @@
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard1.3'">
+    <DefineConstants>$(DefineConstants);HAS_FILESYSTEM_ACCESS</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>

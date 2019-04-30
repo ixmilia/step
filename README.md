@@ -22,6 +22,9 @@ using (FileStream fs = new FileStream(@"C:\Path\To\File.stp", FileMode.Open))
     stepFile = StepFile.Load(fs);
 }
 
+// if on >= NETStandard1.3 you can use:
+// StepFile stepFile = StepFile.Load(@"C:\Path\To\File.stp");
+
 //---------------------------------------------- or read directly from a string
 StepFile stepFile = StepFile.Parse(@"ISO-10303-21;
 HEADER;
@@ -59,6 +62,9 @@ using (FileStream fs = new FileStream(@"C:\Path\To\File.stp", FileMode.Create))
 {
     stepFile.Save(fs);
 }
+
+// if on >= NETStandard1.3 you can use
+// stepFile.Save(@"C:\Path\To\File.stp");
 
 //------------------------------------------------------- or output as a string
 string contents = stepFile.GetContentsAsString();
