@@ -1,0 +1,31 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+
+  linux:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        configuration: ['Debug', 'Release']
+    steps:
+    - uses: actions/checkout@v1
+    - uses: actions/setup-dotnet@v1.0.2
+      with:
+        dotnet-version: '3.0.100'
+    - name: Build and test
+      run: ./build-and-test.sh --configuration ${{ matrix.configuration }}
+
+  windows:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        configuration: ['Debug', 'Release']
+    steps:
+    - uses: actions/checkout@v1
+    - uses: actions/setup-dotnet@v1.0.2
+      with:
+        dotnet-version: '3.0.100'
+    - name: Build and test
+      run: .\build-and-test.cmd -c ${{ matrix.configuration }}
