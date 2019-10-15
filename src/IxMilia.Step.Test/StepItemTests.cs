@@ -203,7 +203,7 @@ END-ISO-10303-21;
         {
             var file = ReadFile("#1=ELLIPSE('',AXIS2_PLACEMENT_2D('',CARTESIAN_POINT('',(1.0,2.0,3.0)),DIRECTION('',(0.0,0.0,1.0))),3.0,4.0);");
 
-            Assert.Equal(1, file.Items.Count);
+            Assert.Single(file.Items);
 
             // only ELLIPSE() isn't referenced by another item
             var ellipse = (StepEllipse)file.GetTopLevelItems().Single();
@@ -415,7 +415,7 @@ END-ISO-10303-21;
             var face = file.GetTopLevelItems().OfType<StepAdvancedFace>().FirstOrDefault();
             Assert.NotNull(face);
             Assert.NotNull(face.FaceGeometry);
-            Assert.Equal(1, face.Bounds.Count);
+            Assert.Single(face.Bounds);
         }
 
         [Fact]

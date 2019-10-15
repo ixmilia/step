@@ -117,8 +117,8 @@ END-ISO-10303-21;
         public void ReadHeaderWithUnsupportedSchemaTest()
         {
             var file = ReadFileFromHeader(@"FILE_SCHEMA(('EXPLICIT_DRAUGHTING','UNSUPPORTED_SCHEMA'));");
-            Assert.Equal(1, file.Schemas.Count);
-            Assert.Equal(1, file.UnsupportedSchemas.Count);
+            Assert.Single(file.Schemas);
+            Assert.Single(file.UnsupportedSchemas);
         }
 
         [Fact]
