@@ -8,7 +8,11 @@ namespace IxMilia.Step.Syntax
 {
     internal static class StepSyntaxExtensions
     {
-        public const string DateTimeFormat = "yyyy-MM-ddT";
+        public static readonly string[] DateTimeFormats = new string[]
+        {
+            "yyyy-MM-ddT",
+            "yyyy-M-dTh:mm:ss ttzzz",
+        };
 
         public static void AssertListCount(this StepSyntaxList syntaxList, int count)
         {
@@ -44,7 +48,7 @@ namespace IxMilia.Step.Syntax
         {
             var str = syntax.GetStringValue();
             DateTime result;
-            if (DateTime.TryParseExact(str, DateTimeFormat, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out result))
+            if (DateTime.TryParseExact(str, DateTimeFormats, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out result))
             {
                 return result;
             }
