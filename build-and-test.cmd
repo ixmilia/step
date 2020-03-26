@@ -26,9 +26,9 @@ goto error
 
 :: build
 set SOLUTION=%~dp0src\IxMilia.Step.sln
-dotnet restore %SOLUTION%
+dotnet restore "%SOLUTION%"
 if errorlevel 1 exit /b 1
-dotnet build %SOLUTION% -c %configuration%
+dotnet build "%SOLUTION%" -c %configuration%
 if errorlevel 1 exit /b 1
 
 :: test
