@@ -4,28 +4,19 @@ on: [push, pull_request]
 
 jobs:
 
-  linux:
-    runs-on: ubuntu-latest
+  build:
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        configuration: ['Debug', 'Release']
+        os: [ubuntu-latest, windows-latest]
+        configuration: [Debug, Release]
     steps:
     - uses: actions/checkout@v1
     - uses: actions/setup-dotnet@v1
       with:
         dotnet-version: '3.1.201'
     - name: Build and test
-      run: ./build-and-test.sh --configuration ${{ matrix.configuration }}
-
-  windows:
-    runs-on: windows-latest
-    strategy:
-      matrix:
-        configuration: ['Debug', 'Release']
-    steps:
-    - uses: actions/checkout@v1
-    - uses: actions/setup-dotnet@v1
-      with:
-        dotnet-version: '3.1.201'
-    - name: Build and test
-      run: .\build-and-test.cmd -c ${{ matrix.configuration }}
+      shell: pwsh
+      run: |
+        $shellExt = if ($IsWindows) { "cmd" } else { "sh" }
+        & ./build-and-test.$shellExt --configuration ${{ matrix.configuration }}
