@@ -23,11 +23,10 @@ while [ $# -gt 0 ]; do
 done
 
 # build
-SOLUTION=$_SCRIPT_DIR/src/IxMilia.Step.sln
-dotnet restore "$SOLUTION"
-dotnet build "$SOLUTION" -c $CONFIGURATION
+dotnet restore
+dotnet build -c $CONFIGURATION
 
 # test
 if [ "$RUNTESTS" = "true" ]; then
-    dotnet test "$SOLUTION" -c $CONFIGURATION --no-restore --no-build
+    dotnet test -c $CONFIGURATION --no-restore --no-build
 fi

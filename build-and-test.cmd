@@ -25,14 +25,13 @@ goto error
 :argsdone
 
 :: build
-set SOLUTION=%~dp0src\IxMilia.Step.sln
-dotnet restore "%SOLUTION%"
+dotnet restore
 if errorlevel 1 exit /b 1
-dotnet build "%SOLUTION%" -c %configuration%
+dotnet build -c %configuration%
 if errorlevel 1 exit /b 1
 
 :: test
 if /i "%runtests%" == "true" (
-    dotnet test "%SOLUTION%" -c %configuration% --no-restore --no-build
+    dotnet test -c %configuration% --no-restore --no-build
     if errorlevel 1 goto error
 )
