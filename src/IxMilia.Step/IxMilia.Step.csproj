@@ -10,7 +10,7 @@
     <PackageId>IxMilia.Step</PackageId>
     <PackageTags>CAD;STEP;STP</PackageTags>
     <PackageProjectUrl>https://github.com/ixmilia/step</PackageProjectUrl>
-    <PackageLicenseUrl>http://www.apache.org/licenses/LICENSE-2.0</PackageLicenseUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
 
     <!-- SourceLink settings -->
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
