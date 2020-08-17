@@ -230,17 +230,6 @@ module SchemaParser =
         let logical_literal = (FALSE >>% LogicalLiteral(Some false)) <|> (TRUE >>% LogicalLiteral(Some true)) <|> (UNKNOWN >>% LogicalLiteral(None))
         let literal = binary_literal <|> integer_or_real_literal <|> logical_literal <|> string_literal
         let attribute_ref = attribute_id
-        let rec attribute =
-            parse {
-                return! choice [
-                    attempt (pipe2 attribute_id group_qualifier (fun a b -> GroupQualifiedAttribute(a, b)))
-                    attempt (pipe2 attribute_id dot_qualifier (fun a b -> DotQualifiedAttribute(a, b)))
-                    attribute_id |>> AttributeName
-                ]
-            }
-        and group_qualifier = BACKSLASH >>. attribute
-        and dot_qualifier = PERIOD >>. attribute
-        let referenced_attribute = attribute
         let opp = new OperatorPrecedenceParser<Expression, unit, unit>()
         let expr = opp.ExpressionParser
         let variable_id = simple_id
@@ -266,36 +255,40 @@ module SchemaParser =
                     array_expression
                     attempt query_expression
                     attempt function_call
-                    referenced_attribute |>> AttributeExpression
                     between LEFT_PAREN RIGHT_PAREN expr
                     literal |>> LiteralValue
+                    simple_id |>> IdentifierExpression
                 ])
                 (opt (LEFT_BRACKET >>. index .>>. opt (COLON >>. index) .>> RIGHT_BRACKET))
                 (fun expression qualifiedIndex ->
                     match qualifiedIndex with
                     | Some (index1, index2) -> SubcomponentQualifiedExpression(expression, index1, index2)
                     | None -> expression)
-        opp.AddOperator(InfixOperator(">", ws, 1, Associativity.Left, (fun a b -> Greater(a, b))))
-        opp.AddOperator(InfixOperator(">=", ws, 1, Associativity.Left, (fun a b -> GreaterEquals(a, b))))
-        opp.AddOperator(InfixOperator("<", ws, 1, Associativity.Left, (fun a b -> Less(a, b))))
-        opp.AddOperator(InfixOperator("<=", ws, 1, Associativity.Left, (fun a b -> LessEquals(a, b))))
-        opp.AddOperator(InfixOperator("=", ws, 1, Associativity.Left, (fun a b -> Equals(a, b))))
-        opp.AddOperator(InfixOperator("<>", ws, 1, Associativity.Left, (fun a b -> NotEquals(a, b))))
-        opp.AddOperator(InfixOperator("+", ws, 2, Associativity.Left, (fun a b -> Add(a, b))))
-        opp.AddOperator(InfixOperator("-", ws, 2, Associativity.Left, (fun a b -> Subtract(a, b))))
-        opp.AddOperator(InfixOperator("in", ws, 2, Associativity.Left, (fun a b -> In(a, b))))
-        opp.AddOperator(InfixOperator("IN", ws, 2, Associativity.Left, (fun a b -> In(a, b))))
-        opp.AddOperator(InfixOperator("or", ws, 2, Associativity.Left, (fun a b -> Or(a, b))))
-        opp.AddOperator(InfixOperator("OR", ws, 2, Associativity.Left, (fun a b -> Or(a, b))))
-        opp.AddOperator(InfixOperator("xor", ws, 2, Associativity.Left, (fun a b -> Xor(a, b))))
-        opp.AddOperator(InfixOperator("XOR", ws, 2, Associativity.Left, (fun a b -> Xor(a, b))))
-        opp.AddOperator(InfixOperator("*", ws, 3, Associativity.Left, (fun a b -> Multiply(a, b))))
-        opp.AddOperator(InfixOperator("/", ws, 3, Associativity.Left, (fun a b -> Divide(a, b))))
-        opp.AddOperator(InfixOperator("%", ws, 3, Associativity.Left, (fun a b -> Modulus(a, b))))
-        opp.AddOperator(InfixOperator("and", ws, 3, Associativity.Left, (fun a b -> And(a, b))))
-        opp.AddOperator(InfixOperator("AND", ws, 3, Associativity.Left, (fun a b -> And(a, b))))
-        opp.AddOperator(InfixOperator("**", ws, 4, Associativity.Right, (fun a b -> Exponent(a, b))))
-        opp.AddOperator(PrefixOperator("-", ws, 5, true, Negate))
+        opp.AddOperator(InfixOperator("\\", ws, 1, Associativity.Left, (fun a b -> GroupQualifiedAccessExpression(a, b))))
+        opp.AddOperator(InfixOperator(".", ws, 1, Associativity.Left, (fun a b -> DottedAccessExpression(a, b))))
+        opp.AddOperator(InfixOperator(">", ws, 2, Associativity.Left, (fun a b -> Greater(a, b))))
+        opp.AddOperator(InfixOperator(">=", ws, 2, Associativity.Left, (fun a b -> GreaterEquals(a, b))))
+        opp.AddOperator(InfixOperator("<", ws, 2, Associativity.Left, (fun a b -> Less(a, b))))
+        opp.AddOperator(InfixOperator("<=", ws, 2, Associativity.Left, (fun a b -> LessEquals(a, b))))
+        opp.AddOperator(InfixOperator("=", ws, 2, Associativity.Left, (fun a b -> Equals(a, b))))
+        opp.AddOperator(InfixOperator("<>", ws, 2, Associativity.Left, (fun a b -> NotEquals(a, b))))
+        opp.AddOperator(InfixOperator("+", ws, 3, Associativity.Left, (fun a b -> Add(a, b))))
+        opp.AddOperator(InfixOperator("-", ws, 3, Associativity.Left, (fun a b -> Subtract(a, b))))
+        opp.AddOperator(InfixOperator("in", ws, 3, Associativity.Left, (fun a b -> In(a, b))))
+        opp.AddOperator(InfixOperator("IN", ws, 3, Associativity.Left, (fun a b -> In(a, b))))
+        opp.AddOperator(InfixOperator("or", ws, 3, Associativity.Left, (fun a b -> Or(a, b))))
+        opp.AddOperator(InfixOperator("OR", ws, 3, Associativity.Left, (fun a b -> Or(a, b))))
+        opp.AddOperator(InfixOperator("xor", ws, 3, Associativity.Left, (fun a b -> Xor(a, b))))
+        opp.AddOperator(InfixOperator("XOR", ws, 3, Associativity.Left, (fun a b -> Xor(a, b))))
+        opp.AddOperator(InfixOperator("*", ws, 4, Associativity.Left, (fun a b -> Multiply(a, b))))
+        opp.AddOperator(InfixOperator("/", ws, 4, Associativity.Left, (fun a b -> Divide(a, b))))
+        opp.AddOperator(InfixOperator("%", ws, 4, Associativity.Left, (fun a b -> Modulus(a, b))))
+        opp.AddOperator(InfixOperator("and", ws, 4, Associativity.Left, (fun a b -> And(a, b))))
+        opp.AddOperator(InfixOperator("AND", ws, 4, Associativity.Left, (fun a b -> And(a, b))))
+        opp.AddOperator(InfixOperator("**", ws, 5, Associativity.Right, (fun a b -> Exponent(a, b))))
+        opp.AddOperator(PrefixOperator("-", ws, 6, true, Negate))
+        opp.AddOperator(PrefixOperator("not", ws, 6, true, Not))
+        opp.AddOperator(PrefixOperator("NOT", ws, 6, true, Not))
         //let add_like_op = PLUS <|> MINUS <|> OR <|> XOR
         //let multiplication_like_op = ASTERISK <|> SLASH <|> DIV <|> MOD <|> AND <|> DOUBLE_PIPE
         //let primary = literal // <|> qualifialble_factor { qualifier }
@@ -384,7 +377,7 @@ module SchemaParser =
         let unique_rule =
             pipe3
                 (opt label .>> COLON |>> Option.defaultValue null)
-                (sepBy1 referenced_attribute COMMA)
+                (sepBy1 expression COMMA)
                 (SEMI)
                 (fun label referencedAttributes _ -> UniqueRule(label, referencedAttributes))
         let unique_clause = UNIQUE >>. many1 (attempt unique_rule)

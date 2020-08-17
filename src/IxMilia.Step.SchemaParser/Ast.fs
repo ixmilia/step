@@ -16,15 +16,13 @@ type LiteralValue =
     | RealLiteral of float
     | StringLiteral of string
 
-type AttributeReference =
-    | AttributeName of string
-    | GroupQualifiedAttribute of string * AttributeReference // name \ subname
-    | DotQualifiedAttribute of string * AttributeReference // name . subname
-
 type Expression =
     // static values
+    | IdentifierExpression of string
     | LiteralValue of LiteralValue
-    | AttributeExpression of AttributeReference
+    // member access
+    | GroupQualifiedAccessExpression of Expression * Expression // parent \ child
+    | DottedAccessExpression of Expression * Expression // parent . child
     // artithmetic
     | Negate of Expression
     | Add of Expression * Expression
@@ -50,6 +48,7 @@ type Expression =
     | Or of Expression * Expression
     | Xor of Expression * Expression
     | And of Expression * Expression
+    | Not of Expression
 
 and FunctionCall(name:string, arguments:Expression list) =
     member this.Name = name
@@ -99,9 +98,9 @@ type AttributeType(typ:BaseType, isOptional:bool) =
     member this.Type = typ
     member this.IsOptional = isOptional
 
-type UniqueRule(label:string, attributes:AttributeReference list) =
+type UniqueRule(label:string, expressions:Expression list) =
     member this.Label = label
-    member this.Attributes = attributes
+    member this.Expressions = expressions
 
 type InverseCollectionType =
     | Set
