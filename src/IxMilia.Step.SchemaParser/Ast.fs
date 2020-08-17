@@ -38,6 +38,8 @@ type Expression =
     | LessEquals of Expression * Expression
     | Equals of Expression * Expression
     | NotEquals of Expression * Expression
+    | Assignable of Expression * Expression * bool // _ * _ * is_strict
+    | NotAssignable of Expression * Expression
     // functions
     | FunctionCallExpression of FunctionCall
     | QueryExpression of Query
