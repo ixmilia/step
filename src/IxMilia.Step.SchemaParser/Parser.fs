@@ -245,23 +245,9 @@ module SchemaParser =
                 (PIPE >>. expr .>> RIGHT_PAREN)
                 (fun variable aggregate logical -> Query(variable, aggregate, logical))
             |>> QueryExpression
-        let function_id =
-            choice [
-                ACOS
-                ASIN
-                ATAN
-                COS
-                EXISTS
-                ONEOF
-                ROLESOF
-                SIN
-                SIZEOF
-                TAN
-                TYPEOF
-            ]
         let function_call =
             pipe2
-                function_id
+                simple_id
                 (between LEFT_PAREN RIGHT_PAREN (sepBy expr COMMA))
                 (fun name args -> FunctionCall(name, args))
             |>> FunctionCallExpression
