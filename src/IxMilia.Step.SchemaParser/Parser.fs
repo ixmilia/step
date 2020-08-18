@@ -267,14 +267,16 @@ module SchemaParser =
             |>> FunctionCallExpression
         let array_expression = between LEFT_BRACKET RIGHT_BRACKET (sepBy expr COMMA) |>> ArrayExpression
         let expression_index = LEFT_BRACKET >>. expr .>>. opt (COLON >>. expr) .>> RIGHT_BRACKET
-        let expression_member = PERIOD >>. simple_id
+        let expression_member = PERIOD <|> BACKSLASH |>> (=) "." .>>. simple_id
         let expression_tail = (attempt expression_index |>> function r -> (Some r, None)) <|> (opt expression_member |>> function r -> (None, r))
         let rec with_expression_tail expression =
             expression_tail
             |>> function
             | (Some _, Some _) -> failwith "impossible to match both"
             | (Some(lowerBound, upperBoundOpt), None) -> (true, SubcomponentQualifiedExpression(expression, lowerBound, upperBoundOpt))
-            | (None, Some memberName) -> (true, DottedAccessExpression(expression, memberName))
+            | (None, Some(isDot, memberName)) ->
+                if isDot then (true, DottedAccessExpression(expression, memberName))
+                else (true, QualifiedAccessExpression(expression, memberName))
             | (None, None) -> (false, expression)
             >>= fun (recurse, expression) ->
             if recurse then with_expression_tail expression

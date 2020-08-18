@@ -302,6 +302,11 @@ let ``parse alternating dot qualified and index expression tails``() =
     Assert.Equal(DottedAccessExpression(SubcomponentQualifiedExpression(SubcomponentQualifiedExpression(DottedAccessExpression(DottedAccessExpression(SubcomponentQualifiedExpression(AttributeReference(IdentifierAttributeReference "x"), LiteralValue(IntegerLiteral 4L), None), "foo"), "bar"), LiteralValue(IntegerLiteral 5L), None), LiteralValue(IntegerLiteral 6L), None), "end"), expr)
 
 [<Fact>]
+let ``parse deeply nested attribute reference``() =
+    let expr = parseExpr @"SELF\parent_item.item\child_item.child_path_1.child_path_2"
+    Assert.Equal(DottedAccessExpression(DottedAccessExpression(QualifiedAccessExpression(DottedAccessExpression(AttributeReference(GroupQualifiedAttributeReference "parent_item"), "item"), "child_item"), "child_path_1"), "child_path_2"), expr)
+
+[<Fact>]
 let ``parse array expression``() =
     let expr = parseExpr "['a', 'b']"
     Assert.Equal(ArrayExpression([LiteralValue(StringLiteral "a"); LiteralValue(StringLiteral "b")]), expr)

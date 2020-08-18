@@ -27,6 +27,7 @@ type Expression =
     // member access
     | AttributeReference of AttributeReference
     | DottedAccessExpression of Expression * string // parent . child
+    | QualifiedAccessExpression of Expression * string // parent \ child
     // artithmetic
     | Negate of Expression
     | Add of Expression * Expression
