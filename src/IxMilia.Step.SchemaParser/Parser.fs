@@ -162,7 +162,8 @@ module SchemaParser =
         let octet = hex_digit .>>. hex_digit |>> (fun (a, b) -> ((int a) <<< 4) + int b) |>> byte
         let encoded_character = tuple4 octet octet octet octet |>> (fun (a, b, c, d) -> (int a <<< 24) + (int b <<< 16) + (int c <<< 8) + int d) |>> char
 
-        let simple_id = many1Satisfy2 isLetter (fun c -> isLetter c || isDigit c || c = '_') .>> ws
+        let is_id_continuation_char c = isLetter c || isDigit c || c = '_'
+        let simple_id = many1Satisfy2 isLetter is_id_continuation_char .>> ws
         let not_paren_star_quote_special = anyOf ['!'; '#'; '$'; '%'; '&'; '+'; ','; '-'; '.'; '/'; ':'; ';'; '<'; '='; '>'; '?'; '@'; '\\'; '^'; '_'; '{'; '|'; '}'; '~'; '['; ']'; ' ']
         let not_quote : Parser<char, unit> = not_paren_star_quote_special <|> letter <|> digit <|> anyOf ['('; ')'; '*']
         let char_list_to_string (chars: char list) = String.Join(String.Empty, chars)
@@ -231,7 +232,7 @@ module SchemaParser =
         let literal = binary_literal <|> integer_or_real_literal <|> logical_literal <|> string_literal
         let attribute_ref =
             [ SELF >>. BACKSLASH >>. simple_id |>> GroupQualifiedAttributeReference
-              SELF |>> fun _ -> SelfAttributeReference
+              SELF .>> (notFollowedBy (many1Satisfy is_id_continuation_char)) |>> fun _ -> SelfAttributeReference
               simple_id |>> IdentifierAttributeReference ]
             |> List.map attempt
             |> choice

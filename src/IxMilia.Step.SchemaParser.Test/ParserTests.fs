@@ -281,6 +281,11 @@ let ``expression with qualified attribute``() =
     Assert.Equal(AttributeReference SelfAttributeReference, parseExpr @"SELF")
 
 [<Fact>]
+let ``expression identifier that starts with 'self'``() =
+    let expr = parseExpr "self_but_not_really"
+    Assert.Equal(AttributeReference(IdentifierAttributeReference "self_but_not_really"), expr)
+
+[<Fact>]
 let ``entity with complex restriction``() =
     let schema = parse "SCHEMA s ; ENTITY e ; WHERE wr1 : 'asdf.jkl' IN TYPEOF ( foo.bar ) ; END_ENTITY ; END_SCHEMA ; "
     let expr = schema.Entities.Single().DomainRules.Single().Expression
