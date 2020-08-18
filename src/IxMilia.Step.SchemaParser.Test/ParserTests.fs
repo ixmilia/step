@@ -45,9 +45,9 @@ let ``simple entity``() =
     let schema = parse " SCHEMA s ; ENTITY point ; x : REAL ; y : REAL ( 3 ) ; END_ENTITY ; END_SCHEMA ; "
     let entity = schema.Entities.Single()
     Assert.Equal(2, entity.Attributes.Length)
-    Assert.Equal("x", entity.Attributes.[0].Name)
+    Assert.Equal(IdentifierAttributeReference "x", entity.Attributes.[0].AttributeReference)
     Assert.Equal(SimpleType(RealType None), entity.Attributes.[0].Type.Type)
-    Assert.Equal("y", entity.Attributes.[1].Name)
+    Assert.Equal(IdentifierAttributeReference "y", entity.Attributes.[1].AttributeReference)
     Assert.Equal(SimpleType(RealType(Some(LiteralValue(IntegerLiteral 3L)))), entity.Attributes.[1].Type.Type)
 
 [<Fact>]
@@ -121,10 +121,10 @@ let ``entity with optional parameter``() =
     let schema = parse " SCHEMA s ; ENTITY point ; x : REAL ; y : OPTIONAL REAL ; END_ENTITY ; END_SCHEMA ; "
     let entity = schema.Entities.Single()
     Assert.Equal(2, entity.Attributes.Length)
-    Assert.Equal("x", entity.Attributes.[0].Name)
+    Assert.Equal(IdentifierAttributeReference "x", entity.Attributes.[0].AttributeReference)
     Assert.Equal(SimpleType(RealType None), entity.Attributes.[0].Type.Type)
     Assert.False(entity.Attributes.[0].Type.IsOptional)
-    Assert.Equal("y", entity.Attributes.[1].Name)
+    Assert.Equal(IdentifierAttributeReference "y", entity.Attributes.[1].AttributeReference)
     Assert.Equal(SimpleType(RealType None), entity.Attributes.[1].Type.Type)
     Assert.True(entity.Attributes.[1].Type.IsOptional)
 
@@ -137,8 +137,8 @@ let ``entity attribute with non-built-in-type``() =
 let ``entity with derived``() =
     let schema = parse " SCHEMA s ; ENTITY square ; size : REAL ; DERIVE area : REAL := size * size ; END_ENTITY ; END_SCHEMA ; "
     let derived = schema.Entities.Single().DerivedAttributes.Single()
-    Assert.Equal("area", derived.Name)
-    Assert.Equal(Multiply(IdentifierExpression "size", IdentifierExpression "size"), derived.Expression)
+    Assert.Equal(IdentifierAttributeReference "area", derived.AttributeReference)
+    Assert.Equal(Multiply(AttributeReference(IdentifierAttributeReference "size"), AttributeReference(IdentifierAttributeReference "size")), derived.Expression)
 
 [<Fact>]
 let ``multiple entities``() =
@@ -214,29 +214,29 @@ let ``schema with inverse attributes``() =
     Assert.Equal(None, inverse.LowerBound)
     Assert.Equal(None, inverse.UpperBound)
     Assert.Equal("e", inverse.EntityName)
-    Assert.Equal("value", inverse.AttributeName)
+    Assert.Equal(IdentifierAttributeReference "value", inverse.AttributeReference)
 
 [<Fact>]
 let ``entity with unique rules``() =
     let schema = parse " SCHEMA s ; ENTITY e ; UNIQUE label : SELF\\entity.attribute ; END_ENTITY ; END_SCHEMA ; "
     let restr = schema.Entities.Single().UniqueRestrictions.Single()
     Assert.Equal("label", restr.Label)
-    Assert.Equal(DottedAccessExpression(GroupQualifiedAccessExpression(IdentifierExpression "SELF", IdentifierExpression "entity"), IdentifierExpression "attribute"), restr.Expressions.Single())
+    Assert.Equal(DottedAccessExpression(AttributeReference(GroupQualifiedAttributeReference "entity"), "attribute"), restr.Expressions.Single())
 
 [<Fact>]
 let ``entity with restriction``() =
     let schema = parse " SCHEMA s ; ENTITY e ; WHERE wr1 : SELF >= 0 ; END_ENTITY ; END_SCHEMA ; "
     let domainRule = schema.Entities.Single().DomainRules.Single()
     Assert.Equal("wr1", domainRule.Label)
-    Assert.Equal(GreaterEquals(IdentifierExpression "SELF", LiteralValue(IntegerLiteral 0L)), domainRule.Expression)
+    Assert.Equal(GreaterEquals(AttributeReference SelfAttributeReference, LiteralValue(IntegerLiteral 0L)), domainRule.Expression)
 
 [<Fact>]
 let ``entity with multiple restrictions``() =
     let schema = parse " SCHEMA s ; ENTITY  e ; WHERE wr1 : SELF >= 0 ; wr2 : (SELF > 0) AND (SELF < 10) ; END_ENTITY ; END_SCHEMA ; "
     let domainRules = schema.Entities.Single().DomainRules
     Assert.Equal(2, domainRules.Length)
-    Assert.Equal(GreaterEquals(IdentifierExpression "SELF", LiteralValue(IntegerLiteral 0L)), domainRules.First().Expression)
-    Assert.Equal(And(Greater(IdentifierExpression "SELF", LiteralValue(IntegerLiteral 0L)), Less(IdentifierExpression "SELF", LiteralValue(IntegerLiteral 10L))), domainRules.Last().Expression)
+    Assert.Equal(GreaterEquals(AttributeReference SelfAttributeReference, LiteralValue(IntegerLiteral 0L)), domainRules.First().Expression)
+    Assert.Equal(And(Greater(AttributeReference SelfAttributeReference, LiteralValue(IntegerLiteral 0L)), Less(AttributeReference SelfAttributeReference, LiteralValue(IntegerLiteral 10L))), domainRules.Last().Expression)
 
 [<Fact>]
 let ``entity with subtype``() =
@@ -276,30 +276,30 @@ let ``expression with function``() =
 
 [<Fact>]
 let ``expression with qualified attribute``() =
-    Assert.Equal(DottedAccessExpression(GroupQualifiedAccessExpression(IdentifierExpression "SELF", IdentifierExpression "a"), IdentifierExpression "b"), parseExpr @"SELF\a.b")
-    Assert.Equal(IdentifierExpression "a", parseExpr @"a")
-    Assert.Equal(IdentifierExpression "SELF", parseExpr @"SELF")
+    Assert.Equal(DottedAccessExpression(AttributeReference(GroupQualifiedAttributeReference "a"), "b"), parseExpr @"SELF\a.b")
+    Assert.Equal(AttributeReference(IdentifierAttributeReference "a"), parseExpr @"a")
+    Assert.Equal(AttributeReference SelfAttributeReference, parseExpr @"SELF")
 
 [<Fact>]
 let ``entity with complex restriction``() =
     let schema = parse "SCHEMA s ; ENTITY e ; WHERE wr1 : 'asdf.jkl' IN TYPEOF ( foo.bar ) ; END_ENTITY ; END_SCHEMA ; "
     let expr = schema.Entities.Single().DomainRules.Single().Expression
-    Assert.Equal(In(LiteralValue(StringLiteral "asdf.jkl"), FunctionCallExpression(FunctionCall("TYPEOF", [DottedAccessExpression(IdentifierExpression "foo", IdentifierExpression "bar")]))), expr)
+    Assert.Equal(In(LiteralValue(StringLiteral "asdf.jkl"), FunctionCallExpression(FunctionCall("TYPEOF", [DottedAccessExpression(AttributeReference(IdentifierAttributeReference "foo"), "bar")]))), expr)
 
 [<Fact>]
 let ``parse query expression``() =
     let expr = parseExpr @"QUERY ( x <* SELF\a.b | x > 4 )"
-    Assert.Equal(QueryExpression(Query("x", DottedAccessExpression(GroupQualifiedAccessExpression(IdentifierExpression "SELF", IdentifierExpression "a"), IdentifierExpression "b"), Greater(IdentifierExpression "x", LiteralValue(IntegerLiteral 4L)))), expr)
+    Assert.Equal(QueryExpression(Query("x", DottedAccessExpression(AttributeReference(GroupQualifiedAttributeReference "a"), "b"), Greater(AttributeReference(IdentifierAttributeReference "x"), LiteralValue(IntegerLiteral 4L)))), expr)
 
 [<Fact>]
 let ``parse expression index``() =
     let expr = parseExpr "x[4]"
-    Assert.Equal(SubcomponentQualifiedExpression(IdentifierExpression "x", LiteralValue(IntegerLiteral 4L), None), expr)
+    Assert.Equal(SubcomponentQualifiedExpression(AttributeReference(IdentifierAttributeReference "x"), LiteralValue(IntegerLiteral 4L), None), expr)
 
 [<Fact>]
-let ``parse dot qualified expression after an index``() =
-    let expr = parseExpr("x[4].foo")
-    Assert.Equal(DottedAccessExpression(SubcomponentQualifiedExpression(IdentifierExpression "x", LiteralValue(IntegerLiteral 4L), None), IdentifierExpression "foo"), expr)
+let ``parse alternating dot qualified and index expression tails``() =
+    let expr = parseExpr "x[4].foo.bar[5][6].end"
+    Assert.Equal(DottedAccessExpression(SubcomponentQualifiedExpression(SubcomponentQualifiedExpression(DottedAccessExpression(DottedAccessExpression(SubcomponentQualifiedExpression(AttributeReference(IdentifierAttributeReference "x"), LiteralValue(IntegerLiteral 4L), None), "foo"), "bar"), LiteralValue(IntegerLiteral 5L), None), LiteralValue(IntegerLiteral 6L), None), "end"), expr)
 
 [<Fact>]
 let ``parse array expression``() =

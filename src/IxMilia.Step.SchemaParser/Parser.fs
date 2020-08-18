@@ -229,7 +229,12 @@ module SchemaParser =
                         Int64.Parse(wholeNumber, NumberStyles.Integer) * factor |> IntegerLiteral)
         let logical_literal = (FALSE >>% LogicalLiteral(Some false)) <|> (TRUE >>% LogicalLiteral(Some true)) <|> (UNKNOWN >>% LogicalLiteral(None))
         let literal = binary_literal <|> integer_or_real_literal <|> logical_literal <|> string_literal
-        let attribute_ref = attribute_id
+        let attribute_ref =
+            [ SELF >>. BACKSLASH >>. simple_id |>> GroupQualifiedAttributeReference
+              SELF |>> fun _ -> SelfAttributeReference
+              simple_id |>> IdentifierAttributeReference ]
+            |> List.map attempt
+            |> choice
         let opp = new OperatorPrecedenceParser<Expression, unit, unit>()
         let expr = opp.ExpressionParser
         let variable_id = simple_id
@@ -240,58 +245,76 @@ module SchemaParser =
                 (PIPE >>. expr .>> RIGHT_PAREN)
                 (fun variable aggregate logical -> Query(variable, aggregate, logical))
             |>> QueryExpression
-        let function_id = simple_id
+        let function_id =
+            choice [
+                ACOS
+                ASIN
+                ATAN
+                COS
+                EXISTS
+                ONEOF
+                ROLESOF
+                SIN
+                SIZEOF
+                TAN
+                TYPEOF
+            ]
         let function_call =
             pipe2
                 function_id
                 (between LEFT_PAREN RIGHT_PAREN (sepBy expr COMMA))
                 (fun name args -> FunctionCall(name, args))
             |>> FunctionCallExpression
-        let index = expr
         let array_expression = between LEFT_BRACKET RIGHT_BRACKET (sepBy expr COMMA) |>> ArrayExpression
-        opp.TermParser <-
-            pipe2
-                (choice [
-                    array_expression
-                    attempt query_expression
-                    attempt function_call
-                    between LEFT_PAREN RIGHT_PAREN expr
-                    literal |>> LiteralValue
-                    simple_id |>> IdentifierExpression
-                ])
-                (opt (LEFT_BRACKET >>. index .>>. opt (COLON >>. index) .>> RIGHT_BRACKET))
-                (fun expression qualifiedIndex ->
-                    match qualifiedIndex with
-                    | Some (index1, index2) -> SubcomponentQualifiedExpression(expression, index1, index2)
-                    | None -> expression)
-        opp.AddOperator(InfixOperator("\\", ws, 1, Associativity.Left, (fun a b -> GroupQualifiedAccessExpression(a, b))))
-        opp.AddOperator(InfixOperator(".", ws, 1, Associativity.Left, (fun a b -> DottedAccessExpression(a, b))))
-        opp.AddOperator(InfixOperator(">", ws, 2, Associativity.Left, (fun a b -> Greater(a, b))))
-        opp.AddOperator(InfixOperator(">=", ws, 2, Associativity.Left, (fun a b -> GreaterEquals(a, b))))
-        opp.AddOperator(InfixOperator("<", ws, 2, Associativity.Left, (fun a b -> Less(a, b))))
-        opp.AddOperator(InfixOperator("<=", ws, 2, Associativity.Left, (fun a b -> LessEquals(a, b))))
-        opp.AddOperator(InfixOperator("=", ws, 2, Associativity.Left, (fun a b -> Equals(a, b))))
-        opp.AddOperator(InfixOperator("<>", ws, 2, Associativity.Left, (fun a b -> NotEquals(a, b))))
-        opp.AddOperator(InfixOperator(":=", ws, 2, Associativity.Left, (fun a b -> Assignable(a, b, false))))
-        opp.AddOperator(InfixOperator(":=:", ws, 2, Associativity.Left, (fun a b -> Assignable(a, b, true))))
-        opp.AddOperator(InfixOperator(":<>:", ws, 2, Associativity.Left, (fun a b -> NotAssignable(a, b))))
-        opp.AddOperator(InfixOperator("+", ws, 3, Associativity.Left, (fun a b -> Add(a, b))))
-        opp.AddOperator(InfixOperator("-", ws, 3, Associativity.Left, (fun a b -> Subtract(a, b))))
-        opp.AddOperator(InfixOperator("in", ws, 3, Associativity.Left, (fun a b -> In(a, b))))
-        opp.AddOperator(InfixOperator("IN", ws, 3, Associativity.Left, (fun a b -> In(a, b))))
-        opp.AddOperator(InfixOperator("or", ws, 3, Associativity.Left, (fun a b -> Or(a, b))))
-        opp.AddOperator(InfixOperator("OR", ws, 3, Associativity.Left, (fun a b -> Or(a, b))))
-        opp.AddOperator(InfixOperator("xor", ws, 3, Associativity.Left, (fun a b -> Xor(a, b))))
-        opp.AddOperator(InfixOperator("XOR", ws, 3, Associativity.Left, (fun a b -> Xor(a, b))))
-        opp.AddOperator(InfixOperator("*", ws, 4, Associativity.Left, (fun a b -> Multiply(a, b))))
-        opp.AddOperator(InfixOperator("/", ws, 4, Associativity.Left, (fun a b -> Divide(a, b))))
-        opp.AddOperator(InfixOperator("%", ws, 4, Associativity.Left, (fun a b -> Modulus(a, b))))
-        opp.AddOperator(InfixOperator("and", ws, 4, Associativity.Left, (fun a b -> And(a, b))))
-        opp.AddOperator(InfixOperator("AND", ws, 4, Associativity.Left, (fun a b -> And(a, b))))
-        opp.AddOperator(InfixOperator("**", ws, 5, Associativity.Right, (fun a b -> Exponent(a, b))))
-        opp.AddOperator(PrefixOperator("-", ws, 6, true, Negate))
-        opp.AddOperator(PrefixOperator("not", ws, 6, true, Not))
-        opp.AddOperator(PrefixOperator("NOT", ws, 6, true, Not))
+        let expression_index = LEFT_BRACKET >>. expr .>>. opt (COLON >>. expr) .>> RIGHT_BRACKET
+        let expression_member = PERIOD >>. simple_id
+        let expression_tail = (attempt expression_index |>> function r -> (Some r, None)) <|> (opt expression_member |>> function r -> (None, r))
+        let rec with_expression_tail expression =
+            expression_tail
+            |>> function
+            | (Some _, Some _) -> failwith "impossible to match both"
+            | (Some(lowerBound, upperBoundOpt), None) -> (true, SubcomponentQualifiedExpression(expression, lowerBound, upperBoundOpt))
+            | (None, Some memberName) -> (true, DottedAccessExpression(expression, memberName))
+            | (None, None) -> (false, expression)
+            >>= fun (recurse, expression) ->
+            if recurse then with_expression_tail expression
+            else preturn expression
+        let simple_expression =
+            choice [
+                array_expression
+                attempt query_expression
+                attempt function_call
+                between LEFT_PAREN RIGHT_PAREN expr
+                literal |>> LiteralValue
+                attribute_ref |>> AttributeReference
+            ]
+        opp.TermParser <- simple_expression >>= with_expression_tail
+        opp.AddOperator(InfixOperator(">", ws, 1, Associativity.Left, (fun a b -> Greater(a, b))))
+        opp.AddOperator(InfixOperator(">=", ws, 1, Associativity.Left, (fun a b -> GreaterEquals(a, b))))
+        opp.AddOperator(InfixOperator("<", ws, 1, Associativity.Left, (fun a b -> Less(a, b))))
+        opp.AddOperator(InfixOperator("<=", ws, 1, Associativity.Left, (fun a b -> LessEquals(a, b))))
+        opp.AddOperator(InfixOperator("=", ws, 1, Associativity.Left, (fun a b -> Equals(a, b))))
+        opp.AddOperator(InfixOperator("<>", ws, 1, Associativity.Left, (fun a b -> NotEquals(a, b))))
+        opp.AddOperator(InfixOperator(":=", ws, 1, Associativity.Left, (fun a b -> Assignable(a, b, false))))
+        opp.AddOperator(InfixOperator(":=:", ws, 1, Associativity.Left, (fun a b -> Assignable(a, b, true))))
+        opp.AddOperator(InfixOperator(":<>:", ws, 1, Associativity.Left, (fun a b -> NotAssignable(a, b))))
+        opp.AddOperator(InfixOperator("+", ws, 2, Associativity.Left, (fun a b -> Add(a, b))))
+        opp.AddOperator(InfixOperator("-", ws, 2, Associativity.Left, (fun a b -> Subtract(a, b))))
+        opp.AddOperator(InfixOperator("in", ws, 2, Associativity.Left, (fun a b -> In(a, b))))
+        opp.AddOperator(InfixOperator("IN", ws, 2, Associativity.Left, (fun a b -> In(a, b))))
+        opp.AddOperator(InfixOperator("or", ws, 2, Associativity.Left, (fun a b -> Or(a, b))))
+        opp.AddOperator(InfixOperator("OR", ws, 2, Associativity.Left, (fun a b -> Or(a, b))))
+        opp.AddOperator(InfixOperator("xor", ws, 2, Associativity.Left, (fun a b -> Xor(a, b))))
+        opp.AddOperator(InfixOperator("XOR", ws, 2, Associativity.Left, (fun a b -> Xor(a, b))))
+        opp.AddOperator(InfixOperator("*", ws, 3, Associativity.Left, (fun a b -> Multiply(a, b))))
+        opp.AddOperator(InfixOperator("/", ws, 3, Associativity.Left, (fun a b -> Divide(a, b))))
+        opp.AddOperator(InfixOperator("%", ws, 3, Associativity.Left, (fun a b -> Modulus(a, b))))
+        opp.AddOperator(InfixOperator("and", ws, 3, Associativity.Left, (fun a b -> And(a, b))))
+        opp.AddOperator(InfixOperator("AND", ws, 3, Associativity.Left, (fun a b -> And(a, b))))
+        opp.AddOperator(InfixOperator("**", ws, 4, Associativity.Right, (fun a b -> Exponent(a, b))))
+        opp.AddOperator(PrefixOperator("-", ws, 5, true, Negate))
+        opp.AddOperator(PrefixOperator("not", ws, 5, true, Not))
+        opp.AddOperator(PrefixOperator("NOT", ws, 5, true, Not))
         //let add_like_op = PLUS <|> MINUS <|> OR <|> XOR
         //let multiplication_like_op = ASTERISK <|> SLASH <|> DIV <|> MOD <|> AND <|> DOUBLE_PIPE
         //let primary = literal // <|> qualifialble_factor { qualifier }
@@ -343,13 +366,13 @@ module SchemaParser =
             |>> AggregationType
         and aggregation_types = array_type <|> bag_type <|> list_type <|> set_type
         and base_type = parse { return! aggregation_types <|> simple_types <|> named_types }
-        let attribute_decl = attribute_id // <|> qualified_attribute
+        let attribute_decl = attribute_ref
         let derive_attr =
             pipe3
                 (attribute_decl .>> COLON)
                 (base_type .>> COLON_EQUALS |>> (fun baseType -> AttributeType(baseType, false)))
                 (expression .>> SEMI)
-                (fun name typ expression -> DerivedAttribute(name, typ, expression))
+                (fun attRef typ expression -> DerivedAttribute(attRef, typ, expression))
         let derive_clause = DERIVE >>. many1 (attempt derive_attr)
         let explicit_attr =
             pipe4

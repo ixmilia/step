@@ -16,13 +16,17 @@ type LiteralValue =
     | RealLiteral of float
     | StringLiteral of string
 
+type AttributeReference =
+    | IdentifierAttributeReference of string
+    | SelfAttributeReference // SELF
+    | GroupQualifiedAttributeReference of string // SELF \ attribute
+
 type Expression =
     // static values
-    | IdentifierExpression of string
     | LiteralValue of LiteralValue
     // member access
-    | GroupQualifiedAccessExpression of Expression * Expression // parent \ child
-    | DottedAccessExpression of Expression * Expression // parent . child
+    | AttributeReference of AttributeReference
+    | DottedAccessExpression of Expression * string // parent . child
     // artithmetic
     | Negate of Expression
     | Add of Expression * Expression
@@ -108,21 +112,21 @@ type InverseCollectionType =
     | Set
     | Bag
 
-type InverseAttribute(name:string, collectionType:InverseCollectionType option, lowerBound:Expression option, upperBound:Expression option, entityName:string, attributeName:string) =
+type InverseAttribute(name:string, collectionType:InverseCollectionType option, lowerBound:Expression option, upperBound:Expression option, entityName:string, attRef:AttributeReference) =
     member this.Name = name
     member this.CollectionType = collectionType
     member this.LowerBound = lowerBound
     member this.UpperBound = upperBound
     member this.EntityName = entityName
-    member this.AttributeName = attributeName
+    member this.AttributeReference = attRef
 
-type DerivedAttribute(name:string, typ:AttributeType, expression:Expression) =
-    member this.Name = name
+type DerivedAttribute(attRef:AttributeReference, typ:AttributeType, expression:Expression) =
+    member this.AttributeReference = attRef
     member this.Type = typ
     member this.Expression = expression
 
-type ExplicitAttribute(name:string, typ:AttributeType) =
-    member this.Name = name
+type ExplicitAttribute(attRef:AttributeReference, typ:AttributeType) =
+    member this.AttributeReference = attRef
     member this.Type = typ
 
 type DomainRule(label:string, expression:Expression) =
