@@ -15,19 +15,80 @@ type LiteralValue =
     | LogicalLiteral of bool option
     | RealLiteral of float
     | StringLiteral of string
+    override this.ToString() =
+        match this with
+        | IntegerLiteral i -> i.ToString()
+        | LogicalLiteral l -> l.ToString()
+        | RealLiteral f -> f.ToString()
+        | StringLiteral s ->
+            let escaped =
+                s.ToCharArray()
+                |> Array.fold (fun sb c ->
+                    let t =
+                        match c with
+                        | '"' -> "\\\""
+                        | '\r' -> "\\\r"
+                        | '\n' -> "\\\n"
+                        | _ -> c.ToString()
+                    sb + t) ""
+            "\"" + escaped + "\""
 
-type AttributeReference =
-    | IdentifierAttributeReference of string
-    | SelfAttributeReference // SELF
-    | GroupQualifiedAttributeReference of string // SELF \ attribute
+/// Internal-only type used for the attribute expression parser
+type ReferencedAttributeValue =
+    | ReferencedAttributeValueRoot of string // attribute
+    | ReferencedAttributeValueAttribute of string // .attribute
+    | ReferencedAttributeValueGroup of string // \attribute
+    override this.ToString() =
+        match this with
+        | ReferencedAttributeValueRoot a -> a
+        | ReferencedAttributeValueAttribute a -> a
+        | ReferencedAttributeValueGroup a -> a
+
+type ReferencedAttribute(attributeName:string, furtherQualification:ReferencedAttributeQualification option) =
+    member _.Name = attributeName
+    member _.Qualification = furtherQualification
+    override this.GetHashCode() = hash (this.Name, this.Qualification)
+    override this.Equals(other) =
+        match other with
+        | :? ReferencedAttribute as r ->
+            let qualificationMatch =
+                match (this.Qualification, r.Qualification) with
+                | (Some a, Some b) -> a.Equals(b)
+                | (None, None) -> true
+                | _ -> false
+            this.Name = r.Name && qualificationMatch
+        | _ -> false
+    override this.ToString() =
+        let tail = match furtherQualification with
+                   | Some q -> q.ToString()
+                   | None -> ""
+        attributeName + tail
+
+and [<CustomEquality; NoComparison>] ReferencedAttributeQualification =
+    | ReferencedAttributeQualificationWithAttribute of ReferencedAttribute // parent.reference
+    | ReferencedAttributeQualificationWithGroup of ReferencedAttribute // parent\reference
+    override this.GetHashCode() =
+        match this with
+        | ReferencedAttributeQualificationWithAttribute a -> hash a
+        | ReferencedAttributeQualificationWithGroup a -> hash a
+    override this.Equals(other) =
+        match other with
+        | :? ReferencedAttributeQualification as r ->
+            match (this, r) with
+            | (ReferencedAttributeQualificationWithAttribute a, ReferencedAttributeQualificationWithAttribute b) -> a.Equals(b)
+            | (ReferencedAttributeQualificationWithGroup a, ReferencedAttributeQualificationWithGroup b) -> a.Equals(b)
+            | _ -> false
+        | _ -> false
+    override this.ToString() =
+        match this with
+        | ReferencedAttributeQualificationWithAttribute r -> "." + r.ToString()
+        | ReferencedAttributeQualificationWithGroup r -> "\\" + r.ToString()
 
 type Expression =
     // static values
     | LiteralValue of LiteralValue
     // member access
-    | AttributeReference of AttributeReference
-    | DottedAccessExpression of Expression * string // parent . child
-    | QualifiedAccessExpression of Expression * string // parent \ child
+    | ReferencedAttributeExpression of ReferencedAttribute
     // artithmetic
     | Negate of Expression
     | Add of Expression * Expression
@@ -56,6 +117,39 @@ type Expression =
     | Xor of Expression * Expression
     | And of Expression * Expression
     | Not of Expression
+    override this.ToString() =
+        match this with
+        | LiteralValue l -> l.ToString()
+        | ReferencedAttributeExpression r -> r.ToString()
+        | Negate n -> "-" + n.ToString()
+        | Add (a, b) -> a.ToString() + "+" + b.ToString()
+        | Subtract (a, b) -> a.ToString() + "-" + b.ToString()
+        | Multiply (a, b) -> a.ToString() + "*" + b.ToString()
+        | Divide (a, b) -> a.ToString() + "/" + b.ToString()
+        | Modulus (a, b) -> a.ToString() + "%" + b.ToString()
+        | Exponent (a, b) -> a.ToString() + "^" + b.ToString()
+        | Greater (a, b) -> a.ToString() + ">" + b.ToString()
+        | GreaterEquals (a, b) -> a.ToString() + ">=" + b.ToString()
+        | Less (a, b) -> a.ToString() + "<" + b.ToString()
+        | LessEquals (a, b) -> a.ToString() + "<=" + b.ToString()
+        | Equals (a, b) -> a.ToString() + "=" + b.ToString()
+        | NotEquals (a, b) -> a.ToString() + "<>" + b.ToString()
+        | Assignable (a, b, false) -> a.ToString() + ":=" + b.ToString()
+        | Assignable (a, b, true) -> a.ToString() + ":=:" + b.ToString()
+        | NotAssignable (a, b) -> a.ToString() + ":<>:" + b.ToString()
+        | FunctionCallExpression f -> f.ToString()
+        | QueryExpression q -> q.ToString()
+        | ArrayExpression a -> "[" + System.String.Join(", ", a) + "]"
+        | SubcomponentQualifiedExpression (a, b, c) ->
+            let tail = match c with
+                       | Some s -> ":" + s.ToString()
+                       | None -> ""
+            a.ToString() + "[" + b.ToString() + tail + "]"
+        | In (a, b) -> a.ToString() + " in " + b.ToString()
+        | Or (a, b) -> a.ToString() + " or " + b.ToString()
+        | Xor (a, b) -> a.ToString() + " xor " + b.ToString()
+        | And (a, b) -> a.ToString() + " and " + b.ToString()
+        | Not e -> "not " + e.ToString()
 
 and FunctionCall(name:string, arguments:Expression list) =
     member this.Name = name
@@ -65,6 +159,8 @@ and FunctionCall(name:string, arguments:Expression list) =
         match other with
         | :? FunctionCall as f -> (this.Name, this.Arguments) = (f.Name, f.Arguments)
         | _ -> false
+    override this.ToString() =
+        name + "(" + System.String.Join(", ", arguments) + ")"
 
 and Query(variableId:string, aggregateSource:Expression, logicalExpression:Expression) =
     member this.VariableId = variableId
@@ -75,6 +171,8 @@ and Query(variableId:string, aggregateSource:Expression, logicalExpression:Expre
         match other with
         | :? Query as q -> (this.VariableId, this.AggregateSource, this.LogicalExpression) = (q.VariableId, q.AggregateSource, q.LogicalExpression)
         | _ -> false
+    override this.ToString() =
+        "query(" + variableId + " <* " + aggregateSource.ToString() + " | " + logicalExpression.ToString() + ")"
 
 type SimpleType =
     | BinaryType of Expression option * bool // width * isFixed
@@ -105,15 +203,15 @@ type AttributeType(typ:BaseType, isOptional:bool) =
     member this.Type = typ
     member this.IsOptional = isOptional
 
-type UniqueRule(label:string, expressions:Expression list) =
+type UniqueRule(label:string, refAttrs:ReferencedAttribute list) =
     member this.Label = label
-    member this.Expressions = expressions
+    member this.ReferencedAttributes = refAttrs
 
 type InverseCollectionType =
     | Set
     | Bag
 
-type InverseAttribute(name:string, collectionType:InverseCollectionType option, lowerBound:Expression option, upperBound:Expression option, entityName:string, attRef:AttributeReference) =
+type InverseAttribute(name:string, collectionType:InverseCollectionType option, lowerBound:Expression option, upperBound:Expression option, entityName:string, attRef:string) =
     member this.Name = name
     member this.CollectionType = collectionType
     member this.LowerBound = lowerBound
@@ -121,13 +219,13 @@ type InverseAttribute(name:string, collectionType:InverseCollectionType option, 
     member this.EntityName = entityName
     member this.AttributeReference = attRef
 
-type DerivedAttribute(attRef:AttributeReference, typ:AttributeType, expression:Expression) =
-    member this.AttributeReference = attRef
+type DerivedAttribute(attDecl:ReferencedAttribute, typ:AttributeType, expression:Expression) =
+    member this.AttributeDeclaration = attDecl
     member this.Type = typ
     member this.Expression = expression
 
-type ExplicitAttribute(attRef:AttributeReference, typ:AttributeType) =
-    member this.AttributeReference = attRef
+type ExplicitAttribute(attDecl:ReferencedAttribute, typ:AttributeType) =
+    member this.AttributeDeclaration = attDecl
     member this.Type = typ
 
 type DomainRule(label:string, expression:Expression) =

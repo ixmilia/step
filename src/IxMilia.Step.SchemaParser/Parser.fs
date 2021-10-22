@@ -230,12 +230,29 @@ module SchemaParser =
                         Int64.Parse(wholeNumber, NumberStyles.Integer) * factor |> IntegerLiteral)
         let logical_literal = (FALSE >>% LogicalLiteral(Some false)) <|> (TRUE >>% LogicalLiteral(Some true)) <|> (UNKNOWN >>% LogicalLiteral(None))
         let literal = binary_literal <|> integer_or_real_literal <|> logical_literal <|> string_literal
-        let attribute_ref =
-            [ SELF >>. BACKSLASH >>. simple_id |>> GroupQualifiedAttributeReference
-              SELF .>> (notFollowedBy (many1Satisfy is_id_continuation_char)) |>> fun _ -> SelfAttributeReference
-              simple_id |>> IdentifierAttributeReference ]
-            |> List.map attempt
-            |> choice
+
+        let referenced_attribute =
+            let build_attribute_qualifications (values: ReferencedAttributeValue list) =
+                let rec build_attribute_qualifications' (values: ReferencedAttributeValue list): ReferencedAttributeQualification option =
+                    match values with
+                    | [] -> None
+                    | tl::rest ->
+                        match tl with
+                        | ReferencedAttributeValueRoot _ -> failwith "tail items can't be root"
+                        | ReferencedAttributeValueAttribute a -> Some <| ReferencedAttributeQualificationWithAttribute(ReferencedAttribute(a, build_attribute_qualifications' rest))
+                        | ReferencedAttributeValueGroup a -> Some <| ReferencedAttributeQualificationWithGroup(ReferencedAttribute(a, build_attribute_qualifications' rest))
+                match values with
+                | [] -> failwith "expected at least one attribute"
+                | head::rest ->
+                    match head with
+                    | ReferencedAttributeValueRoot r -> ReferencedAttribute(r, build_attribute_qualifications' rest)
+                    | _ -> failwith "expected first item to be root"
+            pipe2
+                (attribute_id |>> ReferencedAttributeValueRoot)
+                (many ((PERIOD >>. attribute_id |>> ReferencedAttributeValueAttribute) <|> (BACKSLASH >>. attribute_id |>> ReferencedAttributeValueGroup)))
+                (fun hd tl -> hd::tl) <|>% []
+            |>> build_attribute_qualifications
+
         let opp = new OperatorPrecedenceParser<Expression, unit, unit>()
         let expr = opp.ExpressionParser
         let variable_id = simple_id
@@ -254,19 +271,13 @@ module SchemaParser =
             |>> FunctionCallExpression
         let array_expression = between LEFT_BRACKET RIGHT_BRACKET (sepBy expr COMMA) |>> ArrayExpression
         let expression_index = LEFT_BRACKET >>. expr .>>. opt (COLON >>. expr) .>> RIGHT_BRACKET
-        let expression_member = PERIOD <|> BACKSLASH |>> (=) "." .>>. simple_id
-        let expression_tail = (attempt expression_index |>> function r -> (Some r, None)) <|> (opt expression_member |>> function r -> (None, r))
-        let rec with_expression_tail expression =
-            expression_tail
+        let rec with_array_index_tail expression =
+            opt expression_index
             |>> function
-            | (Some _, Some _) -> failwith "impossible to match both"
-            | (Some(lowerBound, upperBoundOpt), None) -> (true, SubcomponentQualifiedExpression(expression, lowerBound, upperBoundOpt))
-            | (None, Some(isDot, memberName)) ->
-                if isDot then (true, DottedAccessExpression(expression, memberName))
-                else (true, QualifiedAccessExpression(expression, memberName))
-            | (None, None) -> (false, expression)
+            | Some(lowerBound, upperBoundOpt) -> (true, SubcomponentQualifiedExpression(expression, lowerBound, upperBoundOpt))
+            | None -> (false, expression)
             >>= fun (recurse, expression) ->
-            if recurse then with_expression_tail expression
+            if recurse then with_array_index_tail expression
             else preturn expression
         let simple_expression =
             choice [
@@ -275,9 +286,9 @@ module SchemaParser =
                 attempt function_call
                 between LEFT_PAREN RIGHT_PAREN expr
                 literal |>> LiteralValue
-                attribute_ref |>> AttributeReference
+                referenced_attribute |>> ReferencedAttributeExpression
             ]
-        opp.TermParser <- simple_expression >>= with_expression_tail
+        opp.TermParser <- simple_expression >>= with_array_index_tail
         opp.AddOperator(InfixOperator(">", ws, 1, Associativity.Left, (fun a b -> Greater(a, b))))
         opp.AddOperator(InfixOperator(">=", ws, 1, Associativity.Left, (fun a b -> GreaterEquals(a, b))))
         opp.AddOperator(InfixOperator("<", ws, 1, Associativity.Left, (fun a b -> Less(a, b))))
@@ -355,13 +366,14 @@ module SchemaParser =
             |>> AggregationType
         and aggregation_types = array_type <|> bag_type <|> list_type <|> set_type
         and base_type = parse { return! aggregation_types <|> simple_types <|> named_types }
-        let attribute_decl = attribute_ref
+
+        let attribute_decl = referenced_attribute
         let derive_attr =
             pipe3
                 (attribute_decl .>> COLON)
                 (base_type .>> COLON_EQUALS |>> (fun baseType -> AttributeType(baseType, false)))
                 (expression .>> SEMI)
-                (fun attRef typ expression -> DerivedAttribute(attRef, typ, expression))
+                (fun attDecl typ expression -> DerivedAttribute(attDecl, typ, expression))
         let derive_clause = DERIVE >>. many1 (attempt derive_attr)
         let explicit_attr =
             pipe4
@@ -379,7 +391,7 @@ module SchemaParser =
                 (attribute_id .>> COLON)
                 (opt (((SET >>% Set) <|> (BAG >>% Bag)) .>>. opt bound_spec .>> OF))
                 (entity_ref .>> FOR)
-                (attribute_ref .>> SEMI)
+                (entity_ref .>> SEMI)
                 (fun attributeId boundsClause entityRef attributeRef ->
                     let collectionType, lowerBound, upperBound =
                         match boundsClause with
@@ -392,7 +404,7 @@ module SchemaParser =
         let unique_rule =
             pipe3
                 (opt label .>> COLON |>> Option.defaultValue null)
-                (sepBy1 expression COMMA)
+                (sepBy1 referenced_attribute COMMA)
                 (SEMI)
                 (fun label referencedAttributes _ -> UniqueRule(label, referencedAttributes))
         let unique_clause = UNIQUE >>. many1 (attempt unique_rule)
