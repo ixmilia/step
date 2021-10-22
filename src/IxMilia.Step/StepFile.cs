@@ -46,7 +46,6 @@ namespace IxMilia.Step
             Items = new List<StepRepresentationItem>();
         }
 
-#if HAS_FILESYSTEM_ACCESS
         public static StepFile Load(string path)
         {
             using (var stream = new FileStream(path, FileMode.Open))
@@ -54,7 +53,6 @@ namespace IxMilia.Step
                 return Load(stream);
             }
         }
-#endif
 
         public static StepFile Load(Stream stream)
         {
@@ -79,7 +77,6 @@ namespace IxMilia.Step
             return writer.GetContents();
         }
 
-#if HAS_FILESYSTEM_ACCESS
         public void Save(string path, bool inlineReferences = false)
         {
             using (var stream = new FileStream(path, FileMode.Create))
@@ -87,7 +84,6 @@ namespace IxMilia.Step
                 Save(stream, inlineReferences);
             }
         }
-#endif
 
         public void Save(Stream stream, bool inlineReferences = false)
         {

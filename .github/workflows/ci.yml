@@ -13,10 +13,6 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - uses: actions/setup-dotnet@v1
-      with:
-        dotnet-version: '3.1.201'
     - name: Build and test
       shell: pwsh
-      run: |
-        $shellExt = if ($IsWindows) { "cmd" } else { "sh" }
-        & ./build-and-test.$shellExt --configuration ${{ matrix.configuration }}
+      run: ./build-and-test.ps1 -configuration ${{ matrix.configuration }}
