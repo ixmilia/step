@@ -15,14 +15,15 @@ let ``identifier names``() =
 
 [<Fact>]
 let ``base type names``() =
-    Assert.Equal("byte[]", getBaseTypeName (SimpleType(BinaryType(None, false))) "")
-    Assert.Equal("bool", getBaseTypeName (SimpleType(BooleanType)) "")
-    Assert.Equal("long", getBaseTypeName  (SimpleType(IntegerType)) "")
-    Assert.Equal("bool", getBaseTypeName (SimpleType(LogicalType)) "")
-    Assert.Equal("double", getBaseTypeName (SimpleType(NumberType)) "")
-    Assert.Equal("double", getBaseTypeName (SimpleType(RealType(None))) "")
-    Assert.Equal("string", getBaseTypeName (SimpleType(StringType(None, false))) "")
-    Assert.Equal("TypePrefixSomeType", getBaseTypeName (NamedType "some_type") "TypePrefix")
+    Assert.Equal("byte[]", getBaseTypeName (SimpleType(BinaryType(None, false))) "" Map.empty)
+    Assert.Equal("bool", getBaseTypeName (SimpleType(BooleanType)) "" Map.empty)
+    Assert.Equal("long", getBaseTypeName  (SimpleType(IntegerType)) "" Map.empty)
+    Assert.Equal("bool", getBaseTypeName (SimpleType(LogicalType)) "" Map.empty)
+    Assert.Equal("double", getBaseTypeName (SimpleType(NumberType)) "" Map.empty)
+    Assert.Equal("double", getBaseTypeName (SimpleType(RealType(None))) "" Map.empty)
+    Assert.Equal("string", getBaseTypeName (SimpleType(StringType(None, false))) "" Map.empty)
+    Assert.Equal("TypePrefixSomeType", getBaseTypeName (NamedType "some_type") "TypePrefix" Map.empty)
+    Assert.Equal("TypeFromTheOverrideMap", getBaseTypeName (NamedType "some_type") "TypePrefix" (Map.empty |> Map.add "some_type" "TypeFromTheOverrideMap"))
 
 [<Fact>]
 let ``schema type names``() =
@@ -52,8 +53,8 @@ let ``schema type definitions``() =
 
 [<Fact>]
 let ``entity definitions``() =
-    let entity = Entity(EntityHead("shape", None, ["parent_entity"]), [ExplicitAttribute(ReferencedAttribute("size", None), AttributeType(SimpleType(RealType(None)), false)); ExplicitAttribute(ReferencedAttribute("size2", None), AttributeType(SimpleType(RealType(None)), false))], [], [], [], [DomainRule("wr1", GreaterEquals(ReferencedAttributeExpression(ReferencedAttribute("size", None)), LiteralValue(RealLiteral(0.0))))])
-    let actual = getEntityDefinition entity "TypePrefix" None
+    let entity = Entity(EntityHead("shape", None, ["parent_entity"]), [ExplicitAttribute(ReferencedAttribute("size", None), AttributeType(SimpleType(RealType(None)), false)); ExplicitAttribute(ReferencedAttribute("size2", None), AttributeType(NamedType "real_value", false))], [], [], [], [DomainRule("wr1", GreaterEquals(ReferencedAttributeExpression(ReferencedAttribute("size", None)), LiteralValue(RealLiteral(0.0))))])
+    let actual = getEntityDefinition entity "TypePrefix" None (Map.empty |> Map.add "real_value" "float")
     Assert.Equal(@"
 public class TypePrefixShape : TypePrefixParentEntity
 {
@@ -68,8 +69,8 @@ public class TypePrefixShape : TypePrefixParentEntity
         }
     }
 
-    private double _size2;
-    public double Size2
+    private float _size2;
+    public float Size2
     {
         get => _size2;
         set
@@ -79,7 +80,7 @@ public class TypePrefixShape : TypePrefixParentEntity
         }
     }
 
-    public TypePrefixShape(double size, double size2)
+    public TypePrefixShape(double size, float size2)
     {
         _size = size;
         _size2 = size2;
@@ -104,6 +105,6 @@ let ``generate code for minimal schema``() =
     | Success(schema, _, _) ->
         let generatedCode =
             schema.Entities
-            |> List.map (fun e -> getEntityDefinition e "Step" (Some "StepItem"))
+            |> List.map (fun e -> getEntityDefinition e "Step" (Some "StepItem") Map.empty)
             |> List.fold (fun a b -> a + "\n" + b) ""
         Assert.Equal("TODO:verify expected", generatedCode)

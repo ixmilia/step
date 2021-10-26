@@ -42,14 +42,17 @@ module CSharpSourceGenerator =
             match simpleType with
             | _ -> failwith "not supported"
         else None
-    let getBaseTypeName (baseType: BaseType) (typeNamePrefix: string) =
+    let getBaseTypeName (baseType: BaseType) (typeNamePrefix: string) (typeNameOverrides: Map<string, string>) =
         match baseType with
-        | ConstructedType c -> ""
-        | AggregationType a -> ""
+        | ConstructedType c -> "TODO"
+        | AggregationType a -> "TODO"
         | SimpleType s -> getSimpleTypeName s typeNamePrefix
-        | NamedType n -> getIdentifierNameWithPrefix n typeNamePrefix
-    let private getExplicitAttributeDeclaration (attr: ExplicitAttribute) (typeNamePrefix: string) =
-        let attributeType = getBaseTypeName attr.Type.Type typeNamePrefix
+        | NamedType n ->
+            match Map.tryFind n typeNameOverrides with
+            | Some typeNameOverride -> typeNameOverride
+            | None -> getIdentifierNameWithPrefix n typeNamePrefix
+    let private getExplicitAttributeDeclaration (attr: ExplicitAttribute) (typeNamePrefix: string) (typeNameOverrides: Map<string, string>) =
+        let attributeType = getBaseTypeName attr.Type.Type typeNamePrefix typeNameOverrides
         let attributeName = getIdentifierName attr.AttributeDeclaration.Name
         let fieldName = getFieldName attr.AttributeDeclaration.Name
         seq {
@@ -153,18 +156,18 @@ module CSharpSourceGenerator =
             | Some d -> sprintf " : %s" d
             | None -> ""
         sprintf "public class %s%s" entityName subTypeDefinitionText
-    let getEntityDefinition (entity: Entity) (typeNamePrefix: string) (defaultBaseClassName: string option): string =
+    let getEntityDefinition (entity: Entity) (typeNamePrefix: string) (defaultBaseClassName: string option) (typeNameOverrides: Map<string, string>): string =
         let entityDeclaration = getEntityDeclaration entity typeNamePrefix defaultBaseClassName
         let allAttributeLines =
             entity.Attributes
-            |> List.map (fun a -> getExplicitAttributeDeclaration a typeNamePrefix)
+            |> List.map (fun a -> getExplicitAttributeDeclaration a typeNamePrefix typeNameOverrides)
             |> joinWith "\n\n"
             |> toLines
             |> indentLines
         let validationRuleFunction = getDomainRuleValidationFunction entity.DomainRules |> toLines |> indentLines |> joinLines
         let argumentTexts =
             entity.Attributes
-            |> List.map (fun a -> sprintf "%s %s" (getBaseTypeName a.Type.Type typeNamePrefix) (a.AttributeDeclaration.Name |> getParameterName))
+            |> List.map (fun a -> sprintf "%s %s" (getBaseTypeName a.Type.Type typeNamePrefix typeNameOverrides) (a.AttributeDeclaration.Name |> getParameterName))
         let allArgumentsText = String.Join(", ", argumentTexts)
         let fieldAssignmentLines =
             entity.Attributes
