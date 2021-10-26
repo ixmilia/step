@@ -51,6 +51,16 @@ module CSharpSourceGenerator =
             match Map.tryFind n typeNameOverrides with
             | Some typeNameOverride -> typeNameOverride
             | None -> getIdentifierNameWithPrefix n typeNamePrefix
+    let getTypeNameOverride (typ: BaseType): string option =
+        match typ with
+        | SimpleType s -> Some(getSimpleTypeName s "")
+        | _ -> None
+    let getTypeNameOverrideMap (types: SchemaType list): Map<string, string> =
+        types
+        |> List.map (fun t -> (t, getTypeNameOverride t.Type))
+        |> List.filter (snd >> Option.isSome)
+        |> List.map (fun (a, b) -> (a.Name, Option.get b))
+        |> Map.ofList
     let private getExplicitAttributeDeclaration (attr: ExplicitAttribute) (typeNamePrefix: string) (typeNameOverrides: Map<string, string>) =
         let attributeType = getBaseTypeName attr.Type.Type typeNamePrefix typeNameOverrides
         let attributeName = getIdentifierName attr.AttributeDeclaration.Name
@@ -190,3 +200,7 @@ module CSharpSourceGenerator =
             yield validationRuleFunction
             yield "}"
         } |> joinLines
+    let getEntityDefinitions (schema: Schema) (typeNamePrefix: string) (defaultBaseClassName: string option): string list =
+        let typeNameOverrides = getTypeNameOverrideMap schema.Types
+        schema.Entities
+        |> List.map (fun e -> getEntityDefinition e typeNamePrefix defaultBaseClassName typeNameOverrides)

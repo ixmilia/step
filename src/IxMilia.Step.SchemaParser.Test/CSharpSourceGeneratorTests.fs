@@ -52,6 +52,11 @@ let ``schema type definitions``() =
     Assert.Equal(Some "public enum TypePrefixSomeEnumeration\n{\n    Val1,\n    Val2,\n}\n", getSchemaTypeDefinition (SchemaType("some_enumeration", ConstructedType(EnumerationType(["val1"; "val2"])), [])) "TypePrefix")
 
 [<Fact>]
+let ``get type name overrides``() =
+    Assert.Equal(Some "double", getTypeNameOverride (SimpleType(RealType(None))))
+    Assert.Equal(None, getTypeNameOverride (NamedType "x"))
+
+[<Fact>]
 let ``entity definitions``() =
     let entity = Entity(EntityHead("shape", None, ["parent_entity"]), [ExplicitAttribute(ReferencedAttribute("size", None), AttributeType(SimpleType(RealType(None)), false)); ExplicitAttribute(ReferencedAttribute("size2", None), AttributeType(NamedType "real_value", false))], [], [], [], [DomainRule("wr1", GreaterEquals(ReferencedAttributeExpression(ReferencedAttribute("size", None)), LiteralValue(RealLiteral(0.0))))])
     let actual = getEntityDefinition entity "TypePrefix" None (Map.empty |> Map.add "real_value" "float")
@@ -104,7 +109,5 @@ let ``generate code for minimal schema``() =
     | Failure(errorMessage, _, _) -> failwith errorMessage
     | Success(schema, _, _) ->
         let generatedCode =
-            schema.Entities
-            |> List.map (fun e -> getEntityDefinition e "Step" (Some "StepItem") Map.empty)
-            |> List.fold (fun a b -> a + "\n" + b) ""
+            System.String.Join("\n\n", getEntityDefinitions schema "Step" (Some "StepItem"))
         Assert.Equal("TODO:verify expected", generatedCode)
