@@ -15,11 +15,13 @@
   <ItemGroup>
     <Compile Include="Ast.fs" />
     <Compile Include="Parser.fs" />
+    <Compile Include="CSharpSourceGenerator.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="FParsec" Version="1.1.1" />
+    <PackageReference Update ="FSharp.Core" Version="6.0.0" />
   </ItemGroup>
 
 </Project>

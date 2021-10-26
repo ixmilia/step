@@ -231,6 +231,8 @@ type ExplicitAttribute(attDecl:ReferencedAttribute, typ:AttributeType) =
 type DomainRule(label:string, expression:Expression) =
     member this.Label = label
     member this.Expression = expression
+    override _.ToString() =
+        sprintf "%s:%s" label (expression.ToString())
 
 type SuperTypeExpression =
     | SuperTypeFactor of SuperTypeFactor
@@ -246,10 +248,10 @@ type SuperTypeDeclaration =
     | AbstractSuperType of SuperTypeExpression option
     | SuperType of SuperTypeExpression
 
-type EntityHead(name:string, SuperType:SuperTypeDeclaration option, SubTypes:string list) =
+type EntityHead(name:string, superType:SuperTypeDeclaration option, subTypes:string list) =
     member this.Name = name
-    member this.SuperType = SuperType
-    member this.SubTypes = SubTypes
+    member this.SuperType = superType
+    member this.SubTypes = subTypes
 
 type Entity(head:EntityHead, attributes:ExplicitAttribute list, derivedAttributes:DerivedAttribute list, inverseAttributes:InverseAttribute list, uniqueRestrictions:UniqueRule list, domainRules:DomainRule list) =
     member this.Head = head

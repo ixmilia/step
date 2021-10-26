@@ -1,0 +1,63 @@
+-- a minimal subset of the 201 schema necessary to model a simple line
+
+SCHEMA explicit_draughting;
+
+  TYPE label = STRING;
+  END_TYPE;
+
+  TYPE length_measure = REAL;
+  END_TYPE;
+
+  TYPE dimension_count = INTEGER;
+  WHERE
+    wr1: SELF > 0;
+  END_TYPE;
+
+  ENTITY representation_item;
+      name : label;
+  END_ENTITY;
+
+  ENTITY geometric_representation_item
+    SUPERTYPE OF (ONEOF (point,direction,vector))
+    SUBTYPE OF (representation_item);
+    DERIVE
+      dim : dimension_count := dimension_of(SELF);
+  END_ENTITY;
+
+  ENTITY point
+    SUPERTYPE OF (ONEOF (cartesian_point))
+    SUBTYPE OF (geometric_representation_item);
+  END_ENTITY;
+
+  ENTITY cartesian_point
+    SUBTYPE OF (point);
+      coordinates : LIST [1:3] OF length_measure;
+  END_ENTITY;
+
+  ENTITY direction
+    SUBTYPE OF (geometric_representation_item);
+      direction_ratios : LIST [2:3] OF REAL;
+  END_ENTITY;
+
+  ENTITY vector
+    SUBTYPE OF (geometric_representation_item);
+      orientation : direction;
+      magnitude   : length_measure;
+    WHERE
+      wr1: magnitude >= 0;
+  END_ENTITY;
+
+  ENTITY curve
+    SUPERTYPE OF (ONEOF (line))
+    SUBTYPE OF (geometric_representation_item);
+  END_ENTITY;
+
+  ENTITY line
+    SUBTYPE OF (curve);
+      pnt : cartesian_point;
+      dir : vector;
+    WHERE
+      wr1: dir.dim = pnt.dim;
+  END_ENTITY;
+
+END_SCHEMA;
