@@ -74,23 +74,7 @@ module CSharpSourceGenerator =
         |> List.filter (snd >> Option.isSome)
         |> List.map (fun (a, b) -> (a.Name, Option.get b))
         |> Map.ofList
-    let private getExplicitAttributeDeclaration (attr: ExplicitAttribute) (typeNamePrefix: string) (namedTypeOverrides: Map<string, BaseType>) =
-        let attributeType = getBaseTypeName attr.Type.Type typeNamePrefix namedTypeOverrides
-        let attributeName = getIdentifierName attr.AttributeDeclaration.Name
-        let fieldName = getFieldName attr.AttributeDeclaration.Name
-        seq {
-            yield sprintf "private %s %s;" attributeType fieldName
-            yield sprintf "public %s %s" attributeType attributeName
-            yield "{"
-            yield sprintf "get => %s;" fieldName |> indentLine
-            yield "set" |> indentLine
-            yield "{" |> indentLine
-            yield sprintf "%s = value;" fieldName |> indentLine |> indentLine
-            yield "ValidateDomainRules();" |> indentLine |> indentLine
-            yield "}" |> indentLine
-            yield "}"
-        } |> joinLines
-    let getValidationStatementPredicate (expression: Expression): string option =
+    let getExpressionCode (expression: Expression): string option =
         let rec getValidationStatementPredicate' (expression: Expression): string option =
             let testAndCombine (a: string option) (b: string option) (template: string): string option =
                 match (a, b) with
@@ -108,7 +92,12 @@ module CSharpSourceGenerator =
                         | None -> None
                     | None -> Some ""
                 match qualificationText with
-                | Some qt -> Some((r.Name |> getIdentifierName) + qt)
+                | Some qt ->
+                    let attributeName =
+                        match r.Name.ToUpperInvariant() with
+                        | "SELF" -> "this"
+                        | _ -> r.Name |> getIdentifierName
+                    Some(attributeName + qt)
                 | None -> None
             | Negate n -> 
                 match getValidationStatementPredicate' n with
@@ -129,9 +118,13 @@ module CSharpSourceGenerator =
             | Assignable (a, b, _isStrict) -> testAndCombine (getValidationStatementPredicate' a) (getValidationStatementPredicate' b) "({0} is {1})"
             | NotAssignable (a, b) -> testAndCombine (getValidationStatementPredicate' a) (getValidationStatementPredicate' b) "!({0} is {1})"
             | FunctionCallExpression f ->
+                // check for well-known function names
                 let clrFunction =
                     match f.Name.ToLowerInvariant() with
                     | "sqrt" -> Some "Math.Sqrt"
+                    // the following are defined later in the schema, but for now we'll hard-code it
+                    | "dimension_of" -> Some(getIdentifierName f.Name)
+                    // not supported
                     | _ -> None
                 match clrFunction with
                 | Some clrFunction ->
@@ -158,9 +151,32 @@ module CSharpSourceGenerator =
                 | Some n -> Some(sprintf "!(%s)" n)
                 | None -> None
         getValidationStatementPredicate' expression
+    let private getExplicitAttributeDeclaration (attr: ExplicitAttribute) (typeNamePrefix: string) (namedTypeOverrides: Map<string, BaseType>) =
+        let attributeType = getBaseTypeName attr.Type.Type typeNamePrefix namedTypeOverrides
+        let attributeName = getIdentifierName attr.AttributeDeclaration.Name
+        let fieldName = getFieldName attr.AttributeDeclaration.Name
+        seq {
+            yield sprintf "private %s %s;" attributeType fieldName
+            yield sprintf "public %s %s" attributeType attributeName
+            yield "{"
+            yield sprintf "get => %s;" fieldName |> indentLine
+            yield "set" |> indentLine
+            yield "{" |> indentLine
+            yield sprintf "%s = value;" fieldName |> indentLine |> indentLine
+            yield "ValidateDomainRules();" |> indentLine |> indentLine
+            yield "}" |> indentLine
+            yield "}"
+        } |> joinLines
+    let private getDerivedAttributeDeclaration (attr: DerivedAttribute) (typeNamePrefix: string) (namedTypeOverrides: Map<string, BaseType>) =
+        let attributeType = getBaseTypeName attr.Type.Type typeNamePrefix namedTypeOverrides
+        let attributeName = getIdentifierName attr.AttributeDeclaration.Name
+        let attributeExpression = getExpressionCode attr.Expression
+        match attributeExpression with
+        | Some ae -> sprintf "public %s %s => %s;" attributeType attributeName ae
+        | None -> ""
     let private getValidationStatementBody (domainRule: DomainRule) =
         let predicate =
-            match getValidationStatementPredicate domainRule.Expression with
+            match getExpressionCode domainRule.Expression with
             | Some p -> p
             | None -> "true /* TODO: not all validation predicates are supported */"
         let domainRuleText = domainRule.ToString()
@@ -217,12 +233,19 @@ module CSharpSourceGenerator =
         sprintf "public class %s%s" entityName subTypeDefinitionText
     let getEntityDefinition (schema: Schema option) (entity: Entity) (generatedNamespace: string) (usingNamespaces: string list) (typeNamePrefix: string) (defaultBaseClassName: string option) (namedTypeOverrides: Map<string, BaseType>): (string * string) =
         let entityDeclaration = getEntityDeclaration entity typeNamePrefix defaultBaseClassName
-        let allAttributeLines =
+        let explicitAttributeLines =
             entity.Attributes
             |> List.map (fun a -> getExplicitAttributeDeclaration a typeNamePrefix namedTypeOverrides)
             |> joinWith "\n\n"
             |> toLines
             |> indentLines
+        let derivedAttributeLines =
+            entity.DerivedAttributes
+            |> List.map (fun a -> getDerivedAttributeDeclaration a typeNamePrefix namedTypeOverrides)
+            |> joinWith "\n\n"
+            |> toLines
+            |> indentLines
+        let allAttributeLines = Seq.append explicitAttributeLines derivedAttributeLines
         let validationRuleFunction = getDomainRuleValidationFunction entity.DomainRules |> toLines |> indentLines |> joinLines
         let rec getEntityAndParentAttributes (entity: Entity) =
             let parentAttributes =

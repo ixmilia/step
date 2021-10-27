@@ -36,11 +36,11 @@ let ``entity declarations``() =
     Assert.Equal("public class TypePrefixShape : TypePrefixParentEntity", getEntityDeclaration (Entity(EntityHead("shape", None, ["parent_entity"]), [ExplicitAttribute(ReferencedAttribute("size", None), AttributeType(SimpleType(RealType(None)), false))], [], [], [], [])) "TypePrefix" (Some "DefaultBaseEntity"))
 
 [<Fact>]
-let ``individual expression predicates``() =
-    Assert.Equal(Some "(SomeField >= 0)", getValidationStatementPredicate (GreaterEquals(ReferencedAttributeExpression(ReferencedAttribute("some_field", None)), LiteralValue(RealLiteral(0.0)))))
-    Assert.Equal(Some "(SomeField.SomeDeeperField >= 0)", getValidationStatementPredicate (GreaterEquals(ReferencedAttributeExpression(ReferencedAttribute("some_field", Some(ReferencedAttributeQualificationWithGroup(ReferencedAttribute("some_deeper_field", None))))), LiteralValue(RealLiteral(0.0)))))
-    // any unsupported validation expression cancels the entire operation
-    Assert.Equal(None, getValidationStatementPredicate (Greater(FunctionCallExpression(FunctionCall("some_function", [])), LiteralValue(RealLiteral(0.0)))))
+let ``individual expressions as code``() =
+    Assert.Equal(Some "(SomeField >= 0)", getExpressionCode (GreaterEquals(ReferencedAttributeExpression(ReferencedAttribute("some_field", None)), LiteralValue(RealLiteral(0.0)))))
+    Assert.Equal(Some "(SomeField.SomeDeeperField >= 0)", getExpressionCode (GreaterEquals(ReferencedAttributeExpression(ReferencedAttribute("some_field", Some(ReferencedAttributeQualificationWithGroup(ReferencedAttribute("some_deeper_field", None))))), LiteralValue(RealLiteral(0.0)))))
+    // any unsupported validation expression cancels the operation
+    Assert.Equal(None, getExpressionCode (Greater(FunctionCallExpression(FunctionCall("some_function", [])), LiteralValue(RealLiteral(0.0)))))
 
 [<Fact>]
 let ``schema type definitions``() =
@@ -89,6 +89,7 @@ namespace SomeNamespace
                 ValidateDomainRules();
             }
         }
+
 
         public TypePrefixShape(double size, float size2)
             : base()
