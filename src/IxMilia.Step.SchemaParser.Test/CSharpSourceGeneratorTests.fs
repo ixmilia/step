@@ -37,7 +37,8 @@ let ``entity declarations``() =
 
 [<Fact>]
 let ``individual expression predicates``() =
-    Assert.Equal(Some @"(SomeField >= 0)", getValidationStatementPredicate (GreaterEquals(ReferencedAttributeExpression(ReferencedAttribute("some_field", None)), LiteralValue(RealLiteral(0.0)))))
+    Assert.Equal(Some "(SomeField >= 0)", getValidationStatementPredicate (GreaterEquals(ReferencedAttributeExpression(ReferencedAttribute("some_field", None)), LiteralValue(RealLiteral(0.0)))))
+    Assert.Equal(Some "(SomeField.SomeDeeperField >= 0)", getValidationStatementPredicate (GreaterEquals(ReferencedAttributeExpression(ReferencedAttribute("some_field", Some(ReferencedAttributeQualificationWithGroup(ReferencedAttribute("some_deeper_field", None))))), LiteralValue(RealLiteral(0.0)))))
     // any unsupported validation expression cancels the entire operation
     Assert.Equal(None, getValidationStatementPredicate (Greater(FunctionCallExpression(FunctionCall("some_function", [])), LiteralValue(RealLiteral(0.0)))))
 
