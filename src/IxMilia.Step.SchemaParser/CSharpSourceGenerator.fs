@@ -90,48 +90,73 @@ module CSharpSourceGenerator =
             yield "}" |> indentLine
             yield "}"
         } |> joinLines
-    let getValidationStatementPredicate (expression: Expression) =
-        let rec getValidationStatementPredicate' (expression: Expression) =
+    let getValidationStatementPredicate (expression: Expression): string option =
+        let rec getValidationStatementPredicate' (expression: Expression): string option =
+            let testAndCombine (a: string option) (b: string option) (template: string): string option =
+                match (a, b) with
+                | (Some a, Some b) -> Some(String.Format(template, a, b))
+                | _ -> None
             match expression with
-            | LiteralValue l -> l.ToString()
-            | ReferencedAttributeExpression r -> r.Name |> getIdentifierName // TODO: add qualifications
-            | Negate n -> "-" + getValidationStatementPredicate' n
-            | Add (a, b) -> sprintf "(%s + %s)" (getValidationStatementPredicate' a) (getValidationStatementPredicate' b)
-            | Subtract (a, b) -> sprintf "(%s - %s)" (getValidationStatementPredicate' a) (getValidationStatementPredicate' b)
-            | Multiply (a, b) -> sprintf "(%s * %s)" (getValidationStatementPredicate' a) (getValidationStatementPredicate' b)
-            | Divide (a, b) -> sprintf "(%s / %s)" (getValidationStatementPredicate' a) (getValidationStatementPredicate' b)
-            | Modulus (a, b) -> sprintf "(%s %% %s)" (getValidationStatementPredicate' a) (getValidationStatementPredicate' b)
-            | Exponent (a, b) -> sprintf "Math.Pow(%s, %s)" (getValidationStatementPredicate' a) (getValidationStatementPredicate' b)
-            | Greater (a, b) -> sprintf "(%s > %s)" (getValidationStatementPredicate' a) (getValidationStatementPredicate' b)
-            | GreaterEquals (a, b) -> sprintf "(%s >= %s)" (getValidationStatementPredicate' a) (getValidationStatementPredicate' b)
-            | Less (a, b) -> sprintf "(%s < %s)" (getValidationStatementPredicate' a) (getValidationStatementPredicate' b)
-            | LessEquals (a, b) -> sprintf "(%s <= %s)" (getValidationStatementPredicate' a) (getValidationStatementPredicate' b)
-            | Equals (a, b) -> sprintf "(%s == %s)" (getValidationStatementPredicate' a) (getValidationStatementPredicate' b)
-            | NotEquals (a, b) -> sprintf "(%s != %s)" (getValidationStatementPredicate' a) (getValidationStatementPredicate' b)
-            | Assignable (a, b, _isStrict) -> sprintf "(%s is %s)" (getValidationStatementPredicate' a) (getValidationStatementPredicate' b)
-            | NotAssignable (a, b) -> sprintf "!(%s is %s)" (getValidationStatementPredicate' a) (getValidationStatementPredicate' b)
+            | LiteralValue l -> Some(l.ToString())
+            | ReferencedAttributeExpression r -> Some(r.Name |> getIdentifierName) // TODO: add qualifications
+            | Negate n -> 
+                match getValidationStatementPredicate' n with
+                | Some p -> Some("-" + p)
+                | None -> None
+            | Add (a, b) -> testAndCombine (getValidationStatementPredicate' a) (getValidationStatementPredicate' b) "({0} + {1})"
+            | Subtract (a, b) -> testAndCombine (getValidationStatementPredicate' a) (getValidationStatementPredicate' b) "({0} - {1})"
+            | Multiply (a, b) -> testAndCombine (getValidationStatementPredicate' a) (getValidationStatementPredicate' b) "({0} * {1})"
+            | Divide (a, b) -> testAndCombine (getValidationStatementPredicate' a) (getValidationStatementPredicate' b) "({0} / {1})"
+            | Modulus (a, b) -> testAndCombine (getValidationStatementPredicate' a) (getValidationStatementPredicate' b) "({0} % {1})"
+            | Exponent (a, b) -> testAndCombine (getValidationStatementPredicate' a) (getValidationStatementPredicate' b) "Math.Pow({0}, {1})"
+            | Greater (a, b) -> testAndCombine (getValidationStatementPredicate' a) (getValidationStatementPredicate' b) "({0} > {1})"
+            | GreaterEquals (a, b) -> testAndCombine (getValidationStatementPredicate' a) (getValidationStatementPredicate' b) "({0} >= {1})"
+            | Less (a, b) -> testAndCombine (getValidationStatementPredicate' a) (getValidationStatementPredicate' b) "({0} < {1})"
+            | LessEquals (a, b) -> testAndCombine (getValidationStatementPredicate' a) (getValidationStatementPredicate' b) "({0} <= {1})"
+            | Equals (a, b) -> testAndCombine (getValidationStatementPredicate' a) (getValidationStatementPredicate' b) "({0} == {1})"
+            | NotEquals (a, b) -> testAndCombine (getValidationStatementPredicate' a) (getValidationStatementPredicate' b) "({0} != {1})"
+            | Assignable (a, b, _isStrict) -> testAndCombine (getValidationStatementPredicate' a) (getValidationStatementPredicate' b) "({0} is {1})"
+            | NotAssignable (a, b) -> testAndCombine (getValidationStatementPredicate' a) (getValidationStatementPredicate' b) "!({0} is {1})"
             | FunctionCallExpression f ->
                 let clrFunction =
                     match f.Name.ToLowerInvariant() with
-                    | "sqrt" -> "Math.Sqrt"
-                    | _ -> f.Name
-                sprintf "%s(%s)" clrFunction (f.Arguments |> List.map getValidationStatementPredicate' |> joinWith ", ")
-            | QueryExpression _ -> failwith "query NYI"
-            | ArrayExpression _ -> failwith "array NYI"
+                    | "sqrt" -> Some "Math.Sqrt"
+                    | _ -> None
+                match clrFunction with
+                | Some clrFunction ->
+                    let argumentSet =
+                        f.Arguments
+                        |> List.map getValidationStatementPredicate'
+                        |> List.fold (fun state t ->
+                            match (state, t) with
+                            | (Some collection, Some value) -> Some(List.append collection [value])
+                            | _ -> None) (Some [])
+                    match argumentSet with
+                    | Some arguments -> Some(sprintf "%s(%s)" clrFunction (arguments |> joinWith ", "))
+                    | None -> None
+                | None -> None
+            | QueryExpression _ -> None // NYI
+            | ArrayExpression _ -> None // NYI
             | SubcomponentQualifiedExpression (_, _, _) -> failwith "subcomponent NYI"
             | In (_, _) -> failwith "in NYI"
-            | Or (a, b) -> sprintf "(%s || %s)" (getValidationStatementPredicate' a) (getValidationStatementPredicate' b)
-            | Xor (a, b) -> sprintf "(%s ^ %s)" (getValidationStatementPredicate' a) (getValidationStatementPredicate' b)
-            | And (a, b) -> sprintf "(%s && %s)" (getValidationStatementPredicate' a) (getValidationStatementPredicate' b)
-            | Not n -> sprintf "!(%s)" (getValidationStatementPredicate' n)
+            | Or (a, b) -> testAndCombine (getValidationStatementPredicate' a) (getValidationStatementPredicate' b) "({0} || {1})"
+            | Xor (a, b) -> testAndCombine (getValidationStatementPredicate' a) (getValidationStatementPredicate' b) "({0} ^ {1})"
+            | And (a, b) -> testAndCombine (getValidationStatementPredicate' a) (getValidationStatementPredicate' b) "({0} && {1})"
+            | Not n ->
+                match getValidationStatementPredicate' n with
+                | Some n -> Some(sprintf "!(%s)" n)
+                | None -> None
         getValidationStatementPredicate' expression
     let private getValidationStatementBody (domainRule: DomainRule) =
-        let predicate = getValidationStatementPredicate domainRule.Expression
+        let predicate =
+            match getValidationStatementPredicate domainRule.Expression with
+            | Some p -> p
+            | None -> "true /* TODO: not all validation predicates are supported */"
         let domainRuleText = domainRule.ToString()
         seq {
             yield sprintf "if (!%s)" predicate
             yield "{"
-            yield sprintf "throw new StepValidationException(\"The validation rule '%s' was not satisfied\");" domainRuleText |> indentLine
+            yield sprintf "throw new StepValidationException(\"The validation rule '%s' was not satisfied\");" (domainRuleText.Replace("\"", "\\\"")) |> indentLine
             yield "}"
         } |> joinLines
     let private getDomainRuleValidationFunction (domainRules: DomainRule list) =

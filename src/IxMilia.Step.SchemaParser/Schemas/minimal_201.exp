@@ -3,41 +3,50 @@
 SCHEMA explicit_draughting;
 
   TYPE label = STRING;
-  END_TYPE;
+  END_TYPE; -- label
 
   TYPE length_measure = REAL;
-  END_TYPE;
+  END_TYPE; -- length_measure
 
   TYPE dimension_count = INTEGER;
   WHERE
     wr1: SELF > 0;
-  END_TYPE;
+  END_TYPE; -- dimension_count
 
   ENTITY representation_item;
       name : label;
-  END_ENTITY;
+    WHERE
+      wr1: SIZEOF(using_representations(SELF)) > 0;
+  END_ENTITY; -- representation_item
 
   ENTITY geometric_representation_item
-    SUPERTYPE OF (ONEOF (point,direction,vector))
+    SUPERTYPE OF (ONEOF (point,direction,vector,placement,curve,
+        geometric_set))
     SUBTYPE OF (representation_item);
     DERIVE
       dim : dimension_count := dimension_of(SELF);
-  END_ENTITY;
+    WHERE
+      wr1: SIZEOF(QUERY ( using_rep <* using_representations(SELF) | (NOT 
+               ('EXPLICIT_DRAUGHTING.GEOMETRIC_REPRESENTATION_CONTEXT' IN 
+               TYPEOF(using_rep.context_of_items))) )) = 0;
+  END_ENTITY; -- geometric_representation_item
 
   ENTITY point
-    SUPERTYPE OF (ONEOF (cartesian_point))
+    SUPERTYPE OF (ONEOF (cartesian_point,point_on_curve))
     SUBTYPE OF (geometric_representation_item);
-  END_ENTITY;
+  END_ENTITY; -- point
 
   ENTITY cartesian_point
     SUBTYPE OF (point);
       coordinates : LIST [1:3] OF length_measure;
-  END_ENTITY;
+  END_ENTITY; -- cartesian_point
 
   ENTITY direction
     SUBTYPE OF (geometric_representation_item);
       direction_ratios : LIST [2:3] OF REAL;
-  END_ENTITY;
+    WHERE
+      wr1: SIZEOF(QUERY ( tmp <* direction_ratios | (tmp <> 0) )) > 0;
+  END_ENTITY; -- direction
 
   ENTITY vector
     SUBTYPE OF (geometric_representation_item);
@@ -45,12 +54,12 @@ SCHEMA explicit_draughting;
       magnitude   : length_measure;
     WHERE
       wr1: magnitude >= 0;
-  END_ENTITY;
+  END_ENTITY; -- vector
 
   ENTITY curve
-    SUPERTYPE OF (ONEOF (line))
+    SUPERTYPE OF (ONEOF (line,conic,offset_curve_2d))
     SUBTYPE OF (geometric_representation_item);
-  END_ENTITY;
+  END_ENTITY; -- curve
 
   ENTITY line
     SUBTYPE OF (curve);
@@ -58,6 +67,6 @@ SCHEMA explicit_draughting;
       dir : vector;
     WHERE
       wr1: dir.dim = pnt.dim;
-  END_ENTITY;
+  END_ENTITY; -- line
 
-END_SCHEMA;
+END_SCHEMA; -- explicit_draughting

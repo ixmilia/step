@@ -37,7 +37,9 @@ let ``entity declarations``() =
 
 [<Fact>]
 let ``individual expression predicates``() =
-    Assert.Equal(@"(SomeField >= 0)", getValidationStatementPredicate (GreaterEquals(ReferencedAttributeExpression(ReferencedAttribute("some_field", None)), LiteralValue(RealLiteral(0.0)))))
+    Assert.Equal(Some @"(SomeField >= 0)", getValidationStatementPredicate (GreaterEquals(ReferencedAttributeExpression(ReferencedAttribute("some_field", None)), LiteralValue(RealLiteral(0.0)))))
+    // any unsupported validation expression cancels the entire operation
+    Assert.Equal(None, getValidationStatementPredicate (Greater(FunctionCallExpression(FunctionCall("some_function", [])), LiteralValue(RealLiteral(0.0)))))
 
 [<Fact>]
 let ``schema type definitions``() =
@@ -106,7 +108,7 @@ namespace SomeNamespace
     }
 }".Trim().Replace("\r", ""), actual)
 
-[<Fact(Skip = "Only used for diagnostics")>]
+//[<Fact>] // only used for diagnostics
 let ``generate code for minimal schema``() =
     let schemaText = System.IO.File.ReadAllText("minimal_201.exp")
     match run SchemaParser.parser schemaText with
