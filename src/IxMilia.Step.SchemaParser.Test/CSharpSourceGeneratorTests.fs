@@ -58,7 +58,7 @@ let ``get type name overrides``() =
 [<Fact>]
 let ``entity definitions``() =
     let entity = Entity(EntityHead("shape", None, ["parent_entity"]), [ExplicitAttribute(ReferencedAttribute("size", None), AttributeType(SimpleType(RealType(None)), false)); ExplicitAttribute(ReferencedAttribute("size2", None), AttributeType(NamedType "real_value", false))], [], [], [], [DomainRule("wr1", GreaterEquals(ReferencedAttributeExpression(ReferencedAttribute("size", None)), LiteralValue(RealLiteral(0.0))))])
-    let actual = getEntityDefinition entity "SomeNamespace" ["System"] "TypePrefix" None (Map.empty |> Map.add "real_value" (NamedType "float")) |> snd
+    let actual = getEntityDefinition None entity "SomeNamespace" ["System"] "TypePrefix" None (Map.empty |> Map.add "real_value" (NamedType "float")) |> snd
     Assert.Equal(@"using System;
 
 namespace SomeNamespace
@@ -88,6 +88,7 @@ namespace SomeNamespace
         }
 
         public TypePrefixShape(double size, float size2)
+            : base()
         {
             _size = size;
             _size2 = size2;

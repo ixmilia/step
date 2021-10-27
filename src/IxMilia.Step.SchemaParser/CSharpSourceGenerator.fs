@@ -172,14 +172,14 @@ module CSharpSourceGenerator =
         let subTypeDefinition =
             match entity.SubTypes with
             | [] -> defaultBaseClassName
-            | st::[] -> Some(getIdentifierNameWithPrefix st typeNamePrefix)
+            | subTypeName::[] -> Some(getIdentifierNameWithPrefix subTypeName typeNamePrefix)
             | _ -> failwith "multiple inheritance NYI"
         let subTypeDefinitionText =
             match subTypeDefinition with
             | Some d -> sprintf " : %s" d
             | None -> ""
         sprintf "public class %s%s" entityName subTypeDefinitionText
-    let getEntityDefinition (entity: Entity) (generatedNamespace: string) (usingNamespaces: string list) (typeNamePrefix: string) (defaultBaseClassName: string option) (namedTypeOverrides: Map<string, BaseType>): (string * string) =
+    let getEntityDefinition (schema: Schema option) (entity: Entity) (generatedNamespace: string) (usingNamespaces: string list) (typeNamePrefix: string) (defaultBaseClassName: string option) (namedTypeOverrides: Map<string, BaseType>): (string * string) =
         let entityDeclaration = getEntityDeclaration entity typeNamePrefix defaultBaseClassName
         let allAttributeLines =
             entity.Attributes
@@ -188,17 +188,31 @@ module CSharpSourceGenerator =
             |> toLines
             |> indentLines
         let validationRuleFunction = getDomainRuleValidationFunction entity.DomainRules |> toLines |> indentLines |> joinLines
-        let argumentTexts =
-            entity.Attributes
+        let rec getEntityAndParentAttributes (entity: Entity) =
+            let parentAttributes =
+                match (schema, entity.SubTypes) with
+                | (_, []) -> []
+                | (Some schema, subTypeName::[]) ->
+                    let parentEntity = schema.Entities |> List.find (fun e -> e.Name = subTypeName)
+                    let (p, pp) = getEntityAndParentAttributes parentEntity
+                    List.append pp p
+                | (None, _) -> []
+                | (_, _) -> failwith "multiple inheritance nyi"
+            (entity.Attributes, parentAttributes)
+        let (thisEntityAttributes, parentEntityAttributes) = getEntityAndParentAttributes entity
+        let getAttributesAsArgumentTexts (attributes: ExplicitAttribute list) =
+            attributes
             |> List.map (fun a -> sprintf "%s %s" (getBaseTypeName a.Type.Type typeNamePrefix namedTypeOverrides) (a.AttributeDeclaration.Name |> getParameterName))
-        let allArgumentsText = String.Join(", ", argumentTexts)
+        let thisArgumentTexts = getAttributesAsArgumentTexts thisEntityAttributes
+        let parentArgumentTexts = getAttributesAsArgumentTexts parentEntityAttributes
+        let allArgumentsText = List.append parentArgumentTexts thisArgumentTexts |> joinWith ", "
         let fieldAssignmentLines =
             entity.Attributes
             |> List.map (fun a -> sprintf "%s = %s;" (getFieldName a.AttributeDeclaration.Name) (getParameterName a.AttributeDeclaration.Name))
         let constructorLines =
-            // TODO: handle parent type parameters
             seq {
                 yield sprintf "public %s(%s)" (getIdentifierNameWithPrefix entity.Name typeNamePrefix) allArgumentsText
+                yield sprintf "%s: base(%s)" indentation (joinWith ", " (parentEntityAttributes |> List.map (fun a -> a.AttributeDeclaration.Name) |> List.map getParameterName))
                 yield "{"
                 yield! fieldAssignmentLines |> indentLines
                 yield "ValidateDomainRules();" |> indentLine
@@ -225,4 +239,4 @@ module CSharpSourceGenerator =
     let getEntityDefinitions (schema: Schema) (generatedNamespace: string) (usingNamespaces: string list) (typeNamePrefix: string) (defaultBaseClassName: string option): (string * string) list =
         let namedTypeOverrides = getNamedTypeOverrideMap schema.Types
         schema.Entities
-        |> List.map (fun e -> getEntityDefinition e generatedNamespace usingNamespaces typeNamePrefix defaultBaseClassName namedTypeOverrides)
+        |> List.map (fun e -> getEntityDefinition (Some schema) e generatedNamespace usingNamespaces typeNamePrefix defaultBaseClassName namedTypeOverrides)
