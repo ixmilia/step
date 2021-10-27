@@ -112,10 +112,18 @@ namespace SomeNamespace
 
 //[<Fact>] // only used for diagnostics
 let ``generate code for minimal schema``() =
-    let schemaText = System.IO.File.ReadAllText("minimal_201.exp")
+    let schemaText = System.IO.File.ReadAllText("Schemas\minimal_201.exp")
     match run SchemaParser.parser schemaText with
     | Failure(errorMessage, _, _) -> failwith errorMessage
     | Success(schema, _, _) ->
         let generatedCode =
             System.String.Join("\n\n", getEntityDefinitions schema "SomeNamespace" ["System"] "Step" (Some "StepItem") |> List.map snd)
         Assert.Equal("TODO:verify expected", generatedCode)
+
+//[<Fact>] // only used for diagnostics
+let ``parse full 201 schema``() =
+    let schemaText = System.IO.File.ReadAllText(@"Schemas\ap201.exp")
+    let parser = SchemaParser.parser
+    match run parser schemaText with
+    | Success(_result, _, _) -> printfn "File parsed successfully"
+    | Failure(errorMessage, parserState, _) -> failwith <| sprintf "Parse failed at [%d, %d]: %s" parserState.Position.Line parserState.Position.Column errorMessage
