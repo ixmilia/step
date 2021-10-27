@@ -179,7 +179,7 @@ module CSharpSourceGenerator =
             | Some d -> sprintf " : %s" d
             | None -> ""
         sprintf "public class %s%s" entityName subTypeDefinitionText
-    let getEntityDefinition (entity: Entity) (typeNamePrefix: string) (defaultBaseClassName: string option) (namedTypeOverrides: Map<string, BaseType>): string =
+    let getEntityDefinition (entity: Entity) (generatedNamespace: string) (usingNamespaces: string list) (typeNamePrefix: string) (defaultBaseClassName: string option) (namedTypeOverrides: Map<string, BaseType>): string =
         let entityDeclaration = getEntityDeclaration entity typeNamePrefix defaultBaseClassName
         let allAttributeLines =
             entity.Attributes
@@ -205,16 +205,21 @@ module CSharpSourceGenerator =
                 yield "}"
             } |> indentLines
         seq {
-            yield entityDeclaration
+            yield! usingNamespaces |> List.map (fun ns -> sprintf "using %s;" ns)
+            yield ""
+            yield sprintf "namespace %s" generatedNamespace
             yield "{"
-            yield! allAttributeLines
+            yield! entityDeclaration |> toLines |> indentLines
+            yield "{" |> indentLine
+            yield! allAttributeLines |> indentLines
             yield ""
-            yield! constructorLines
+            yield! constructorLines |> indentLines
             yield ""
-            yield validationRuleFunction
+            yield! validationRuleFunction |> toLines |> indentLines
+            yield "}" |> indentLine
             yield "}"
         } |> joinLines
-    let getEntityDefinitions (schema: Schema) (typeNamePrefix: string) (defaultBaseClassName: string option): string list =
+    let getEntityDefinitions (schema: Schema) (generatedNamespace: string) (usingNamespaces: string list) (typeNamePrefix: string) (defaultBaseClassName: string option): string list =
         let namedTypeOverrides = getNamedTypeOverrideMap schema.Types
         schema.Entities
-        |> List.map (fun e -> getEntityDefinition e typeNamePrefix defaultBaseClassName namedTypeOverrides)
+        |> List.map (fun e -> getEntityDefinition e generatedNamespace usingNamespaces typeNamePrefix defaultBaseClassName namedTypeOverrides)

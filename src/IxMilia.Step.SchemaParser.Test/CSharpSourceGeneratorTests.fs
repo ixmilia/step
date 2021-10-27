@@ -58,45 +58,49 @@ let ``get type name overrides``() =
 [<Fact>]
 let ``entity definitions``() =
     let entity = Entity(EntityHead("shape", None, ["parent_entity"]), [ExplicitAttribute(ReferencedAttribute("size", None), AttributeType(SimpleType(RealType(None)), false)); ExplicitAttribute(ReferencedAttribute("size2", None), AttributeType(NamedType "real_value", false))], [], [], [], [DomainRule("wr1", GreaterEquals(ReferencedAttributeExpression(ReferencedAttribute("size", None)), LiteralValue(RealLiteral(0.0))))])
-    let actual = getEntityDefinition entity "TypePrefix" None (Map.empty |> Map.add "real_value" (NamedType "float"))
-    Assert.Equal(@"
-public class TypePrefixShape : TypePrefixParentEntity
+    let actual = getEntityDefinition entity "SomeNamespace" ["System"] "TypePrefix" None (Map.empty |> Map.add "real_value" (NamedType "float"))
+    Assert.Equal(@"using System;
+
+namespace SomeNamespace
 {
-    private double _size;
-    public double Size
+    public class TypePrefixShape : TypePrefixParentEntity
     {
-        get => _size;
-        set
+        private double _size;
+        public double Size
         {
-            _size = value;
+            get => _size;
+            set
+            {
+                _size = value;
+                ValidateDomainRules();
+            }
+        }
+
+        private float _size2;
+        public float Size2
+        {
+            get => _size2;
+            set
+            {
+                _size2 = value;
+                ValidateDomainRules();
+            }
+        }
+
+        public TypePrefixShape(double size, float size2)
+        {
+            _size = size;
+            _size2 = size2;
             ValidateDomainRules();
         }
-    }
 
-    private float _size2;
-    public float Size2
-    {
-        get => _size2;
-        set
+        protected override void ValidateDomainRules()
         {
-            _size2 = value;
-            ValidateDomainRules();
-        }
-    }
-
-    public TypePrefixShape(double size, float size2)
-    {
-        _size = size;
-        _size2 = size2;
-        ValidateDomainRules();
-    }
-
-    protected override void ValidateDomainRules()
-    {
-        base.ValidateDomainRules();
-        if (!(Size >= 0))
-        {
-            throw new StepValidationException(""The validation rule 'wr1:size>=0' was not satisfied"");
+            base.ValidateDomainRules();
+            if (!(Size >= 0))
+            {
+                throw new StepValidationException(""The validation rule 'wr1:size>=0' was not satisfied"");
+            }
         }
     }
 }".Trim().Replace("\r", ""), actual)
@@ -108,5 +112,5 @@ let ``generate code for minimal schema``() =
     | Failure(errorMessage, _, _) -> failwith errorMessage
     | Success(schema, _, _) ->
         let generatedCode =
-            System.String.Join("\n\n", getEntityDefinitions schema "Step" (Some "StepItem"))
+            System.String.Join("\n\n", getEntityDefinitions schema "SomeNamespace" ["System"] "Step" (Some "StepItem"))
         Assert.Equal("TODO:verify expected", generatedCode)
