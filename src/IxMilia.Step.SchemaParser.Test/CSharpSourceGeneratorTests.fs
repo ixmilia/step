@@ -58,7 +58,7 @@ let ``get type name overrides``() =
 [<Fact>]
 let ``entity definitions``() =
     let entity = Entity(EntityHead("shape", None, ["parent_entity"]), [ExplicitAttribute(ReferencedAttribute("size", None), AttributeType(SimpleType(RealType(None)), false)); ExplicitAttribute(ReferencedAttribute("size2", None), AttributeType(NamedType "real_value", false))], [], [], [], [DomainRule("wr1", GreaterEquals(ReferencedAttributeExpression(ReferencedAttribute("size", None)), LiteralValue(RealLiteral(0.0))))])
-    let actual = getEntityDefinition entity "SomeNamespace" ["System"] "TypePrefix" None (Map.empty |> Map.add "real_value" (NamedType "float"))
+    let actual = getEntityDefinition entity "SomeNamespace" ["System"] "TypePrefix" None (Map.empty |> Map.add "real_value" (NamedType "float")) |> snd
     Assert.Equal(@"using System;
 
 namespace SomeNamespace
@@ -112,5 +112,5 @@ let ``generate code for minimal schema``() =
     | Failure(errorMessage, _, _) -> failwith errorMessage
     | Success(schema, _, _) ->
         let generatedCode =
-            System.String.Join("\n\n", getEntityDefinitions schema "SomeNamespace" ["System"] "Step" (Some "StepItem"))
+            System.String.Join("\n\n", getEntityDefinitions schema "SomeNamespace" ["System"] "Step" (Some "StepItem") |> List.map snd)
         Assert.Equal("TODO:verify expected", generatedCode)

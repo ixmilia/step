@@ -179,7 +179,7 @@ module CSharpSourceGenerator =
             | Some d -> sprintf " : %s" d
             | None -> ""
         sprintf "public class %s%s" entityName subTypeDefinitionText
-    let getEntityDefinition (entity: Entity) (generatedNamespace: string) (usingNamespaces: string list) (typeNamePrefix: string) (defaultBaseClassName: string option) (namedTypeOverrides: Map<string, BaseType>): string =
+    let getEntityDefinition (entity: Entity) (generatedNamespace: string) (usingNamespaces: string list) (typeNamePrefix: string) (defaultBaseClassName: string option) (namedTypeOverrides: Map<string, BaseType>): (string * string) =
         let entityDeclaration = getEntityDeclaration entity typeNamePrefix defaultBaseClassName
         let allAttributeLines =
             entity.Attributes
@@ -204,22 +204,25 @@ module CSharpSourceGenerator =
                 yield "ValidateDomainRules();" |> indentLine
                 yield "}"
             } |> indentLines
-        seq {
-            yield! usingNamespaces |> List.map (fun ns -> sprintf "using %s;" ns)
-            yield ""
-            yield sprintf "namespace %s" generatedNamespace
-            yield "{"
-            yield! entityDeclaration |> toLines |> indentLines
-            yield "{" |> indentLine
-            yield! allAttributeLines |> indentLines
-            yield ""
-            yield! constructorLines |> indentLines
-            yield ""
-            yield! validationRuleFunction |> toLines |> indentLines
-            yield "}" |> indentLine
-            yield "}"
-        } |> joinLines
-    let getEntityDefinitions (schema: Schema) (generatedNamespace: string) (usingNamespaces: string list) (typeNamePrefix: string) (defaultBaseClassName: string option): string list =
+        let generatedCode =
+            seq {
+                yield! usingNamespaces |> List.map (fun ns -> sprintf "using %s;" ns)
+                yield ""
+                yield sprintf "namespace %s" generatedNamespace
+                yield "{"
+                yield! entityDeclaration |> toLines |> indentLines
+                yield "{" |> indentLine
+                yield! allAttributeLines |> indentLines
+                yield ""
+                yield! constructorLines |> indentLines
+                yield ""
+                yield! validationRuleFunction |> toLines |> indentLines
+                yield "}" |> indentLine
+                yield "}"
+            } |> joinLines
+        let entityName = getIdentifierNameWithPrefix entity.Name typeNamePrefix
+        (entityName, generatedCode)
+    let getEntityDefinitions (schema: Schema) (generatedNamespace: string) (usingNamespaces: string list) (typeNamePrefix: string) (defaultBaseClassName: string option): (string * string) list =
         let namedTypeOverrides = getNamedTypeOverrideMap schema.Types
         schema.Entities
         |> List.map (fun e -> getEntityDefinition e generatedNamespace usingNamespaces typeNamePrefix defaultBaseClassName namedTypeOverrides)
