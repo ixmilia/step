@@ -13,11 +13,11 @@ module CSharpSourceGenerator =
     let joinLines = joinWith "\n"
     let getIdentifierName (nameFromSchema: string) =
         nameFromSchema.Split('_')
-        |> Array.map (fun p -> Char.ToUpperInvariant(p[0]).ToString() + p.Substring(1))
+        |> Array.map (fun p -> p.Substring(0, 1).ToUpperInvariant() + p.Substring(1))
         |> Array.fold (+) ""
     let getParameterName (nameFromSchema: string) =
         let identifierName = getIdentifierName nameFromSchema
-        Char.ToLowerInvariant(identifierName[0]).ToString() + identifierName.Substring(1)
+        identifierName.Substring(0, 1).ToLowerInvariant() + identifierName.Substring(1)
     let getFieldName (nameFromSchema: string) = "_" + getParameterName nameFromSchema
     let getIdentifierNameWithPrefix (nameFromSchema: string) (typeNamePrefix: string) =
         typeNamePrefix + getIdentifierName nameFromSchema
@@ -42,27 +42,42 @@ module CSharpSourceGenerator =
             match simpleType with
             | _ -> failwith "not supported"
         else None
-    let getBaseTypeName (baseType: BaseType) (typeNamePrefix: string) (typeNameOverrides: Map<string, string>) =
-        match baseType with
-        | ConstructedType c -> "TODO"
-        | AggregationType a -> "TODO"
-        | SimpleType s -> getSimpleTypeName s typeNamePrefix
-        | NamedType n ->
-            match Map.tryFind n typeNameOverrides with
-            | Some typeNameOverride -> typeNameOverride
-            | None -> getIdentifierNameWithPrefix n typeNamePrefix
-    let getTypeNameOverride (typ: BaseType): string option =
+    let getBaseTypeName (baseType: BaseType) (typeNamePrefix: string) (namedTypeOverrides: Map<string, BaseType>) =
+        let rec getBaseTypeName' (baseType: BaseType) (typeNamePrefix: string) (namedTypeOverrides: Map<string, BaseType>) (normalizeName: bool) =
+            match baseType with
+            | ConstructedType c -> "TODO"
+            | AggregationType a ->
+                match a with
+                | ListType (typ, lowerBound, upperBound, _isUnique) ->
+                    match (lowerBound, upperBound) with
+                    | (LiteralValue(IntegerLiteral(lower)), Some(LiteralValue(IntegerLiteral(upper)))) when lower >= 0L && upper = 3L ->
+                        match typ with
+                        | SimpleType(RealType(_))
+                        | NamedType "length_measure" ->
+                            getIdentifierNameWithPrefix "Vector3D" typeNamePrefix
+                        | _ -> "TODO"
+                    | _ -> "TODO"
+                | _ -> "TODO"
+            | SimpleType s -> getSimpleTypeName s typeNamePrefix
+            | NamedType n ->
+                match Map.tryFind n namedTypeOverrides with
+                | Some namedTypeOverride -> getBaseTypeName' namedTypeOverride "" namedTypeOverrides false
+                | None ->
+                    if normalizeName then getIdentifierNameWithPrefix n typeNamePrefix
+                    else n
+        getBaseTypeName' baseType typeNamePrefix namedTypeOverrides true
+    let getNamedTypeOverride (typ: BaseType): BaseType option =
         match typ with
-        | SimpleType s -> Some(getSimpleTypeName s "")
+        | SimpleType s -> Some(NamedType(getSimpleTypeName s ""))
         | _ -> None
-    let getTypeNameOverrideMap (types: SchemaType list): Map<string, string> =
+    let getNamedTypeOverrideMap (types: SchemaType list): Map<string, BaseType> =
         types
-        |> List.map (fun t -> (t, getTypeNameOverride t.Type))
+        |> List.map (fun t -> (t, getNamedTypeOverride t.Type))
         |> List.filter (snd >> Option.isSome)
         |> List.map (fun (a, b) -> (a.Name, Option.get b))
         |> Map.ofList
-    let private getExplicitAttributeDeclaration (attr: ExplicitAttribute) (typeNamePrefix: string) (typeNameOverrides: Map<string, string>) =
-        let attributeType = getBaseTypeName attr.Type.Type typeNamePrefix typeNameOverrides
+    let private getExplicitAttributeDeclaration (attr: ExplicitAttribute) (typeNamePrefix: string) (namedTypeOverrides: Map<string, BaseType>) =
+        let attributeType = getBaseTypeName attr.Type.Type typeNamePrefix namedTypeOverrides
         let attributeName = getIdentifierName attr.AttributeDeclaration.Name
         let fieldName = getFieldName attr.AttributeDeclaration.Name
         seq {
@@ -166,23 +181,24 @@ module CSharpSourceGenerator =
             | Some d -> sprintf " : %s" d
             | None -> ""
         sprintf "public class %s%s" entityName subTypeDefinitionText
-    let getEntityDefinition (entity: Entity) (typeNamePrefix: string) (defaultBaseClassName: string option) (typeNameOverrides: Map<string, string>): string =
+    let getEntityDefinition (entity: Entity) (typeNamePrefix: string) (defaultBaseClassName: string option) (namedTypeOverrides: Map<string, BaseType>): string =
         let entityDeclaration = getEntityDeclaration entity typeNamePrefix defaultBaseClassName
         let allAttributeLines =
             entity.Attributes
-            |> List.map (fun a -> getExplicitAttributeDeclaration a typeNamePrefix typeNameOverrides)
+            |> List.map (fun a -> getExplicitAttributeDeclaration a typeNamePrefix namedTypeOverrides)
             |> joinWith "\n\n"
             |> toLines
             |> indentLines
         let validationRuleFunction = getDomainRuleValidationFunction entity.DomainRules |> toLines |> indentLines |> joinLines
         let argumentTexts =
             entity.Attributes
-            |> List.map (fun a -> sprintf "%s %s" (getBaseTypeName a.Type.Type typeNamePrefix typeNameOverrides) (a.AttributeDeclaration.Name |> getParameterName))
+            |> List.map (fun a -> sprintf "%s %s" (getBaseTypeName a.Type.Type typeNamePrefix namedTypeOverrides) (a.AttributeDeclaration.Name |> getParameterName))
         let allArgumentsText = String.Join(", ", argumentTexts)
         let fieldAssignmentLines =
             entity.Attributes
             |> List.map (fun a -> sprintf "%s = %s;" (getFieldName a.AttributeDeclaration.Name) (getParameterName a.AttributeDeclaration.Name))
         let constructorLines =
+            // TODO: handle parent type parameters
             seq {
                 yield sprintf "public %s(%s)" (getIdentifierNameWithPrefix entity.Name typeNamePrefix) allArgumentsText
                 yield "{"
@@ -201,6 +217,6 @@ module CSharpSourceGenerator =
             yield "}"
         } |> joinLines
     let getEntityDefinitions (schema: Schema) (typeNamePrefix: string) (defaultBaseClassName: string option): string list =
-        let typeNameOverrides = getTypeNameOverrideMap schema.Types
+        let namedTypeOverrides = getNamedTypeOverrideMap schema.Types
         schema.Entities
-        |> List.map (fun e -> getEntityDefinition e typeNamePrefix defaultBaseClassName typeNameOverrides)
+        |> List.map (fun e -> getEntityDefinition e typeNamePrefix defaultBaseClassName namedTypeOverrides)

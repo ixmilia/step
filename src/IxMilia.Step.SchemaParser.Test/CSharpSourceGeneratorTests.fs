@@ -23,7 +23,8 @@ let ``base type names``() =
     Assert.Equal("double", getBaseTypeName (SimpleType(RealType(None))) "" Map.empty)
     Assert.Equal("string", getBaseTypeName (SimpleType(StringType(None, false))) "" Map.empty)
     Assert.Equal("TypePrefixSomeType", getBaseTypeName (NamedType "some_type") "TypePrefix" Map.empty)
-    Assert.Equal("TypeFromTheOverrideMap", getBaseTypeName (NamedType "some_type") "TypePrefix" (Map.empty |> Map.add "some_type" "TypeFromTheOverrideMap"))
+    Assert.Equal("TypeFromTheOverrideMap", getBaseTypeName (NamedType "some_type") "TypePrefix" (Map.empty |> Map.add "some_type" (NamedType "TypeFromTheOverrideMap")))
+    Assert.Equal("TypePrefixVector3D", getBaseTypeName (AggregationType(ListType(SimpleType(RealType(None)), LiteralValue(IntegerLiteral(0L)), Some(LiteralValue(IntegerLiteral(3L))), false))) "TypePrefix" Map.empty)
 
 [<Fact>]
 let ``schema type names``() =
@@ -53,13 +54,13 @@ let ``schema type definitions``() =
 
 [<Fact>]
 let ``get type name overrides``() =
-    Assert.Equal(Some "double", getTypeNameOverride (SimpleType(RealType(None))))
-    Assert.Equal(None, getTypeNameOverride (NamedType "x"))
+    Assert.Equal(Some(NamedType "double"), getNamedTypeOverride (SimpleType(RealType(None))))
+    Assert.Equal(None, getNamedTypeOverride (NamedType "x"))
 
 [<Fact>]
 let ``entity definitions``() =
     let entity = Entity(EntityHead("shape", None, ["parent_entity"]), [ExplicitAttribute(ReferencedAttribute("size", None), AttributeType(SimpleType(RealType(None)), false)); ExplicitAttribute(ReferencedAttribute("size2", None), AttributeType(NamedType "real_value", false))], [], [], [], [DomainRule("wr1", GreaterEquals(ReferencedAttributeExpression(ReferencedAttribute("size", None)), LiteralValue(RealLiteral(0.0))))])
-    let actual = getEntityDefinition entity "TypePrefix" None (Map.empty |> Map.add "real_value" "float")
+    let actual = getEntityDefinition entity "TypePrefix" None (Map.empty |> Map.add "real_value" (NamedType "float"))
     Assert.Equal(@"
 public class TypePrefixShape : TypePrefixParentEntity
 {
