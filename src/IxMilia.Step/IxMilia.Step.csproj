@@ -5,7 +5,7 @@
     <Copyright>Copyright 2017</Copyright>
     <AssemblyTitle>IxMilia.Step</AssemblyTitle>
     <Authors>IxMilia</Authors>
-    <TargetFrameworks>netstandard1.3</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0</TargetFrameworks>
     <AssemblyName>IxMilia.Step</AssemblyName>
     <PackageId>IxMilia.Step</PackageId>
     <PackageTags>CAD;STEP;STP</PackageTags>
@@ -19,7 +19,31 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <AdditionalFiles Include="$(MSBuildThisFileDirectory)..\IxMilia.Step.SchemaParser.Test\Schemas\minimal_201.exp" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(MSBuildThisFileDirectory)..\IxMilia.Step.Generator\IxMilia.Step.Generator.csproj"
+                      OutputItemType="Analyzer"
+                      ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0-beta2-19367-01" PrivateAssets="All" />
   </ItemGroup>
+
+  <!-- analyzer (and source generator) dependencies aren't properly loaded so we fake it by adding them to the arguments -->
+  <Target Name="_AddAnalyzerDependencies" BeforeTargets="CoreCompile">
+    <PropertyGroup>
+      <GeneratorOutputDirectory>$(ArtifactsDir)\bin\IxMilia.Step.Generator\$(Configuration)\netstandard2.0</GeneratorOutputDirectory>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <Analyzer Include="$(GeneratorOutputDirectory)\FParsec.dll" />
+      <Analyzer Include="$(GeneratorOutputDirectory)\FParsecCS.dll" />
+      <Analyzer Include="$(GeneratorOutputDirectory)\FSharp.Core.dll" />
+      <Analyzer Include="$(GeneratorOutputDirectory)\IxMilia.Step.SchemaParser.dll" />
+    </ItemGroup>
+  </Target>
 
 </Project>

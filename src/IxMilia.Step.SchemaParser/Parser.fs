@@ -521,3 +521,9 @@ module SchemaParser =
                 (fun a b c -> Schema(a, b, c))
 
         ws >>. schema_decl .>> eof
+
+    [<CompiledName("RunParser")>]
+    let runParser content =
+        match run parser content with
+        | Success(schema, _, _) -> schema
+        | Failure(errorMessage, _, _) -> failwith errorMessage

@@ -231,7 +231,7 @@ module CSharpSourceGenerator =
             | Some d -> sprintf " : %s" d
             | None -> ""
         sprintf "public class %s%s" entityName subTypeDefinitionText
-    let getEntityDefinition (schema: Schema option) (entity: Entity) (generatedNamespace: string) (usingNamespaces: string list) (typeNamePrefix: string) (defaultBaseClassName: string option) (namedTypeOverrides: Map<string, BaseType>): (string * string) =
+    let getEntityDefinition (schema: Schema option) (entity: Entity) (generatedNamespace: string) (usingNamespaces: string seq) (typeNamePrefix: string) (defaultBaseClassName: string option) (namedTypeOverrides: Map<string, BaseType>): (string * string) =
         let entityDeclaration = getEntityDeclaration entity typeNamePrefix defaultBaseClassName
         let explicitAttributeLines =
             entity.Attributes
@@ -279,7 +279,7 @@ module CSharpSourceGenerator =
             } |> indentLines
         let generatedCode =
             seq {
-                yield! usingNamespaces |> List.map (fun ns -> sprintf "using %s;" ns)
+                yield! usingNamespaces |> Seq.map (fun ns -> sprintf "using %s;" ns)
                 yield ""
                 yield sprintf "namespace %s" generatedNamespace
                 yield "{"
@@ -295,7 +295,7 @@ module CSharpSourceGenerator =
             } |> joinLines
         let entityName = getIdentifierNameWithPrefix entity.Name typeNamePrefix
         (entityName, generatedCode)
-    let getEntityDefinitions (schema: Schema) (generatedNamespace: string) (usingNamespaces: string list) (typeNamePrefix: string) (defaultBaseClassName: string option): (string * string) list =
+    let getEntityDefinitions (schema: Schema) (generatedNamespace: string) (usingNamespaces: string seq) (typeNamePrefix: string) (defaultBaseClassName: string option): (string * string) list =
         let namedTypeOverrides = getNamedTypeOverrideMap schema.Types
         schema.Entities
         |> List.map (fun e -> getEntityDefinition (Some schema) e generatedNamespace usingNamespaces typeNamePrefix defaultBaseClassName namedTypeOverrides)
