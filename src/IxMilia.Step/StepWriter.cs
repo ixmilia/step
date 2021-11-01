@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using IxMilia.Step.Items;
+using IxMilia.Step.Schemas.ExplicitDraughting;
 using IxMilia.Step.Syntax;
 using IxMilia.Step.Tokens;
 
@@ -13,7 +13,7 @@ namespace IxMilia.Step
         private int _currentLineLength;
         private bool _honorLineLength = true;
         private bool _inlineReferences;
-        private Dictionary<StepRepresentationItem, int> _itemMap;
+        private Dictionary<StepItem, int> _itemMap;
         private int _nextId;
 
         private const int MaxLineLength = 80;
@@ -21,7 +21,7 @@ namespace IxMilia.Step
         public StepWriter(StepFile stepFile, bool inlineReferences)
         {
             _file = stepFile;
-            _itemMap = new Dictionary<StepRepresentationItem, int>();
+            _itemMap = new Dictionary<StepItem, int>();
             _inlineReferences = inlineReferences;
         }
 
@@ -65,7 +65,7 @@ namespace IxMilia.Step
             WriteNewLine(builder);
         }
 
-        private int WriteItem(StepRepresentationItem item, StringBuilder builder)
+        private int WriteItem(StepItem item, StringBuilder builder)
         {
             if (!_inlineReferences)
             {
@@ -129,12 +129,12 @@ namespace IxMilia.Step
             _currentLineLength = 0;
         }
 
-        private StepSyntax GetItemSyntax(StepRepresentationItem item, int expectedId)
+        private StepSyntax GetItemSyntax(StepItem item, int expectedId)
         {
             if (!_itemMap.ContainsKey(item))
             {
                 var parameters = new StepSyntaxList(-1, -1, item.GetParameters(this));
-                var syntax = new StepSimpleItemSyntax(item.ItemType.GetItemTypeString(), parameters);
+                var syntax = new StepSimpleItemSyntax(item.ItemTypeString, parameters);
                 _itemMap.Add(item, expectedId);
                 return syntax;
             }
@@ -144,12 +144,12 @@ namespace IxMilia.Step
             }
         }
 
-        public StepSyntax GetItemSyntax(StepRepresentationItem item)
+        public StepSyntax GetItemSyntax(StepItem item)
         {
             if (_inlineReferences)
             {
                 var parameters = new StepSyntaxList(-1, -1, item.GetParameters(this));
-                return new StepSimpleItemSyntax(item.ItemType.GetItemTypeString(), parameters);
+                return new StepSimpleItemSyntax(item.ItemTypeString, parameters);
             }
             else
             {
@@ -157,7 +157,25 @@ namespace IxMilia.Step
             }
         }
 
-        public StepSyntax GetItemSyntaxOrAuto(StepRepresentationItem item)
+        public StepSyntax GetItemSyntax(double value)
+        {
+            return new StepRealSyntax(value);
+        }
+
+        public StepSyntax GetItemSyntax(string value)
+        {
+            return new StepStringSyntax(value);
+        }
+
+        public StepSyntax GetItemSyntax(StepVector3D vector)
+        {
+            return new StepSyntaxList(
+                new StepRealSyntax(vector.X),
+                new StepRealSyntax(vector.Y),
+                new StepRealSyntax(vector.Z));
+        }
+
+        public StepSyntax GetItemSyntaxOrAuto(StepItem item)
         {
             return item == null
                 ? new StepAutoSyntax()

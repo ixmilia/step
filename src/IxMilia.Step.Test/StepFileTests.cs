@@ -1,6 +1,6 @@
 using System.IO;
 using System.Linq;
-using IxMilia.Step.Items;
+using IxMilia.Step.Schemas.ExplicitDraughting;
 using Xunit;
 
 namespace IxMilia.Step.Test
@@ -10,27 +10,33 @@ namespace IxMilia.Step.Test
         [Fact]
         public void FileSystemAPITest()
         {
-            var filePath = Path.GetTempFileName();
-            var stepFile = new StepFile();
-            var point = new StepCartesianPoint("some-label", 1.0, 2.0, 3.0);
-            stepFile.Items.Add(point);
-
-            // round trip
-            stepFile.Save(filePath);
-            var stepFile2 = StepFile.Load(filePath);
-
-            var point2 = (StepCartesianPoint)stepFile2.Items.Single();
-            Assert.Equal(point.Name, point2.Name);
-            Assert.Equal(point.X, point2.X);
-            Assert.Equal(point.Y, point2.Y);
-            Assert.Equal(point.Z, point2.Z);
-
+            string filePath = null;
             try
             {
-                File.Delete(filePath);
+                filePath = Path.GetTempFileName();
+                var stepFile = new StepFile();
+                var point = new StepCartesianPoint("some-label", new StepVector3D(1.0, 2.0, 3.0));
+                stepFile.Items.Add(point);
+
+                // round trip
+                stepFile.Save(filePath);
+                var stepFile2 = StepFile.Load(filePath);
+
+                var point2 = (StepCartesianPoint)stepFile2.Items.Single();
+                Assert.Equal(point.Name, point2.Name);
+                Assert.Equal(point.Coordinates.X, point2.Coordinates.X);
+                Assert.Equal(point.Coordinates.Y, point2.Coordinates.Y);
+                Assert.Equal(point.Coordinates.Z, point2.Coordinates.Z);
             }
-            catch
+            finally
             {
+                try
+                {
+                    File.Delete(filePath);
+                }
+                catch
+                {
+                }
             }
         }
     }

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -17,18 +18,27 @@ namespace IxMilia.Step.Generator
         public void Execute(GeneratorExecutionContext context)
         {
             var schemaContent = context.AdditionalFiles.Single(f => Path.GetFileName(f.Path) == "minimal_201.exp").GetText().ToString();
+            var entityDefinitions = GenerateSource(schemaContent);
+            foreach ((var entityName, var entityDefinition) in entityDefinitions)
+            {
+                context.AddSource(entityName, SourceText.From(entityDefinition, Encoding.UTF8));
+            }
+        }
+
+        public static IEnumerable<(string name, string contents)> GenerateSource(string schemaContent)
+        {
             var schema = SchemaParser.SchemaParser.RunParser(schemaContent);
-            var entityDefinitions = CSharpSourceGenerator.getEntityDefinitions(
+            var entityDefinitions = CSharpSourceGenerator.getAllFileDefinitions(
                 schema,
                 generatedNamespace: "IxMilia.Step.Schemas.ExplicitDraughting",
-                usingNamespaces: new[] { "System" },
+                usingNamespaces: new[] { "System", "System.Collections.Generic", "IxMilia.Step.Syntax" },
                 typeNamePrefix: "Step",
                 defaultBaseClassName: "StepItem");
             foreach (var entityDefinitionPair in entityDefinitions)
             {
                 var entityName = entityDefinitionPair.Item1;
                 var entityDefinition = entityDefinitionPair.Item2;
-                context.AddSource($"{entityName}.Generated.cs", SourceText.From(entityDefinition, Encoding.UTF8));
+                yield return ($"{entityName}.Generated.cs", entityDefinition);
             }
         }
     }

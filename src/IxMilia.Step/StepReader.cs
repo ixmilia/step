@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using IxMilia.Step.Items;
+using IxMilia.Step.Schemas.ExplicitDraughting;
 using IxMilia.Step.Syntax;
 
 namespace IxMilia.Step
@@ -27,9 +27,8 @@ namespace IxMilia.Step
                 ApplyHeaderMacro(headerMacro);
             }
 
-            var itemMap = new Dictionary<int, StepRepresentationItem>();
+            var itemMap = new Dictionary<int, StepItem>();
             var binder = new StepBinder(itemMap);
-            StepRepresentationItem.UnsupportedItemTypes.Clear();
             foreach (var itemInstance in fileSyntax.Data.ItemInstances)
             {
                 if (itemMap.ContainsKey(itemInstance.Id))
@@ -37,7 +36,7 @@ namespace IxMilia.Step
                     throw new StepReadException("Duplicate item instance", itemInstance.Line, itemInstance.Column);
                 }
 
-                var item = StepRepresentationItem.FromTypedParameter(binder, itemInstance.SimpleItemInstance);
+                var item = StepItemBuilder.FromTypedParameter(binder, itemInstance.SimpleItemInstance);
                 if (item != null)
                 {
                     itemMap.Add(itemInstance.Id, item);
@@ -46,6 +45,11 @@ namespace IxMilia.Step
             }
 
             binder.BindRemainingValues();
+
+            foreach (var item in _file.Items)
+            {
+                item.ValidateDomainRules();
+            }
 
             return _file;
         }

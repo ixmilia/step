@@ -13,6 +13,8 @@ Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "IxMilia.Step.SchemaParser.T
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IxMilia.Step.Generator", "src\IxMilia.Step.Generator\IxMilia.Step.Generator.csproj", "{65722330-093E-433C-8C48-6E64384ADBDB}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IxMilia.Step.Generator.Console", "src\IxMilia.Step.Generator.Console\IxMilia.Step.Generator.Console.csproj", "{420157AF-B660-48B9-AEEA-1E851A1D916A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{65722330-093E-433C-8C48-6E64384ADBDB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{65722330-093E-433C-8C48-6E64384ADBDB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{65722330-093E-433C-8C48-6E64384ADBDB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{420157AF-B660-48B9-AEEA-1E851A1D916A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{420157AF-B660-48B9-AEEA-1E851A1D916A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{420157AF-B660-48B9-AEEA-1E851A1D916A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{420157AF-B660-48B9-AEEA-1E851A1D916A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

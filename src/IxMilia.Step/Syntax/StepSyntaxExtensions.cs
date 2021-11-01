@@ -1,6 +1,7 @@
 using System;
 using System.Globalization;
 using System.Linq;
+using IxMilia.Step.Schemas.ExplicitDraughting;
 
 namespace IxMilia.Step.Syntax
 {
@@ -56,7 +57,7 @@ namespace IxMilia.Step.Syntax
             }
         }
 
-        public static double GetRealVavlue(this StepSyntax syntax)
+        public static double GetRealValue(this StepSyntax syntax)
         {
             if (syntax.SyntaxType != StepSyntaxType.Real)
             {
@@ -66,6 +67,8 @@ namespace IxMilia.Step.Syntax
             return ((StepRealSyntax)syntax).Value;
         }
 
+        public static double GetDoubleValue(this StepSyntax syntax) => syntax.GetRealValue();
+
         public static int GetIntegerValue(this StepSyntax syntax)
         {
             if (syntax.SyntaxType != StepSyntaxType.Integer)
@@ -74,6 +77,16 @@ namespace IxMilia.Step.Syntax
             }
 
             return ((StepIntegerSyntax)syntax).Value;
+        }
+
+        public static StepVector3D GetStepVector3DValue(this StepSyntax syntax)
+        {
+            var list = syntax.GetValueList();
+            list.AssertListCount(1, 3);
+            var x = list.GetRealValueOrDefault(0);
+            var y = list.GetRealValueOrDefault(1);
+            var z = list.GetRealValueOrDefault(2);
+            return new StepVector3D(x, y, z);
         }
 
         public static string GetEnumerationValue(this StepSyntax syntax)
@@ -116,7 +129,7 @@ namespace IxMilia.Step.Syntax
 
             if (index < syntaxList.Values.Count)
             {
-                return syntaxList.Values[index].GetRealVavlue();
+                return syntaxList.Values[index].GetRealValue();
             }
             else
             {

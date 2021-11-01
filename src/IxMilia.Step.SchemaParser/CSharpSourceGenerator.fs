@@ -40,6 +40,25 @@ module CSharpSourceGenerator =
             match simpleType with
             | _ -> failwith "not supported"
         else None
+    let rec private isBuiltInType (baseType: BaseType) (namedTypeOverrides: Map<string, BaseType>) =
+        match baseType with
+        | SimpleType _ -> true
+        | NamedType n ->
+            match Map.tryFind n namedTypeOverrides with
+            | Some _ -> true
+            | None -> false
+        | AggregationType a ->
+            match a with
+            | ListType (typ, lowerBound, upperBound, _isUnique) ->
+                match (lowerBound, upperBound) with
+                | (LiteralValue(IntegerLiteral(lower)), Some(LiteralValue(IntegerLiteral(upper)))) when lower >= 0L && upper = 3L ->
+                    match typ with
+                    | SimpleType _
+                    | NamedType "length_measure" -> true
+                    | _ -> false
+                | _ -> false
+            | _ -> false
+        | _ -> false
     let getBaseTypeName (baseType: BaseType) (typeNamePrefix: string) (namedTypeOverrides: Map<string, BaseType>) =
         let rec getBaseTypeName' (baseType: BaseType) (typeNamePrefix: string) (namedTypeOverrides: Map<string, BaseType>) (normalizeName: bool) =
             match baseType with
@@ -156,7 +175,7 @@ module CSharpSourceGenerator =
         let attributeName = getIdentifierName attr.AttributeDeclaration.Name
         let fieldName = getFieldName attr.AttributeDeclaration.Name
         seq {
-            yield sprintf "private %s %s;" attributeType fieldName
+            yield sprintf "internal %s %s;" attributeType fieldName
             yield sprintf "public %s %s" attributeType attributeName
             yield "{"
             yield sprintf "get => %s;" fieldName |> indentLine
@@ -193,10 +212,75 @@ module CSharpSourceGenerator =
             |> List.map toLines
             |> Seq.concat
         seq {
-            yield "protected override void ValidateDomainRules()"
+            yield "internal override void ValidateDomainRules()"
             yield "{"
             yield "base.ValidateDomainRules();" |> indentLine
             yield! allDomainRules |> indentLines
+            yield "}"
+        } |> joinLines
+    let rec private getEntityAndParentAttributes (schema: Schema) (entity: Entity) =
+        let parentAttributes =
+            match entity.SubTypes with
+            | [] -> []
+            | subTypeName::[] ->
+                let parentEntity = schema.Entities |> List.find (fun e -> e.Name = subTypeName)
+                let (p, pp) = getEntityAndParentAttributes schema parentEntity
+                List.append p pp
+            | _ -> failwith "multiple inheritance nyi"
+        (parentAttributes, entity.Attributes)
+    let private getReferencedItems (schema: Schema) (entity: Entity) (defaultBaseClassName: string) (namedTypeOverrides: Map<string, BaseType>) =
+        seq {
+            yield sprintf "internal override IEnumerable<%s> GetReferencedItems()" defaultBaseClassName
+            yield "{"
+            yield! getEntityAndParentAttributes schema entity
+                   |> snd
+                   |> Seq.filter (fun attribute -> not (isBuiltInType attribute.Type.Type namedTypeOverrides))
+                   |> Seq.map (fun attribute -> sprintf "yield return %s;" (getIdentifierName attribute.AttributeDeclaration.Name))
+                   |> indentLines
+            yield indentLine "yield break;"
+            yield "}"
+        } |> joinLines
+    let private getParametersFunction (schema: Schema) (entity: Entity) =
+        seq {
+            yield "internal override IEnumerable<StepSyntax> GetParameters(StepWriter writer)"
+            yield "{"
+            yield! seq {
+                yield "foreach (var parameter in base.GetParameters(writer))"
+                yield "{"
+                yield indentLine "yield return parameter;"
+                yield "}"
+            } |> indentLines
+            yield ""
+            yield! getEntityAndParentAttributes schema entity
+                   |> snd
+                   |> Seq.map (fun attribute -> sprintf "yield return writer.GetItemSyntax(%s);" (getIdentifierName attribute.AttributeDeclaration.Name))
+                   |> indentLines
+            yield "}"
+        } |> joinLines
+    let private getCreationFromSyntaxFunction (schema: Schema) (entity: Entity) (typeNamePrefix: string) (namedTypeOverrides: Map<string, BaseType>) =
+        let entityName = getIdentifierNameWithPrefix entity.Name typeNamePrefix
+        let (parentEntityAttributes, thisEntityAttributes) = getEntityAndParentAttributes schema entity
+        let allAttributeCount = parentEntityAttributes.Length + thisEntityAttributes.Length
+        let getSettersFromAttributes (attributes: ExplicitAttribute list) (indexOffset: int) =
+            attributes
+            |> Seq.mapi (fun i e ->
+                let fieldName = getFieldName e.AttributeDeclaration.Name
+                let index = i + indexOffset
+                let baseTypeName = getBaseTypeName e.Type.Type typeNamePrefix namedTypeOverrides
+                if isBuiltInType e.Type.Type namedTypeOverrides then
+                    sprintf "item.%s = syntaxList.Values[%d].Get%sValue();" fieldName index (getIdentifierName baseTypeName)
+                else
+                    sprintf "binder.BindValue(syntaxList.Values[%d], value => item.%s = value.AsType<%s>());" index fieldName baseTypeName)
+        seq {
+            yield sprintf "internal static new %s CreateFromSyntaxList(StepBinder binder, StepSyntaxList syntaxList)" entityName
+            yield "{"
+            yield! seq {
+                yield sprintf "syntaxList.AssertListCount(%d);" allAttributeCount
+                yield sprintf "var item = new %s();" entityName
+                yield! getSettersFromAttributes parentEntityAttributes 0
+                yield! getSettersFromAttributes thisEntityAttributes parentEntityAttributes.Length
+                yield "return item;"
+            } |> indentLines
             yield "}"
         } |> joinLines
     let getSchemaTypeName (schemaType: SchemaType) (typeNamePrefix: string) =
@@ -219,19 +303,15 @@ module CSharpSourceGenerator =
         | AggregationType a -> Some ""
         | SimpleType s -> generateSimpleType s
         | NamedType n -> Some ""
-    let getEntityDeclaration (entity: Entity) (typeNamePrefix: string) (defaultBaseClassName: string option): string =
+    let getEntityDeclaration (entity: Entity) (typeNamePrefix: string) (defaultBaseClassName: string): string =
         let entityName = getIdentifierNameWithPrefix entity.Name typeNamePrefix
-        let subTypeDefinition =
-            match entity.SubTypes with
-            | [] -> defaultBaseClassName
-            | subTypeName::[] -> Some(getIdentifierNameWithPrefix subTypeName typeNamePrefix)
-            | _ -> failwith "multiple inheritance NYI"
         let subTypeDefinitionText =
-            match subTypeDefinition with
-            | Some d -> sprintf " : %s" d
-            | None -> ""
+            match entity.SubTypes with
+            | [] -> sprintf " : %s" defaultBaseClassName
+            | subTypeName::[] -> sprintf " : %s" (getIdentifierNameWithPrefix subTypeName typeNamePrefix)
+            | _ -> failwith "multiple inheritance NYI"
         sprintf "public class %s%s" entityName subTypeDefinitionText
-    let getEntityDefinition (schema: Schema option) (entity: Entity) (generatedNamespace: string) (usingNamespaces: string seq) (typeNamePrefix: string) (defaultBaseClassName: string option) (namedTypeOverrides: Map<string, BaseType>): (string * string) =
+    let getEntityDefinition (schema: Schema) (entity: Entity) (generatedNamespace: string) (usingNamespaces: string seq) (typeNamePrefix: string) (defaultBaseClassName: string) (namedTypeOverrides: Map<string, BaseType>): (string * string) =
         let entityDeclaration = getEntityDeclaration entity typeNamePrefix defaultBaseClassName
         let explicitAttributeLines =
             entity.Attributes
@@ -247,33 +327,29 @@ module CSharpSourceGenerator =
             |> indentLines
         let allAttributeLines = Seq.append explicitAttributeLines derivedAttributeLines
         let validationRuleFunction = getDomainRuleValidationFunction entity.DomainRules |> toLines |> indentLines |> joinLines
-        let rec getEntityAndParentAttributes (entity: Entity) =
-            let parentAttributes =
-                match (schema, entity.SubTypes) with
-                | (_, []) -> []
-                | (Some schema, subTypeName::[]) ->
-                    let parentEntity = schema.Entities |> List.find (fun e -> e.Name = subTypeName)
-                    let (p, pp) = getEntityAndParentAttributes parentEntity
-                    List.append pp p
-                | (None, _) -> []
-                | (_, _) -> failwith "multiple inheritance nyi"
-            (entity.Attributes, parentAttributes)
-        let (thisEntityAttributes, parentEntityAttributes) = getEntityAndParentAttributes entity
+        let getReferencedItems = getReferencedItems schema entity defaultBaseClassName namedTypeOverrides |> toLines |> indentLines |> joinLines
+        let getParametersFunction = getParametersFunction schema entity |> toLines |> indentLines |> joinLines
+        let entityCreationFunction = getCreationFromSyntaxFunction schema entity typeNamePrefix namedTypeOverrides |> toLines |> indentLines |> joinLines
+        let (parentEntityAttributes, thisEntityAttributes) = getEntityAndParentAttributes schema entity
         let getAttributesAsArgumentTexts (attributes: ExplicitAttribute list) =
             attributes
             |> List.map (fun a -> sprintf "%s %s" (getBaseTypeName a.Type.Type typeNamePrefix namedTypeOverrides) (a.AttributeDeclaration.Name |> getParameterName))
         let thisArgumentTexts = getAttributesAsArgumentTexts thisEntityAttributes
         let parentArgumentTexts = getAttributesAsArgumentTexts parentEntityAttributes
         let allArgumentsText = List.append parentArgumentTexts thisArgumentTexts |> joinWith ", "
-        let fieldAssignmentLines =
-            entity.Attributes
-            |> List.map (fun a -> sprintf "%s = %s;" (getFieldName a.AttributeDeclaration.Name) (getParameterName a.AttributeDeclaration.Name))
         let constructorLines =
+            let entityName = getIdentifierNameWithPrefix entity.Name typeNamePrefix
             seq {
-                yield sprintf "public %s(%s)" (getIdentifierNameWithPrefix entity.Name typeNamePrefix) allArgumentsText
-                yield sprintf "%s: base(%s)" indentation (joinWith ", " (parentEntityAttributes |> List.map (fun a -> a.AttributeDeclaration.Name) |> List.map getParameterName))
+                yield sprintf "internal %s()" entityName
                 yield "{"
-                yield! fieldAssignmentLines |> indentLines
+                yield "}"
+                yield ""
+                yield sprintf "public %s(%s)" entityName allArgumentsText
+                yield "{"
+                yield! Seq.append (parentEntityAttributes |> Seq.map (fun a -> a.AttributeDeclaration.Name))
+                                  (thisEntityAttributes |> Seq.map (fun a -> a.AttributeDeclaration.Name))
+                       |> Seq.map (fun name -> sprintf "%s = %s;" (getFieldName name) (getParameterName name))
+                       |> indentLines
                 yield "ValidateDomainRules();" |> indentLine
                 yield "}"
             } |> indentLines
@@ -285,17 +361,85 @@ module CSharpSourceGenerator =
                 yield "{"
                 yield! entityDeclaration |> toLines |> indentLines
                 yield "{" |> indentLine
+                yield sprintf "public override string ItemTypeString => \"%s\";" (entity.Name.ToUpperInvariant()) |> indentLine |> indentLine
+                yield ""
                 yield! allAttributeLines |> indentLines
                 yield ""
                 yield! constructorLines |> indentLines
                 yield ""
                 yield! validationRuleFunction |> toLines |> indentLines
+                yield ""
+                yield! getReferencedItems |> toLines |> indentLines
+                yield ""
+                yield! getParametersFunction |> toLines |> indentLines
+                yield ""
+                yield! entityCreationFunction |> toLines |> indentLines
                 yield "}" |> indentLine
                 yield "}"
+                yield ""
             } |> joinLines
         let entityName = getIdentifierNameWithPrefix entity.Name typeNamePrefix
         (entityName, generatedCode)
-    let getEntityDefinitions (schema: Schema) (generatedNamespace: string) (usingNamespaces: string seq) (typeNamePrefix: string) (defaultBaseClassName: string option): (string * string) list =
+    let getEntityDefinitions (schema: Schema) (generatedNamespace: string) (usingNamespaces: string seq) (typeNamePrefix: string) (defaultBaseClassName: string): (string * string) list =
         let namedTypeOverrides = getNamedTypeOverrideMap schema.Types
         schema.Entities
-        |> List.map (fun e -> getEntityDefinition (Some schema) e generatedNamespace usingNamespaces typeNamePrefix defaultBaseClassName namedTypeOverrides)
+        |> List.map (fun e -> getEntityDefinition schema e generatedNamespace usingNamespaces typeNamePrefix defaultBaseClassName namedTypeOverrides)
+    let getFromItemSyntaxFile (schema: Schema) (generatedNamespace: string) (typeNamePrefix: string) (defaultBaseClassName: string): (string * string) =
+        let itemName = sprintf "%sBuilder" defaultBaseClassName
+        let content =
+            seq {
+                yield "using IxMilia.Step.Syntax;"
+                yield ""
+                yield sprintf "namespace %s" generatedNamespace
+                yield "{"
+                yield! seq {
+                    yield sprintf "internal static class %s" itemName
+                    yield "{"
+                    yield! seq {
+                        yield sprintf "internal static %s FromTypedParameter(StepBinder binder, StepItemSyntax itemSyntax)" defaultBaseClassName
+                        yield "{"
+                        yield! seq {
+                            yield sprintf "%s item = null;" defaultBaseClassName
+                            yield "if (itemSyntax is StepSimpleItemSyntax simpleItem)"
+                            yield "{"
+                            yield! seq {
+                                yield "switch (simpleItem.Keyword.ToUpperInvariant())"
+                                yield "{"
+                                yield! schema.Entities
+                                        |> Seq.map (fun entity ->
+                                            seq {
+                                                yield sprintf "case \"%s\":" (entity.Name.ToUpperInvariant())
+                                                yield! seq {
+                                                    yield sprintf "item = %s.CreateFromSyntaxList(binder, simpleItem.Parameters);" (getIdentifierNameWithPrefix entity.Name typeNamePrefix)
+                                                    yield "break;"
+                                                } |> indentLines;
+                                            })
+                                        |> Seq.concat
+                                        |> indentLines
+                                yield! seq {
+                                    yield "default:"
+                                    yield! seq {
+                                        yield "// TODO: track unsupported items"
+                                        yield "break;"
+                                    } |> indentLines
+                                } |> indentLines
+                                yield "}"
+                            } |> indentLines
+                            yield "}"
+                            yield "// TODO: else"
+                            yield ""
+                            yield "return item;"
+                        } |> indentLines
+                        yield "}"
+                    } |> indentLines
+                    yield "}"
+                } |> indentLines
+                yield "}"
+                yield ""
+            } |> joinLines
+        (itemName, content)
+    let getAllFileDefinitions (schema: Schema) (generatedNamespace: string) (usingNamespaces: string seq) (typeNamePrefix: string) (defaultBaseClassName: string): (string * string) list =
+        seq {
+            yield getFromItemSyntaxFile schema generatedNamespace typeNamePrefix defaultBaseClassName
+            yield! getEntityDefinitions schema generatedNamespace usingNamespaces typeNamePrefix defaultBaseClassName
+        } |> List.ofSeq

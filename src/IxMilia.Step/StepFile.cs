@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using IxMilia.Step.Items;
+using IxMilia.Step.Schemas.ExplicitDraughting;
 using IxMilia.Step.Syntax;
 
 namespace IxMilia.Step
@@ -36,14 +36,14 @@ namespace IxMilia.Step
         public HashSet<StepSchemaTypes> Schemas { get; }
         public List<string> UnsupportedSchemas { get; }
 
-        public List<StepRepresentationItem> Items { get; }
+        public List<StepItem> Items { get; }
 
         public StepFile()
         {
             Timestamp = DateTime.Now;
             Schemas = new HashSet<StepSchemaTypes>();
             UnsupportedSchemas = new List<string>();
-            Items = new List<StepRepresentationItem>();
+            Items = new List<StepItem>();
         }
 
         public static StepFile Load(string path)
@@ -97,10 +97,10 @@ namespace IxMilia.Step
         /// <summary>
         /// Gets all top-level items (i.e., not referenced by any other item) in the file.
         /// </summary>
-        public IEnumerable<StepRepresentationItem> GetTopLevelItems()
+        public IEnumerable<StepItem> GetTopLevelItems()
         {
-            var visitedItems = new HashSet<StepRepresentationItem>();
-            var referencedItems = new HashSet<StepRepresentationItem>();
+            var visitedItems = new HashSet<StepItem>();
+            var referencedItems = new HashSet<StepItem>();
             foreach (var item in Items)
             {
                 MarkReferencedItems(item, visitedItems, referencedItems);
@@ -109,7 +109,7 @@ namespace IxMilia.Step
             return Items.Where(item => !referencedItems.Contains(item));
         }
 
-        private static void MarkReferencedItems(StepRepresentationItem item, HashSet<StepRepresentationItem> visitedItems, HashSet<StepRepresentationItem> referencedItems)
+        private static void MarkReferencedItems(StepItem item, HashSet<StepItem> visitedItems, HashSet<StepItem> referencedItems)
         {
             if (visitedItems.Add(item))
             {

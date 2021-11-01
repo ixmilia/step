@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "IxMilia.Step.Generator.Console": {
+      "commandName": "Project",
+      "workingDirectory": "D:\\ixmilia\\step\\src\\IxMilia.Step\\Schemas\\ExplicitDraughting\\Generated"
+    }
+  }
+}

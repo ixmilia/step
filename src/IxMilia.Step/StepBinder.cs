@@ -1,17 +1,17 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using IxMilia.Step.Items;
+using IxMilia.Step.Schemas.ExplicitDraughting;
 using IxMilia.Step.Syntax;
 
 namespace IxMilia.Step
 {
     internal class StepBinder
     {
-        private Dictionary<int, StepRepresentationItem> _itemMap;
+        private Dictionary<int, StepItem> _itemMap;
         private Dictionary<int, List<Tuple<StepSyntax, Action<StepBoundItem>>>> _unboundPointers = new Dictionary<int, List<Tuple<StepSyntax, Action<StepBoundItem>>>>();
 
-        public StepBinder(Dictionary<int, StepRepresentationItem> itemMap)
+        public StepBinder(Dictionary<int, StepItem> itemMap)
         {
             _itemMap = itemMap;
         }
@@ -21,7 +21,7 @@ namespace IxMilia.Step
             if (syntax is StepSimpleItemSyntax)
             {
                 var typedParameter = (StepSimpleItemSyntax)syntax;
-                var item = StepRepresentationItem.FromTypedParameter(this, typedParameter);
+                var item = StepItemBuilder.FromTypedParameter(this, typedParameter);
                 var boundItem = new StepBoundItem(item, syntax);
                 bindAction(boundItem);
             }

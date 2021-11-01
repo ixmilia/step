@@ -1,4 +1,4 @@
-using IxMilia.Step.Items;
+using IxMilia.Step.Schemas.ExplicitDraughting;
 using IxMilia.Step.Syntax;
 
 namespace IxMilia.Step
@@ -6,16 +6,16 @@ namespace IxMilia.Step
     internal class StepBoundItem
     {
         public StepSyntax CreatingSyntax { get; }
-        public StepRepresentationItem Item { get; }
+        public StepItem Item { get; }
         public bool IsAuto { get; private set; }
 
-        public StepBoundItem(StepRepresentationItem item, StepSyntax creatingSyntax)
+        public StepBoundItem(StepItem item, StepSyntax creatingSyntax)
         {
             CreatingSyntax = creatingSyntax;
             Item = item;
         }
 
-        public TItemType AsType<TItemType>() where TItemType : StepRepresentationItem
+        public TItemType AsType<TItemType>() where TItemType : StepItem
         {
             TItemType result = null;
             if (IsAuto)

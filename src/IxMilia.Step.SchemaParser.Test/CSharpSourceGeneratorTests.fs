@@ -31,9 +31,8 @@ let ``schema type names``() =
 
 [<Fact>]
 let ``entity declarations``() =
-    Assert.Equal("public class TypePrefixShape", getEntityDeclaration (Entity(EntityHead("shape", None, []), [ExplicitAttribute(ReferencedAttribute("size", None), AttributeType(SimpleType(RealType(None)), false))], [], [], [], [])) "TypePrefix" None)
-    Assert.Equal("public class TypePrefixShape : DefaultBaseEntity", getEntityDeclaration (Entity(EntityHead("shape", None, []), [ExplicitAttribute(ReferencedAttribute("size", None), AttributeType(SimpleType(RealType(None)), false))], [], [], [], [])) "TypePrefix" (Some "DefaultBaseEntity"))
-    Assert.Equal("public class TypePrefixShape : TypePrefixParentEntity", getEntityDeclaration (Entity(EntityHead("shape", None, ["parent_entity"]), [ExplicitAttribute(ReferencedAttribute("size", None), AttributeType(SimpleType(RealType(None)), false))], [], [], [], [])) "TypePrefix" (Some "DefaultBaseEntity"))
+    Assert.Equal("public class TypePrefixShape : DefaultBaseEntity", getEntityDeclaration (Entity(EntityHead("shape", None, []), [ExplicitAttribute(ReferencedAttribute("size", None), AttributeType(SimpleType(RealType(None)), false))], [], [], [], [])) "TypePrefix" "DefaultBaseEntity")
+    Assert.Equal("public class TypePrefixShape : TypePrefixParentEntity", getEntityDeclaration (Entity(EntityHead("shape", None, ["parent_entity"]), [ExplicitAttribute(ReferencedAttribute("size", None), AttributeType(SimpleType(RealType(None)), false))], [], [], [], [])) "TypePrefix" "DefaultBaseEntity")
 
 [<Fact>]
 let ``individual expressions as code``() =
@@ -60,15 +59,19 @@ let ``get type name overrides``() =
 
 [<Fact>]
 let ``entity definitions``() =
+    let parentEntity = Entity(EntityHead("parent_entity", None, []), [], [], [], [], [])
     let entity = Entity(EntityHead("shape", None, ["parent_entity"]), [ExplicitAttribute(ReferencedAttribute("size", None), AttributeType(SimpleType(RealType(None)), false)); ExplicitAttribute(ReferencedAttribute("size2", None), AttributeType(NamedType "real_value", false))], [], [], [], [DomainRule("wr1", GreaterEquals(ReferencedAttributeExpression(ReferencedAttribute("size", None)), LiteralValue(RealLiteral(0.0))))])
-    let actual = getEntityDefinition None entity "SomeNamespace" ["System"] "TypePrefix" None (Map.empty |> Map.add "real_value" (NamedType "float")) |> snd
+    let schema = Schema("id", "version", SchemaBody([], [], [entity; parentEntity], []))
+    let actual = getEntityDefinition schema entity "SomeNamespace" ["System"] "TypePrefix" "DefaultBaseClassName" (Map.empty |> Map.add "real_value" (NamedType "float")) |> snd
     Assert.Equal(@"using System;
 
 namespace SomeNamespace
 {
     public class TypePrefixShape : TypePrefixParentEntity
     {
-        private double _size;
+        public override string ItemTypeString => ""SHAPE"";
+
+        internal double _size;
         public double Size
         {
             get => _size;
@@ -79,7 +82,7 @@ namespace SomeNamespace
             }
         }
 
-        private float _size2;
+        internal float _size2;
         public float Size2
         {
             get => _size2;
@@ -91,15 +94,18 @@ namespace SomeNamespace
         }
 
 
+        internal TypePrefixShape()
+        {
+        }
+
         public TypePrefixShape(double size, float size2)
-            : base()
         {
             _size = size;
             _size2 = size2;
             ValidateDomainRules();
         }
 
-        protected override void ValidateDomainRules()
+        internal override void ValidateDomainRules()
         {
             base.ValidateDomainRules();
             if (!(Size >= 0))
@@ -107,8 +113,73 @@ namespace SomeNamespace
                 throw new StepValidationException(""The validation rule 'wr1:size>=0' was not satisfied"");
             }
         }
+
+        internal override IEnumerable<DefaultBaseClassName> GetReferencedItems()
+        {
+            yield break;
+        }
+
+        internal override IEnumerable<StepSyntax> GetParameters(StepWriter writer)
+        {
+            foreach (var parameter in base.GetParameters(writer))
+            {
+                yield return parameter;
+            }
+
+            yield return writer.GetItemSyntax(Size);
+            yield return writer.GetItemSyntax(Size2);
+        }
+
+        internal static new TypePrefixShape CreateFromSyntaxList(StepBinder binder, StepSyntaxList syntaxList)
+        {
+            syntaxList.AssertListCount(2);
+            var item = new TypePrefixShape();
+            item._size = syntaxList.Values[0].GetDoubleValue();
+            item._size2 = syntaxList.Values[1].GetFloatValue();
+            return item;
+        }
     }
-}".Trim().Replace("\r", ""), actual)
+}
+".TrimStart().Replace("\r", ""), actual)
+
+[<Fact>]
+let ``generate item generator function``() =
+    let parentEntity = Entity(EntityHead("parent_entity", None, []), [], [], [], [], [])
+    let entity = Entity(EntityHead("shape", None, ["parent_entity"]), [], [], [], [], [])
+    let schema = Schema("id", "version", SchemaBody([], [], [entity; parentEntity], []))
+    let actual = getFromItemSyntaxFile schema "SomeNamespace" "TypePrefix" "DefaultBaseClassName" |> snd
+    Assert.Equal(@"
+using IxMilia.Step.Syntax;
+
+namespace SomeNamespace
+{
+    internal static class DefaultBaseClassNameBuilder
+    {
+        internal static DefaultBaseClassName FromTypedParameter(StepBinder binder, StepItemSyntax itemSyntax)
+        {
+            DefaultBaseClassName item = null;
+            if (itemSyntax is StepSimpleItemSyntax simpleItem)
+            {
+                switch (simpleItem.Keyword.ToUpperInvariant())
+                {
+                    case ""SHAPE"":
+                        item = TypePrefixShape.CreateFromSyntaxList(binder, simpleItem.Parameters);
+                        break;
+                    case ""PARENT_ENTITY"":
+                        item = TypePrefixParentEntity.CreateFromSyntaxList(binder, simpleItem.Parameters);
+                        break;
+                    default:
+                        // TODO: track unsupported items
+                        break;
+                }
+            }
+            // TODO: else
+
+            return item;
+        }
+    }
+}
+".TrimStart().Replace("\r", ""), actual)
 
 //[<Fact>] // only used for diagnostics
 let ``generate code for minimal schema``() =
@@ -117,7 +188,7 @@ let ``generate code for minimal schema``() =
     | Failure(errorMessage, _, _) -> failwith errorMessage
     | Success(schema, _, _) ->
         let generatedCode =
-            System.String.Join("\n\n", getEntityDefinitions schema "SomeNamespace" ["System"] "Step" (Some "StepItem") |> List.map snd)
+            System.String.Join("\n\n", getEntityDefinitions schema "SomeNamespace" ["System"] "Step" "StepItem" |> List.map snd)
         Assert.Equal("TODO:verify expected", generatedCode)
 
 //[<Fact>] // only used for diagnostics
