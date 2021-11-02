@@ -27,9 +27,7 @@ try {
     dotnet restore || Fail "Error restoring."
 
     dotnet build --configuration $configuration "$PSScriptRoot/src/IxMilia.Step.Generator.Console/IxMilia.Step.Generator.Console.csproj" || Fail "Error building generator."
-    Push-Location "$PSScriptRoot/src/IxMilia.Step/Schemas/ExplicitDraughting/Generated"
     dotnet run --project "$PSScriptRoot/src/IxMilia.Step.Generator.Console/IxMilia.Step.Generator.Console.csproj"
-    Pop-Location
 
     dotnet build --configuration $configuration || Fail "Error building."
     if (-Not $noTest) {
