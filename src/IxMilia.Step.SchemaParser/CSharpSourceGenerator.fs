@@ -175,7 +175,7 @@ module CSharpSourceGenerator =
         let attributeName = getIdentifierName attr.AttributeDeclaration.Name
         let fieldName = getFieldName attr.AttributeDeclaration.Name
         seq {
-            yield sprintf "internal %s %s;" attributeType fieldName
+            yield sprintf "protected %s %s;" attributeType fieldName
             yield sprintf "public %s %s" attributeType attributeName
             yield "{"
             yield sprintf "get => %s;" fieldName |> indentLine

@@ -71,7 +71,7 @@ namespace SomeNamespace
     {
         public override string ItemTypeString => ""SHAPE"";
 
-        internal double _size;
+        protected double _size;
         public double Size
         {
             get => _size;
@@ -82,7 +82,7 @@ namespace SomeNamespace
             }
         }
 
-        internal float _size2;
+        protected float _size2;
         public float Size2
         {
             get => _size2;
