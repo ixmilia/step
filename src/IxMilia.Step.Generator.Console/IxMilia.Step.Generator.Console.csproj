@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\IxMilia.Step.Generator\IxMilia.Step.Generator.csproj" />
+    <ProjectReference Include="..\IxMilia.Step.SchemaParser\IxMilia.Step.SchemaParser.fsproj" />
   </ItemGroup>
 
 </Project>
