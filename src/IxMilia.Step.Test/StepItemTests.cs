@@ -36,7 +36,15 @@ END-ISO-10303-21;
                 {
                     var expectedValue = propertyInfo.GetValue(expected);
                     var actualValue = propertyInfo.GetValue(actual);
-                    if (!expectedValue.Equals(actualValue))
+                    if (expectedValue is null && actualValue is null)
+                    {
+                        // all good
+                    }
+                    else if (expectedValue is null)
+                    {
+                        Assert.True(false, $"Expected null but got {actual}");
+                    }
+                    else if (!expectedValue.Equals(actualValue))
                     {
                         AssertEquivalent(propertyInfo.GetValue(expected), propertyInfo.GetValue(actual));
                     }
@@ -56,9 +64,9 @@ END-ISO-10303-21;
         {
             var point = (StepCartesianPoint)ReadTopLevelItem("#1=CARTESIAN_POINT('name',(1.0,2.0,3.0));");
             Assert.Equal("name", point.Name);
-            Assert.Equal(1.0, point.Coordinates.X);
-            Assert.Equal(2.0, point.Coordinates.Y);
-            Assert.Equal(3.0, point.Coordinates.Z);
+            Assert.Equal(1.0, point.X);
+            Assert.Equal(2.0, point.Y);
+            Assert.Equal(3.0, point.Z);
         }
 
         [Fact]
@@ -66,9 +74,9 @@ END-ISO-10303-21;
         {
             var point = (StepCartesianPoint)ReadTopLevelItem("#1=CARTESIAN_POINT('name',(1.0));");
             Assert.Equal("name", point.Name);
-            Assert.Equal(1.0, point.Coordinates.X);
-            Assert.Equal(0.0, point.Coordinates.Y);
-            Assert.Equal(0.0, point.Coordinates.Z);
+            Assert.Equal(1.0, point.X);
+            Assert.Equal(0.0, point.Y);
+            Assert.Equal(0.0, point.Z);
         }
 
         [Fact]
@@ -83,16 +91,16 @@ END-ISO-10303-21;
         {
             var direction = (StepDirection)ReadTopLevelItem("#1=DIRECTION('name',(1.0,2.0,3.0));");
             Assert.Equal("name", direction.Name);
-            Assert.Equal(1.0, direction.DirectionRatios.X);
-            Assert.Equal(2.0, direction.DirectionRatios.Y);
-            Assert.Equal(3.0, direction.DirectionRatios.Z);
+            Assert.Equal(1.0, direction.X);
+            Assert.Equal(2.0, direction.Y);
+            Assert.Equal(3.0, direction.Z);
         }
 
         [Fact]
         public void ReadSubReferencedItemTest()
         {
             var vector = (StepVector)ReadTopLevelItem("#1=VECTOR('name',DIRECTION('',(0.0,0.0,1.0)),15.0);");
-            AssertEquivalent(new StepDirection("", new StepVector3D(0.0, 0.0, 1.0)), vector.Orientation);
+            AssertEquivalent(new StepDirection("", 0.0, 0.0, 1.0), vector.Orientation);
             Assert.Equal(15.0, vector.Magnitude);
         }
 
@@ -103,7 +111,7 @@ END-ISO-10303-21;
 #1=DIRECTION('',(0.0,0.0,1.0));
 #2=VECTOR('',#1,15.0);
 ");
-            AssertEquivalent(new StepDirection("", new StepVector3D(0.0, 0.0, 1.0)), vector.Orientation);
+            AssertEquivalent(new StepDirection("", 0.0, 0.0, 1.0), vector.Orientation);
             Assert.Equal(15.0, vector.Magnitude);
         }
 
@@ -114,7 +122,7 @@ END-ISO-10303-21;
 #1=VECTOR('',#2,15.0);
 #2=DIRECTION('',(0.0,0.0,1.0));
 ");
-            AssertEquivalent(new StepDirection("", new StepVector3D(0.0, 0.0, 1.0)), vector.Orientation);
+            AssertEquivalent(new StepDirection("", 0.0, 0.0, 1.0), vector.Orientation);
             Assert.Equal(15.0, vector.Magnitude);
         }
 
@@ -127,16 +135,16 @@ END-ISO-10303-21;
 #3=VECTOR('',#2,15.0);
 #4=LINE('',#1,#3);
 ");
-            AssertEquivalent(new StepCartesianPoint("", new StepVector3D(1.0, 2.0, 3.0)), line.Pnt);
+            AssertEquivalent(new StepCartesianPoint("", 1.0, 2.0, 3.0), line.Pnt);
             Assert.Equal(15.0, line.Dir.Magnitude);
-            AssertEquivalent(new StepDirection("", new StepVector3D(0.0, 0.0, 1.0)), line.Dir.Orientation);
+            AssertEquivalent(new StepDirection("", 0.0, 0.0, 1.0), line.Dir.Orientation);
         }
 
         [Fact]
         public void WriteLineTest()
         {
             var file = new StepFile();
-            file.Items.Add(new StepLine("", new StepCartesianPoint("", new StepVector3D(1.0, 2.0, 3.0)), new StepVector("", new StepDirection("", new StepVector3D(1.0, 0.0, 0.0)), 4.0)));
+            file.Items.Add(new StepLine("", new StepCartesianPoint("", 1.0, 2.0, 3.0), new StepVector("", new StepDirection("", 1.0, 0.0, 0.0), 4.0)));
             AssertFileContains(file, @"
 #1=CARTESIAN_POINT('',(1.0,2.0,3.0));
 #2=DIRECTION('',(1.0,0.0,0.0));
@@ -149,7 +157,7 @@ END-ISO-10303-21;
         public void WriteLineWithInlineReferencesTest()
         {
             var file = new StepFile();
-            file.Items.Add(new StepLine("", new StepCartesianPoint("", new StepVector3D(1.0, 2.0, 3.0)), new StepVector("", new StepDirection("", new StepVector3D(1.0, 0.0, 0.0)), 4.0)));
+            file.Items.Add(new StepLine("", new StepCartesianPoint("", 1.0, 2.0, 3.0), new StepVector("", new StepDirection("", 1.0, 0.0, 0.0), 4.0)));
             AssertFileContains(file, @"
 #1=LINE('',CARTESIAN_POINT('',(1.0,2.0,3.0)),VECTOR('',DIRECTION('',(1.0,0.0,0.0
 )),4.0));

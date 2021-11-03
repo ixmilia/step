@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using IxMilia.Step.Schemas.ExplicitDraughting;
 using IxMilia.Step.Syntax;
@@ -157,6 +158,12 @@ namespace IxMilia.Step
             }
         }
 
+        public StepSyntax GetItemSyntax(IList<double> list)
+        {
+            var itemSyntaxes = list.Select(value => GetItemSyntax(value));
+            return new StepSyntaxList(itemSyntaxes);
+        }
+
         public StepSyntax GetItemSyntax(double value)
         {
             return new StepRealSyntax(value);
@@ -165,14 +172,6 @@ namespace IxMilia.Step
         public StepSyntax GetItemSyntax(string value)
         {
             return new StepStringSyntax(value);
-        }
-
-        public StepSyntax GetItemSyntax(StepVector3D vector)
-        {
-            return new StepSyntaxList(
-                new StepRealSyntax(vector.X),
-                new StepRealSyntax(vector.Y),
-                new StepRealSyntax(vector.Z));
         }
 
         public StepSyntax GetItemSyntaxOrAuto(StepItem item)

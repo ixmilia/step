@@ -79,16 +79,6 @@ namespace IxMilia.Step.Syntax
             return ((StepIntegerSyntax)syntax).Value;
         }
 
-        public static StepVector3D GetStepVector3DValue(this StepSyntax syntax)
-        {
-            var list = syntax.GetValueList();
-            list.AssertListCount(1, 3);
-            var x = list.GetRealValueOrDefault(0);
-            var y = list.GetRealValueOrDefault(1);
-            var z = list.GetRealValueOrDefault(2);
-            return new StepVector3D(x, y, z);
-        }
-
         public static string GetEnumerationValue(this StepSyntax syntax)
         {
             if (syntax.SyntaxType != StepSyntaxType.Enumeration)

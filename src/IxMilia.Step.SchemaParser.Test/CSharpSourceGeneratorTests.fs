@@ -22,7 +22,7 @@ let ``base type names``() =
     Assert.Equal("string", getBaseTypeName (SimpleType(StringType(None, false))) "" Map.empty)
     Assert.Equal("TypePrefixSomeType", getBaseTypeName (NamedType "some_type") "TypePrefix" Map.empty)
     Assert.Equal("TypeFromTheOverrideMap", getBaseTypeName (NamedType "some_type") "TypePrefix" (Map.empty |> Map.add "some_type" (NamedType "TypeFromTheOverrideMap")))
-    Assert.Equal("TypePrefixVector3D", getBaseTypeName (AggregationType(ListType(SimpleType(RealType(None)), LiteralValue(IntegerLiteral(0L)), Some(LiteralValue(IntegerLiteral(3L))), false))) "TypePrefix" Map.empty)
+    Assert.Equal("ListWithMinimumAndMaximum<double>", getBaseTypeName (AggregationType(ListType(SimpleType(RealType(None)), LiteralValue(IntegerLiteral(0L)), Some(LiteralValue(IntegerLiteral(3L))), false))) "TypePrefix" Map.empty)
 
 [<Fact>]
 let ``schema type names``() =
@@ -31,8 +31,8 @@ let ``schema type names``() =
 
 [<Fact>]
 let ``entity declarations``() =
-    Assert.Equal("public class TypePrefixShape : DefaultBaseEntity", getEntityDeclaration (Entity(EntityHead("shape", None, []), [ExplicitAttribute(ReferencedAttribute("size", None), AttributeType(SimpleType(RealType(None)), false))], [], [], [], [])) "TypePrefix" "DefaultBaseEntity")
-    Assert.Equal("public class TypePrefixShape : TypePrefixParentEntity", getEntityDeclaration (Entity(EntityHead("shape", None, ["parent_entity"]), [ExplicitAttribute(ReferencedAttribute("size", None), AttributeType(SimpleType(RealType(None)), false))], [], [], [], [])) "TypePrefix" "DefaultBaseEntity")
+    Assert.Equal("public partial class TypePrefixShape : DefaultBaseEntity", getEntityDeclaration (Entity(EntityHead("shape", None, []), [ExplicitAttribute(ReferencedAttribute("size", None), AttributeType(SimpleType(RealType(None)), false))], [], [], [], [])) "TypePrefix" "DefaultBaseEntity")
+    Assert.Equal("public partial class TypePrefixShape : TypePrefixParentEntity", getEntityDeclaration (Entity(EntityHead("shape", None, ["parent_entity"]), [ExplicitAttribute(ReferencedAttribute("size", None), AttributeType(SimpleType(RealType(None)), false))], [], [], [], [])) "TypePrefix" "DefaultBaseEntity")
 
 [<Fact>]
 let ``individual expressions as code``() =
@@ -67,7 +67,7 @@ let ``entity definitions``() =
 
 namespace SomeNamespace
 {
-    public class TypePrefixShape : TypePrefixParentEntity
+    public partial class TypePrefixShape : TypePrefixParentEntity
     {
         public override string ItemTypeString => ""SHAPE"";
 

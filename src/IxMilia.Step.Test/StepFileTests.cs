@@ -15,7 +15,7 @@ namespace IxMilia.Step.Test
             {
                 filePath = Path.GetTempFileName();
                 var stepFile = new StepFile();
-                var point = new StepCartesianPoint("some-label", new StepVector3D(1.0, 2.0, 3.0));
+                var point = new StepCartesianPoint("some-label", 1.0, 2.0, 3.0);
                 stepFile.Items.Add(point);
 
                 // round trip
@@ -24,9 +24,9 @@ namespace IxMilia.Step.Test
 
                 var point2 = (StepCartesianPoint)stepFile2.Items.Single();
                 Assert.Equal(point.Name, point2.Name);
-                Assert.Equal(point.Coordinates.X, point2.Coordinates.X);
-                Assert.Equal(point.Coordinates.Y, point2.Coordinates.Y);
-                Assert.Equal(point.Coordinates.Z, point2.Coordinates.Z);
+                Assert.Equal(point.X, point2.X);
+                Assert.Equal(point.Y, point2.Y);
+                Assert.Equal(point.Z, point2.Z);
             }
             finally
             {

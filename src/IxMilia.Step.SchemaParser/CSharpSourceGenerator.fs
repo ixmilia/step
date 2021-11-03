@@ -19,10 +19,6 @@ module CSharpSourceGenerator =
     let getFieldName (nameFromSchema: string) = "_" + getParameterName nameFromSchema
     let getIdentifierNameWithPrefix (nameFromSchema: string) (typeNamePrefix: string) =
         typeNamePrefix + getIdentifierName nameFromSchema
-    let private getConstructedTypeName (constructedType: ConstructedType) (typeNamePrefix: string) =
-        match constructedType with
-        | EnumerationType values -> ""
-        | SelectType values -> ""
     let private getSimpleTypeName (simpleType: SimpleType) (_typeNamePrefix: string) =
         match simpleType with
         | BinaryType (_width, _isFixed) -> "byte[]"
@@ -47,41 +43,39 @@ module CSharpSourceGenerator =
             match Map.tryFind n namedTypeOverrides with
             | Some _ -> true
             | None -> false
+        | _ -> false
+    let rec private tryGetListTypeBounds (baseType: BaseType) (namedTypeOverrides: Map<string, BaseType>) =
+        match baseType with
+        | NamedType n ->
+            match Map.tryFind n namedTypeOverrides with
+            | Some namedTypeOverride -> tryGetListTypeBounds namedTypeOverride namedTypeOverrides
+            | None -> None
         | AggregationType a ->
             match a with
-            | ListType (typ, lowerBound, upperBound, _isUnique) ->
-                match (lowerBound, upperBound) with
-                | (LiteralValue(IntegerLiteral(lower)), Some(LiteralValue(IntegerLiteral(upper)))) when lower >= 0L && upper = 3L ->
-                    match typ with
-                    | SimpleType _
-                    | NamedType "length_measure" -> true
-                    | _ -> false
-                | _ -> false
-            | _ -> false
-        | _ -> false
+            | ListType (innerType, (LiteralValue(IntegerLiteral(lower))), upperBoundOpt, _isUnique) ->
+                match upperBoundOpt with
+                | Some(LiteralValue(IntegerLiteral(upper))) -> Some(innerType, lower, Some upper)
+                | None -> Some(innerType, lower, None)
+                | _ -> None
+            | _ -> None
+        | _ -> None
     let getBaseTypeName (baseType: BaseType) (typeNamePrefix: string) (namedTypeOverrides: Map<string, BaseType>) =
         let rec getBaseTypeName' (baseType: BaseType) (typeNamePrefix: string) (namedTypeOverrides: Map<string, BaseType>) (normalizeName: bool) =
-            match baseType with
-            | ConstructedType c -> "TODO"
-            | AggregationType a ->
-                match a with
-                | ListType (typ, lowerBound, upperBound, _isUnique) ->
-                    match (lowerBound, upperBound) with
-                    | (LiteralValue(IntegerLiteral(lower)), Some(LiteralValue(IntegerLiteral(upper)))) when lower >= 0L && upper = 3L ->
-                        match typ with
-                        | SimpleType(RealType(_))
-                        | NamedType "length_measure" ->
-                            getIdentifierNameWithPrefix "Vector3D" typeNamePrefix
-                        | _ -> "TODO"
-                    | _ -> "TODO"
-                | _ -> "TODO"
-            | SimpleType s -> getSimpleTypeName s typeNamePrefix
-            | NamedType n ->
-                match Map.tryFind n namedTypeOverrides with
-                | Some namedTypeOverride -> getBaseTypeName' namedTypeOverride "" namedTypeOverrides false
-                | None ->
-                    if normalizeName then getIdentifierNameWithPrefix n typeNamePrefix
-                    else n
+            match tryGetListTypeBounds baseType namedTypeOverrides with
+            | Some(innerType, _lower, _upperOpt) ->
+                let innerTypeName = getBaseTypeName' innerType typeNamePrefix namedTypeOverrides normalizeName
+                sprintf "ListWithMinimumAndMaximum<%s>" innerTypeName
+            | None ->
+                match baseType with
+                | ConstructedType _c -> "TODO"
+                | AggregationType _a -> "TODO"
+                | SimpleType s -> getSimpleTypeName s typeNamePrefix
+                | NamedType n ->
+                    match Map.tryFind n namedTypeOverrides with
+                    | Some namedTypeOverride -> getBaseTypeName' namedTypeOverride "" namedTypeOverrides false
+                    | None ->
+                        if normalizeName then getIdentifierNameWithPrefix n typeNamePrefix
+                        else n
         getBaseTypeName' baseType typeNamePrefix namedTypeOverrides true
     let getNamedTypeOverride (typ: BaseType): BaseType option =
         match typ with
@@ -175,16 +169,22 @@ module CSharpSourceGenerator =
         let attributeName = getIdentifierName attr.AttributeDeclaration.Name
         let fieldName = getFieldName attr.AttributeDeclaration.Name
         seq {
-            yield sprintf "protected %s %s;" attributeType fieldName
-            yield sprintf "public %s %s" attributeType attributeName
-            yield "{"
-            yield sprintf "get => %s;" fieldName |> indentLine
-            yield "set" |> indentLine
-            yield "{" |> indentLine
-            yield sprintf "%s = value;" fieldName |> indentLine |> indentLine
-            yield "ValidateDomainRules();" |> indentLine |> indentLine
-            yield "}" |> indentLine
-            yield "}"
+            match tryGetListTypeBounds attr.Type.Type namedTypeOverrides with
+            | Some(innerType, lower, Some upper) ->
+                let baseTypeName = getBaseTypeName innerType typeNamePrefix namedTypeOverrides
+                yield sprintf "public ListWithMinimumAndMaximum<%s> %s { get; } = new ListWithMinimumAndMaximum<%s>(%d, %d);" baseTypeName attributeName baseTypeName lower upper
+            // TODO: handle case where upper is None
+            | _ ->
+                yield sprintf "protected %s %s;" attributeType fieldName
+                yield sprintf "public %s %s" attributeType attributeName
+                yield "{"
+                yield sprintf "get => %s;" fieldName |> indentLine
+                yield "set" |> indentLine
+                yield "{" |> indentLine
+                yield sprintf "%s = value;" fieldName |> indentLine |> indentLine
+                yield "ValidateDomainRules();" |> indentLine |> indentLine
+                yield "}" |> indentLine
+                yield "}"
         } |> joinLines
     let private getDerivedAttributeDeclaration (attr: DerivedAttribute) (typeNamePrefix: string) (namedTypeOverrides: Map<string, BaseType>) =
         let attributeType = getBaseTypeName attr.Type.Type typeNamePrefix namedTypeOverrides
@@ -235,7 +235,17 @@ module CSharpSourceGenerator =
             yield! getEntityAndParentAttributes schema entity
                    |> snd
                    |> Seq.filter (fun attribute -> not (isBuiltInType attribute.Type.Type namedTypeOverrides))
-                   |> Seq.map (fun attribute -> sprintf "yield return %s;" (getIdentifierName attribute.AttributeDeclaration.Name))
+                   |> Seq.map (fun attribute ->
+                        seq {
+                            let attributeName = getIdentifierName attribute.AttributeDeclaration.Name
+                            match tryGetListTypeBounds attribute.Type.Type namedTypeOverrides with
+                            | Some _ ->
+                                // TODO: currently if it's a `List<T>` we don't return the sub-items
+                                ()
+                            | None ->
+                                yield sprintf "yield return %s;" attributeName
+                        })
+                   |> Seq.concat
                    |> indentLines
             yield indentLine "yield break;"
             yield "}"
@@ -261,24 +271,35 @@ module CSharpSourceGenerator =
         let entityName = getIdentifierNameWithPrefix entity.Name typeNamePrefix
         let (parentEntityAttributes, thisEntityAttributes) = getEntityAndParentAttributes schema entity
         let allAttributeCount = parentEntityAttributes.Length + thisEntityAttributes.Length
-        let getSettersFromAttributes (attributes: ExplicitAttribute list) (indexOffset: int) =
+        let getSetterLinesFromAttributes (attributes: ExplicitAttribute list) (indexOffset: int) =
             attributes
             |> Seq.mapi (fun i e ->
-                let fieldName = getFieldName e.AttributeDeclaration.Name
-                let index = i + indexOffset
-                let baseTypeName = getBaseTypeName e.Type.Type typeNamePrefix namedTypeOverrides
-                if isBuiltInType e.Type.Type namedTypeOverrides then
-                    sprintf "item.%s = syntaxList.Values[%d].Get%sValue();" fieldName index (getIdentifierName baseTypeName)
-                else
-                    sprintf "binder.BindValue(syntaxList.Values[%d], value => item.%s = value.AsType<%s>());" index fieldName baseTypeName)
+                seq {
+                    let fieldName = getFieldName e.AttributeDeclaration.Name
+                    let index = i + indexOffset
+                    match tryGetListTypeBounds e.Type.Type namedTypeOverrides with
+                    | Some(innerType, lower, Some upper) ->
+                        let attributeName = getIdentifierName e.AttributeDeclaration.Name
+                        let baseTypeName = getBaseTypeName innerType typeNamePrefix namedTypeOverrides
+                        yield sprintf "syntaxList.Values[%d].GetValueList().AssertListCount(%d, %d);" index lower upper
+                        yield sprintf "item.%s.AssignValues(syntaxList.Values[%d].GetValueList().Values.Select(value => value.Get%sValue()));" attributeName index (getIdentifierName baseTypeName)
+                    // TODO: handle case where upper is None
+                    | _ ->
+                        let baseTypeName = getBaseTypeName e.Type.Type typeNamePrefix namedTypeOverrides
+                        if isBuiltInType e.Type.Type namedTypeOverrides then
+                            yield sprintf "item.%s = syntaxList.Values[%d].Get%sValue();" fieldName index (getIdentifierName baseTypeName)
+                        else
+                            yield sprintf "binder.BindValue(syntaxList.Values[%d], value => item.%s = value.AsType<%s>());" index fieldName baseTypeName
+                })
+            |> Seq.concat
         seq {
             yield sprintf "internal static new %s CreateFromSyntaxList(StepBinder binder, StepSyntaxList syntaxList)" entityName
             yield "{"
             yield! seq {
                 yield sprintf "syntaxList.AssertListCount(%d);" allAttributeCount
                 yield sprintf "var item = new %s();" entityName
-                yield! getSettersFromAttributes parentEntityAttributes 0
-                yield! getSettersFromAttributes thisEntityAttributes parentEntityAttributes.Length
+                yield! getSetterLinesFromAttributes parentEntityAttributes 0
+                yield! getSetterLinesFromAttributes thisEntityAttributes parentEntityAttributes.Length
                 yield "return item;"
             } |> indentLines
             yield "}"
@@ -310,7 +331,7 @@ module CSharpSourceGenerator =
             | [] -> sprintf " : %s" defaultBaseClassName
             | subTypeName::[] -> sprintf " : %s" (getIdentifierNameWithPrefix subTypeName typeNamePrefix)
             | _ -> failwith "multiple inheritance NYI"
-        sprintf "public class %s%s" entityName subTypeDefinitionText
+        sprintf "public partial class %s%s" entityName subTypeDefinitionText
     let getEntityDefinition (schema: Schema) (entity: Entity) (generatedNamespace: string) (usingNamespaces: string seq) (typeNamePrefix: string) (defaultBaseClassName: string) (namedTypeOverrides: Map<string, BaseType>): (string * string) =
         let entityDeclaration = getEntityDeclaration entity typeNamePrefix defaultBaseClassName
         let explicitAttributeLines =
@@ -332,8 +353,14 @@ module CSharpSourceGenerator =
         let entityCreationFunction = getCreationFromSyntaxFunction schema entity typeNamePrefix namedTypeOverrides |> toLines |> indentLines |> joinLines
         let (parentEntityAttributes, thisEntityAttributes) = getEntityAndParentAttributes schema entity
         let getAttributesAsArgumentTexts (attributes: ExplicitAttribute list) =
+            let getArgumentType (baseType: BaseType) =
+                match tryGetListTypeBounds baseType namedTypeOverrides with
+                | Some(innerType, _lower, _upperOpt) ->
+                    let innerTypeName = getBaseTypeName innerType typeNamePrefix namedTypeOverrides
+                    sprintf "IEnumerable<%s>" innerTypeName
+                | _ -> getBaseTypeName baseType typeNamePrefix namedTypeOverrides
             attributes
-            |> List.map (fun a -> sprintf "%s %s" (getBaseTypeName a.Type.Type typeNamePrefix namedTypeOverrides) (a.AttributeDeclaration.Name |> getParameterName))
+            |> List.map (fun a -> sprintf "%s %s" (getArgumentType a.Type.Type) (a.AttributeDeclaration.Name |> getParameterName))
         let thisArgumentTexts = getAttributesAsArgumentTexts thisEntityAttributes
         let parentArgumentTexts = getAttributesAsArgumentTexts parentEntityAttributes
         let allArgumentsText = List.append parentArgumentTexts thisArgumentTexts |> joinWith ", "
@@ -346,9 +373,17 @@ module CSharpSourceGenerator =
                 yield ""
                 yield sprintf "public %s(%s)" entityName allArgumentsText
                 yield "{"
-                yield! Seq.append (parentEntityAttributes |> Seq.map (fun a -> a.AttributeDeclaration.Name))
-                                  (thisEntityAttributes |> Seq.map (fun a -> a.AttributeDeclaration.Name))
-                       |> Seq.map (fun name -> sprintf "%s = %s;" (getFieldName name) (getParameterName name))
+                yield! Seq.append parentEntityAttributes thisEntityAttributes
+                       |> Seq.map (fun attribute ->
+                            let name = attribute.AttributeDeclaration.Name
+                            let parameterName = getParameterName name
+                            match tryGetListTypeBounds attribute.Type.Type namedTypeOverrides with
+                            | Some _ ->
+                                let attributeName = getIdentifierName name
+                                sprintf "%s.AssignValues(%s);" attributeName parameterName
+                            | _ ->
+                                let fieldName = getFieldName name
+                                sprintf "%s = %s;" fieldName parameterName)
                        |> indentLines
                 yield "ValidateDomainRules();" |> indentLine
                 yield "}"

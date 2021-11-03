@@ -31,7 +31,7 @@ namespace IxMilia.Step.Generator
             var entityDefinitions = CSharpSourceGenerator.getAllFileDefinitions(
                 schema,
                 generatedNamespace: "IxMilia.Step.Schemas.ExplicitDraughting",
-                usingNamespaces: new[] { "System", "System.Collections.Generic", "IxMilia.Step.Syntax" },
+                usingNamespaces: new[] { "System", "System.Collections.Generic", "System.Linq", "IxMilia.Step.Collections", "IxMilia.Step.Syntax" },
                 typeNamePrefix: "Step",
                 defaultBaseClassName: "StepItem");
             foreach (var entityDefinitionPair in entityDefinitions)
