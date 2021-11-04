@@ -95,23 +95,13 @@ module CSharpSourceGenerator =
                 | _ -> None
             match expression with
             | LiteralValue l -> Some(l.ToString())
-            | ReferencedAttributeExpression r ->
-                let qualificationText =
-                    match r.Qualification with
-                    | Some(ReferencedAttributeQualificationWithAttribute r2)
-                    | Some(ReferencedAttributeQualificationWithGroup r2) ->
-                        match getValidationStatementPredicate' (ReferencedAttributeExpression r2) with
-                        | Some r2 -> Some("." + r2.ToString())
-                        | None -> None
-                    | None -> Some ""
-                match qualificationText with
-                | Some qt ->
-                    let attributeName =
-                        match r.Name.ToUpperInvariant() with
-                        | "SELF" -> "this"
-                        | _ -> r.Name |> getIdentifierName
-                    Some(attributeName + qt)
-                | None -> None
+            | Identifier i ->
+                match i.ToUpperInvariant() with
+                | "SELF" -> "this"
+                | _ -> getIdentifierName i
+                |> Some
+            | MemberAccess (a, b) -> testAndCombine (getValidationStatementPredicate' a) (b |> getIdentifierName |> Some) "{0}.{1}"
+            | GroupAccess (a, b) -> testAndCombine (getValidationStatementPredicate' a) (b |> getIdentifierName |> Some) "{0}\\{1}"
             | Negate n -> 
                 match getValidationStatementPredicate' n with
                 | Some p -> Some("-" + p)

@@ -269,14 +269,14 @@ module SchemaParser =
             |>> FunctionCallExpression
         let array_expression = between LEFT_BRACKET RIGHT_BRACKET (sepBy expr COMMA) |>> ArrayExpression
         let expression_index = LEFT_BRACKET >>. expr .>>. opt (COLON >>. expr) .>> RIGHT_BRACKET
-        let rec with_array_index_tail expression =
-            opt expression_index
-            |>> function
-            | Some(lowerBound, upperBoundOpt) -> (true, SubcomponentQualifiedExpression(expression, lowerBound, upperBoundOpt))
-            | None -> (false, expression)
-            >>= fun (recurse, expression) ->
-            if recurse then with_array_index_tail expression
-            else preturn expression
+        let rec with_trailing_expression expression =
+            choice [
+                attempt expression_index |>> (fun (lowerBound, upperBoundOpt) -> SubcomponentQualifiedExpression(expression, lowerBound, upperBoundOpt))
+                attempt (PERIOD >>. simple_id) |>> (fun id -> MemberAccess(expression, id))
+                attempt (BACKSLASH >>. simple_id) |>> (fun id -> GroupAccess(expression, id))
+            ]
+            >>= with_trailing_expression
+            <|> preturn expression
         let simple_expression =
             choice [
                 array_expression
@@ -284,9 +284,9 @@ module SchemaParser =
                 attempt function_call
                 between LEFT_PAREN RIGHT_PAREN expr
                 literal |>> LiteralValue
-                referenced_attribute |>> ReferencedAttributeExpression
+                simple_id |>> Identifier
             ]
-        opp.TermParser <- simple_expression >>= with_array_index_tail
+        opp.TermParser <- simple_expression >>= with_trailing_expression
         opp.AddOperator(InfixOperator(">", ws, 1, Associativity.Left, (fun a b -> Greater(a, b))))
         opp.AddOperator(InfixOperator(">=", ws, 1, Associativity.Left, (fun a b -> GreaterEquals(a, b))))
         opp.AddOperator(InfixOperator("<", ws, 1, Associativity.Left, (fun a b -> Less(a, b))))

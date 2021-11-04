@@ -136,7 +136,7 @@ let ``entity with derived``() =
     let schema = parse " SCHEMA s ; ENTITY square ; size : REAL ; DERIVE area : REAL := size * size ; END_ENTITY ; END_SCHEMA ; "
     let derived = schema.Entities.Single().DerivedAttributes.Single()
     Assert.Equal(ReferencedAttribute("area", None), derived.AttributeDeclaration)
-    Assert.Equal(Multiply(ReferencedAttribute("size", None) |> ReferencedAttributeExpression, ReferencedAttribute("size", None) |> ReferencedAttributeExpression), derived.Expression)
+    Assert.Equal(Multiply(Identifier "size", Identifier "size"), derived.Expression)
 
 [<Fact>]
 let ``multiple entities``() =
@@ -226,15 +226,15 @@ let ``entity with restriction``() =
     let schema = parse " SCHEMA s ; ENTITY e ; WHERE wr1 : SELF >= 0 ; END_ENTITY ; END_SCHEMA ; "
     let domainRule = schema.Entities.Single().DomainRules.Single()
     Assert.Equal("wr1", domainRule.Label)
-    Assert.Equal(GreaterEquals(ReferencedAttributeExpression(ReferencedAttribute("SELF", None)), LiteralValue(IntegerLiteral 0L)), domainRule.Expression)
+    Assert.Equal(GreaterEquals(Identifier "SELF", LiteralValue(IntegerLiteral 0L)), domainRule.Expression)
 
 [<Fact>]
 let ``entity with multiple restrictions``() =
     let schema = parse " SCHEMA s ; ENTITY  e ; WHERE wr1 : SELF >= 0 ; wr2 : (SELF > 0) AND (SELF < 10) ; END_ENTITY ; END_SCHEMA ; "
     let domainRules = schema.Entities.Single().DomainRules
     Assert.Equal(2, domainRules.Length)
-    Assert.Equal(GreaterEquals(ReferencedAttributeExpression(ReferencedAttribute("SELF", None)), LiteralValue(IntegerLiteral 0L)), domainRules.First().Expression)
-    Assert.Equal(And(Greater(ReferencedAttributeExpression(ReferencedAttribute("SELF", None)), LiteralValue(IntegerLiteral 0L)), Less(ReferencedAttributeExpression(ReferencedAttribute("SELF", None)), LiteralValue(IntegerLiteral 10L))), domainRules.Last().Expression)
+    Assert.Equal(GreaterEquals(Identifier "SELF", LiteralValue(IntegerLiteral 0L)), domainRules.First().Expression)
+    Assert.Equal(And(Greater(Identifier "SELF", LiteralValue(IntegerLiteral 0L)), Less(Identifier "SELF", LiteralValue(IntegerLiteral 10L))), domainRules.Last().Expression)
 
 [<Fact>]
 let ``entity with subtype``() =
@@ -274,14 +274,14 @@ let ``expression with function``() =
 
 [<Fact>]
 let ``expression with qualified attribute``() =
-    Assert.Equal(ReferencedAttributeExpression(ReferencedAttribute("SELF", Some(ReferencedAttributeQualificationWithGroup(ReferencedAttribute("a", Some(ReferencedAttributeQualificationWithAttribute(ReferencedAttribute("b", None)))))))), parseExpr @"SELF\a.b")
-    Assert.Equal(ReferencedAttributeExpression(ReferencedAttribute("a", None)), parseExpr @"a")
-    Assert.Equal(ReferencedAttributeExpression(ReferencedAttribute("SELF", None)), parseExpr @"SELF")
+    Assert.Equal(MemberAccess(GroupAccess(Identifier "SELF", "a"), "b"), parseExpr @"SELF\a.b")
+    Assert.Equal(Identifier "a", parseExpr @"a")
+    Assert.Equal(Identifier "SELF", parseExpr @"SELF")
 
 [<Fact>]
 let ``expression identifier that starts with 'self'``() =
     let expr = parseExpr "self_but_not_really"
-    Assert.Equal(ReferencedAttributeExpression(ReferencedAttribute("self_but_not_really", None)), expr)
+    Assert.Equal(Identifier "self_but_not_really", expr)
 
 [<Fact>]
 let ``derived qualified attribute``() =
@@ -292,17 +292,17 @@ let ``derived qualified attribute``() =
 let ``entity with complex restriction``() =
     let schema = parse "SCHEMA s ; ENTITY e ; WHERE wr1 : 'asdf.jkl' IN TYPEOF ( foo.bar ) ; END_ENTITY ; END_SCHEMA ; "
     let expr = schema.Entities.Single().DomainRules.Single().Expression
-    Assert.Equal(In(LiteralValue(StringLiteral "asdf.jkl"), FunctionCallExpression(FunctionCall("TYPEOF", [ReferencedAttributeExpression(ReferencedAttribute("foo", Some(ReferencedAttributeQualificationWithAttribute(ReferencedAttribute("bar", None)))))]))), expr)
+    Assert.Equal(In(LiteralValue(StringLiteral "asdf.jkl"), FunctionCallExpression(FunctionCall("TYPEOF", [MemberAccess(Identifier "foo", "bar")]))), expr)
 
 [<Fact>]
 let ``parse query expression``() =
     let expr = parseExpr @"QUERY ( x <* SELF\a.b | x > 4 )"
-    Assert.Equal(QueryExpression(Query("x", ReferencedAttributeExpression(ReferencedAttribute("SELF", Some(ReferencedAttributeQualificationWithGroup(ReferencedAttribute("a", Some(ReferencedAttributeQualificationWithAttribute(ReferencedAttribute("b", None)))))))), Greater(ReferencedAttributeExpression(ReferencedAttribute("x", None)), LiteralValue(IntegerLiteral 4L)))), expr)
+    Assert.Equal(QueryExpression(Query("x", MemberAccess(GroupAccess(Identifier "SELF", "a"), "b"), Greater(Identifier "x", LiteralValue(IntegerLiteral 4L)))), expr)
 
 [<Fact>]
 let ``parse expression index``() =
     let expr = parseExpr "x[4]"
-    Assert.Equal(SubcomponentQualifiedExpression(ReferencedAttributeExpression(ReferencedAttribute("x", None)), LiteralValue(IntegerLiteral 4L), None), expr)
+    Assert.Equal(SubcomponentQualifiedExpression(Identifier "x", LiteralValue(IntegerLiteral 4L), None), expr)
 
 //[<Fact>]
 //let ``parse alternating dot qualified and index expression tails``() =
@@ -310,9 +310,9 @@ let ``parse expression index``() =
 //    Assert.Equal(DottedAccessExpression(SubcomponentQualifiedExpression(SubcomponentQualifiedExpression(DottedAccessExpression(DottedAccessExpression(SubcomponentQualifiedExpression(AttributeReference(IdentifierAttributeReference "x"), LiteralValue(IntegerLiteral 4L), None), "foo"), "bar"), LiteralValue(IntegerLiteral 5L), None), LiteralValue(IntegerLiteral 6L), None), "end"), expr)
 
 [<Fact>]
-let ``parse deeply nested attribute reference``() =
-    let expr = parseExpr @"SELF\parent_item.item\child_item.child_path_1.child_path_2"
-    Assert.Equal(ReferencedAttributeExpression(ReferencedAttribute("SELF", Some(ReferencedAttributeQualificationWithGroup(ReferencedAttribute("parent_item", Some(ReferencedAttributeQualificationWithAttribute(ReferencedAttribute("item", Some(ReferencedAttributeQualificationWithGroup(ReferencedAttribute("child_item", Some(ReferencedAttributeQualificationWithAttribute(ReferencedAttribute("child_path_1", Some(ReferencedAttributeQualificationWithAttribute(ReferencedAttribute("child_path_2", None))))))))))))))))), expr)
+let ``parse deeply nested group, member, and element access``() =
+    let expr = parseExpr @"SELF\parent_item.item\child_item[child_item_index].child_path_1.child_path_2"
+    Assert.Equal(MemberAccess(MemberAccess(SubcomponentQualifiedExpression(GroupAccess(MemberAccess(GroupAccess(Identifier "SELF", "parent_item"), "item"), "child_item"), Identifier "child_item_index", None), "child_path_1"), "child_path_2"), expr)
 
 [<Fact>]
 let ``parse array expression``() =

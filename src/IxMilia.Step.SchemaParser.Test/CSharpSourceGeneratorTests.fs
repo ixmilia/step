@@ -36,8 +36,8 @@ let ``entity declarations``() =
 
 [<Fact>]
 let ``individual expressions as code``() =
-    Assert.Equal(Some "(SomeField >= 0)", getExpressionCode (GreaterEquals(ReferencedAttributeExpression(ReferencedAttribute("some_field", None)), LiteralValue(RealLiteral(0.0)))))
-    Assert.Equal(Some "(SomeField.SomeDeeperField >= 0)", getExpressionCode (GreaterEquals(ReferencedAttributeExpression(ReferencedAttribute("some_field", Some(ReferencedAttributeQualificationWithGroup(ReferencedAttribute("some_deeper_field", None))))), LiteralValue(RealLiteral(0.0)))))
+    Assert.Equal(Some "(SomeField >= 0)", getExpressionCode (GreaterEquals(Identifier "some_field", LiteralValue(RealLiteral(0.0)))))
+    Assert.Equal(Some "(SomeField.SomeDeeperField >= 0)", getExpressionCode (GreaterEquals(MemberAccess(Identifier "some_field", "some_deeper_field"), LiteralValue(RealLiteral(0.0)))))
     // any unsupported validation expression cancels the operation
     Assert.Equal(None, getExpressionCode (Greater(FunctionCallExpression(FunctionCall("some_function", [])), LiteralValue(RealLiteral(0.0)))))
 
@@ -60,7 +60,7 @@ let ``get type name overrides``() =
 [<Fact>]
 let ``entity definitions``() =
     let parentEntity = Entity(EntityHead("parent_entity", None, []), [], [], [], [], [])
-    let entity = Entity(EntityHead("shape", None, ["parent_entity"]), [ExplicitAttribute(ReferencedAttribute("size", None), AttributeType(SimpleType(RealType(None)), false)); ExplicitAttribute(ReferencedAttribute("size2", None), AttributeType(NamedType "real_value", false))], [], [], [], [DomainRule("wr1", GreaterEquals(ReferencedAttributeExpression(ReferencedAttribute("size", None)), LiteralValue(RealLiteral(0.0))))])
+    let entity = Entity(EntityHead("shape", None, ["parent_entity"]), [ExplicitAttribute(ReferencedAttribute("size", None), AttributeType(SimpleType(RealType(None)), false)); ExplicitAttribute(ReferencedAttribute("size2", None), AttributeType(NamedType "real_value", false))], [], [], [], [DomainRule("wr1", GreaterEquals(Identifier "size", LiteralValue(RealLiteral(0.0))))])
     let schema = Schema("id", "version", SchemaBody([], [], [entity; parentEntity], []))
     let actual = getEntityDefinition schema entity "SomeNamespace" ["System"] "TypePrefix" "DefaultBaseClassName" (Map.empty |> Map.add "real_value" (NamedType "float")) |> snd
     Assert.Equal(@"using System;
@@ -197,4 +197,7 @@ let ``parse full 201 schema``() =
     let parser = SchemaParser.parser
     match run parser schemaText with
     | Success(_result, _, _) -> printfn "File parsed successfully"
-    | Failure(errorMessage, parserState, _) -> failwith <| sprintf "Parse failed at [%d, %d]: %s" parserState.Position.Line parserState.Position.Column errorMessage
+    | Failure(errorMessage, parserState, _) ->
+        // current failure on line 2467 `RULE application_context_requires_ap_definition FOR`
+        // ------------------------------^
+        failwith <| sprintf "Parse failed at [%d, %d]: %s" parserState.Position.Line parserState.Position.Column errorMessage

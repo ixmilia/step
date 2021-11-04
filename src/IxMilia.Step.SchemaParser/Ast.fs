@@ -86,7 +86,9 @@ type Expression =
     // static values
     | LiteralValue of LiteralValue
     // member access
-    | ReferencedAttributeExpression of ReferencedAttribute
+    | Identifier of string
+    | MemberAccess of Expression * string // foo.bar
+    | GroupAccess of Expression * string // foo\bar
     // artithmetic
     | Negate of Expression
     | Add of Expression * Expression
@@ -109,7 +111,7 @@ type Expression =
     | QueryExpression of Query
     // other
     | ArrayExpression of Expression list
-    | SubcomponentQualifiedExpression of Expression * Expression * Expression option // expression * index1 * index2
+    | SubcomponentQualifiedExpression of Expression * Expression * Expression option // expression * index1 * index2 // expression[index1 : index2]
     | In of Expression * Expression
     | Or of Expression * Expression
     | Xor of Expression * Expression
@@ -118,7 +120,9 @@ type Expression =
     override this.ToString() =
         match this with
         | LiteralValue l -> l.ToString()
-        | ReferencedAttributeExpression r -> r.ToString()
+        | Identifier i -> i
+        | MemberAccess (e, m) -> sprintf "%s.%s" (e.ToString()) m
+        | GroupAccess (e, m) -> sprintf "%s\\%s" (e.ToString()) m
         | Negate n -> "-" + n.ToString()
         | Add (a, b) -> a.ToString() + "+" + b.ToString()
         | Subtract (a, b) -> a.ToString() + "-" + b.ToString()
