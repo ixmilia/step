@@ -16,6 +16,9 @@ namespace IxMilia.Step.Items
                 var simpleItem = (StepSimpleItemSyntax)itemSyntax;
                 switch (simpleItem.Keyword)
                 {
+                    case StepItemTypeExtensions.ClosedShellText:
+                        item = StepClosedShell.CreateFromSyntaxList(binder, simpleItem.Parameters);
+                        break;
                     case StepItemTypeExtensions.AdvancedFaceText:
                         item = StepAdvancedFace.CreateFromSyntaxList(binder, simpleItem.Parameters);
                         break;
@@ -42,6 +45,9 @@ namespace IxMilia.Step.Items
                         break;
                     case StepItemTypeExtensions.EdgeCurveText:
                         item = StepEdgeCurve.CreateFromSyntaxList(binder, simpleItem.Parameters);
+                        break;
+                    case StepItemTypeExtensions.SurfaceCurveText:
+                        item = StepSurfaceCurve.CreateFromSyntaxList(binder, simpleItem.Parameters);
                         break;
                     case StepItemTypeExtensions.EdgeLoopText:
                         item = StepEdgeLoop.CreateFromSyntaxList(binder, simpleItem.Parameters);

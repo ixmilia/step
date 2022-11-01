@@ -4,6 +4,7 @@ namespace IxMilia.Step.Items
 {
     public enum StepItemType
     {
+        ClosedShell,
         AdvancedFace,
         AxisPlacement2D,
         AxisPlacement3D,
@@ -13,6 +14,7 @@ namespace IxMilia.Step.Items
         CylindricalSurface,
         Direction,
         EdgeCurve,
+        SurfaceCurve,
         EdgeLoop,
         Ellipse,
         FaceBound,
@@ -26,6 +28,7 @@ namespace IxMilia.Step.Items
 
     internal static class StepItemTypeExtensions
     {
+        public const string ClosedShellText = "CLOSED_SHELL";
         public const string AdvancedFaceText = "ADVANCED_FACE";
         public const string Axis2Placement2DText = "AXIS2_PLACEMENT_2D";
         public const string Axis2Placement3DText = "AXIS2_PLACEMENT_3D";
@@ -33,8 +36,9 @@ namespace IxMilia.Step.Items
         public const string CartesianPointText = "CARTESIAN_POINT";
         public const string CircleText = "CIRCLE";
         public const string CylindricalSurfaceText = "CYLINDRICAL_SURFACE";
-        public const string DirectionText = "DIRECTION";
+        public const string DirectionText = "DIRECTION";        
         public const string EdgeCurveText = "EDGE_CURVE";
+        public const string SurfaceCurveText = "SURFACE_CURVE";
         public const string EdgeLoopText = "EDGE_LOOP";
         public const string EllipseText = "ELLIPSE";
         public const string FaceBoundText = "FACE_BOUND";
@@ -49,6 +53,8 @@ namespace IxMilia.Step.Items
         {
             switch (type)
             {
+                case StepItemType.ClosedShell:
+                    return ClosedShellText;
                 case StepItemType.AdvancedFace:
                     return AdvancedFaceText;
                 case StepItemType.AxisPlacement2D:
@@ -66,6 +72,8 @@ namespace IxMilia.Step.Items
                 case StepItemType.Direction:
                     return DirectionText;
                 case StepItemType.EdgeCurve:
+                    return SurfaceCurveText;
+                case StepItemType.SurfaceCurve:
                     return EdgeCurveText;
                 case StepItemType.EdgeLoop:
                     return EdgeLoopText;
