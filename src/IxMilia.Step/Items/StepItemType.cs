@@ -10,6 +10,7 @@ namespace IxMilia.Step.Items
         BSplineCurveWithKnots,
         CartesianPoint,
         Circle,
+        ClosedShell,
         CylindricalSurface,
         Direction,
         EdgeCurve,
@@ -18,6 +19,7 @@ namespace IxMilia.Step.Items
         FaceBound,
         FaceOuterBound,
         Line,
+        ManifoldSolidBrep,
         OrientedEdge,
         Plane,
         Vector,
@@ -32,6 +34,7 @@ namespace IxMilia.Step.Items
         public const string BSplineCurveWithKnotsText = "B_SPLINE_CURVE_WITH_KNOTS";
         public const string CartesianPointText = "CARTESIAN_POINT";
         public const string CircleText = "CIRCLE";
+        public const string ClosedShellText = "CLOSED_SHELL";
         public const string CylindricalSurfaceText = "CYLINDRICAL_SURFACE";
         public const string DirectionText = "DIRECTION";
         public const string EdgeCurveText = "EDGE_CURVE";
@@ -40,6 +43,7 @@ namespace IxMilia.Step.Items
         public const string FaceBoundText = "FACE_BOUND";
         public const string FaceOuterBoundText = "FACE_OUTER_BOUND";
         public const string LineText = "LINE";
+        public const string ManifoldSolidBrepText = "MANIFOLD_SOLID_BREP";
         public const string OrientedEdgeText = "ORIENTED_EDGE";
         public const string PlaneText = "PLANE";
         public const string VectorText = "VECTOR";
@@ -61,6 +65,8 @@ namespace IxMilia.Step.Items
                     return CartesianPointText;
                 case StepItemType.Circle:
                     return CircleText;
+                case StepItemType.ClosedShell:
+                    return ClosedShellText;
                 case StepItemType.CylindricalSurface:
                     return CylindricalSurfaceText;
                 case StepItemType.Direction:
@@ -77,6 +83,8 @@ namespace IxMilia.Step.Items
                     return FaceOuterBoundText;
                 case StepItemType.Line:
                     return LineText;
+                case StepItemType.ManifoldSolidBrep:
+                    return ManifoldSolidBrepText;
                 case StepItemType.OrientedEdge:
                     return OrientedEdgeText;
                 case StepItemType.Plane:
